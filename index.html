@@ -61,10 +61,16 @@
     background-color: inherit !important;
   }
 
-  /* Make links in table orange */
+  /* Link color overrides */
   .tabulator .tabulator-cell a {
-    color: orange !important;
+    color: #FF8C00 !important; /* dark orange */
     text-decoration: underline;
+  }
+  .tabulator .tabulator-cell a:visited {
+    color: #FF8C00 !important;
+  }
+  .tabulator .tabulator-cell a:hover {
+    color: #FFA500 !important; /* slightly lighter on hover */
   }
 
   /* Hover image tooltip */
@@ -77,6 +83,7 @@
     z-index: 1000;
     pointer-events: none;
     background-color: #2e2e2e;
+    transition: opacity 0.2s ease-in-out; /* smooth fade */
   }
 
   /* Loader message */
@@ -168,7 +175,7 @@ Papa.parse(csvUrl, {
       layout:"fitDataTable",
       columns: columns,
       movableColumns: true,
-      height: "85vh",       // enables vertical scrolling & freezes header
+      height: "85vh",       // freezes header while scrolling
       reactiveData: true,
       initialSort:[{column:"Rank", dir:"asc"}],
     });
@@ -182,6 +189,7 @@ Papa.parse(csvUrl, {
       if(target){
         hoverImg.src = target.dataset.src;
         hoverImg.style.display = "block";
+        hoverImg.style.opacity = 1;
 
         const vw = window.innerWidth;
         const vh = window.innerHeight;
@@ -198,6 +206,7 @@ Papa.parse(csvUrl, {
         hoverImg.style.left = left + "px";
         hoverImg.style.top = top + "px";
       } else {
+        hoverImg.style.opacity = 0;
         hoverImg.style.display = "none";
       }
     });
