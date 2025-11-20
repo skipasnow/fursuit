@@ -14,28 +14,46 @@
     color: #fff;
     font-family: sans-serif;
     padding: 20px;
+    margin: 0;
   }
 
   #creator-table {
     margin-top: 20px;
   }
 
-  /* Hover image preview tooltip */
-  .preview-hover {
-    cursor: pointer;
-    color: #00ffff;
-    position: relative;
+  /* Dark theme for Tabulator */
+  .tabulator {
+    background: #2e2e2e;
+    color: #fff;
   }
 
-  .preview-hover img {
-    display: none;
+  .tabulator .tabulator-header {
+    background-color: #3a3a3a;
+    color: #fff;
+  }
+
+  .tabulator .tabulator-header .tabulator-col {
+    border-right: 1px solid #555;
+  }
+
+  .tabulator .tabulator-row {
+    border-bottom: 1px solid #555;
+  }
+
+  .tabulator .tabulator-cell {
+    color: #fff;
+  }
+
+  /* Hover image tooltip */
+  #hover-image {
     position: absolute;
+    display: none;
     width: 250px;
     height: 250px;
     border: 2px solid #fff;
     z-index: 1000;
-    top: 0;
-    left: 105%;
+    pointer-events: none;
+    background-color: #2e2e2e;
   }
 </style>
 </head>
@@ -43,6 +61,7 @@
 
 <h1>Kemono Fursuit Makers</h1>
 <div id="creator-table"></div>
+<img id="hover-image" src="" alt="Preview">
 
 <!-- Dependencies -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -85,7 +104,7 @@ Papa.parse(csvUrl, {
           formatter:function(cell){
             const value = cell.getValue();
             if(!value) return "";
-            return `<span class="preview-hover">Hover<img src="${value}" alt="Preview"></span>`;
+            return `<span class="preview-hover" data-src="${value}">Hover</span>`;
           }
         };
       } else if(colName === "Link"){
@@ -112,25 +131,23 @@ Papa.parse(csvUrl, {
       layout:"fitDataTable",      // columns auto-fit content
       columns: columns,
       movableColumns: true,       // drag to reorder
-      height:"700px",
+      height: "85vh",             // fill ~85% of viewport
       reactiveData: true,
       initialSort:[{column:"Rank", dir:"asc"}],
     });
 
-    // Hover image preview functionality
+    // Hover image tooltip
+    const hoverImg = document.getElementById("hover-image");
     const container = document.querySelector("#creator-table");
-    container.addEventListener("mouseover", function(e) {
-      const target = e.target.closest(".preview-hover");
-      if(target){
-        const img = target.querySelector("img");
-        if(img) img.style.display = "block";
-      }
-    });
-    container.addEventListener("mouseout", function(e) {
-      const target = e.target.closest(".preview-hover");
-      if(target){
-        const img = target.querySelector("img");
-        if(img) img.style.display = "none";
+
+    container.addEventListener("mousemove", function(e){
+      if(e.target.closest(".preview-hover")){
+        hoverImg.src = e.target.closest(".preview-hover").dataset.src;
+        hoverImg.style.display = "block";
+        hoverImg.style.top = (e.pageY + 10) + "px";
+        hoverImg.style.left = (e.pageX + 10) + "px";
+      } else {
+        hoverImg.style.display = "none";
       }
     });
   }
