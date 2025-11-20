@@ -17,42 +17,48 @@
     margin: 0;
   }
 
+  h1 {
+    color: #fff;
+  }
+
   #creator-table {
     margin-top: 20px;
   }
 
   /* Dark theme for Tabulator */
   .tabulator {
-    background: #2e2e2e;
-    color: #fff;
+    background: #2e2e2e !important;
+    color: #fff !important;
+    border: 1px solid #555 !important;
   }
 
   .tabulator .tabulator-header {
-    background-color: #1f1f1f;
-    color: #fff;
-    border-bottom: 2px solid #555;
+    background-color: #1f1f1f !important;
+    color: #fff !important;
+    border-bottom: 2px solid #555 !important;
   }
 
   .tabulator .tabulator-header .tabulator-col {
-    border-right: 1px solid #555;
+    border-right: 1px solid #555 !important;
   }
 
   .tabulator .tabulator-row {
-    border-bottom: 1px solid #444;
-    color: #fff;
+    border-bottom: 1px solid #444 !important;
+    color: #fff !important;
   }
 
   /* Alternating row colors */
   .tabulator .tabulator-row.tabulator-row-even {
-    background-color: #2a2a2a;
+    background-color: #2a2a2a !important;
   }
 
   .tabulator .tabulator-row.tabulator-row-odd {
-    background-color: #3a3a3a;
+    background-color: #3a3a3a !important;
   }
 
   .tabulator .tabulator-cell {
-    color: #fff;
+    color: #fff !important;
+    background-color: inherit !important;
   }
 
   /* Hover image tooltip */
@@ -67,14 +73,19 @@
     background-color: #2e2e2e;
   }
 
-  h1 {
+  /* Loader message */
+  #loader {
     color: #fff;
+    font-size: 18px;
+    text-align: center;
+    margin-top: 50px;
   }
 </style>
 </head>
 <body>
 
 <h1>Kemono Fursuit Makers</h1>
+<div id="loader">Loading data...</div>
 <div id="creator-table"></div>
 <img id="hover-image" src="" alt="Preview">
 
@@ -91,7 +102,12 @@ Papa.parse(csvUrl, {
   complete: function(results) {
     const data = results.data.filter(row => row.Maker); // remove empty rows
 
-    if(!data.length) return;
+    if(!data.length) {
+      document.getElementById("loader").textContent = "No data found.";
+      return;
+    }
+
+    document.getElementById("loader").style.display = "none"; // hide loader
 
     const columns = Object.keys(data[0]).map(colName => {
       if(colName === "Rank"){
@@ -161,20 +177,14 @@ Papa.parse(csvUrl, {
         hoverImg.src = target.dataset.src;
         hoverImg.style.display = "block";
 
-        // Get viewport size
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-
-        // Calculate image position
         let left = e.pageX + 10;
         let top = e.pageY + 10;
 
-        // Prevent overflow right
         if(left + hoverImg.width > window.scrollX + vw){
           left = e.pageX - hoverImg.width - 10;
         }
-
-        // Prevent overflow bottom
         if(top + hoverImg.height > window.scrollY + vh){
           top = e.pageY - hoverImg.height - 10;
         }
