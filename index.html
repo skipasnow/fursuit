@@ -61,6 +61,12 @@
     background-color: inherit !important;
   }
 
+  /* Make links in table orange */
+  .tabulator .tabulator-cell a {
+    color: orange !important;
+    text-decoration: underline;
+  }
+
   /* Hover image tooltip */
   #hover-image {
     position: absolute;
@@ -162,7 +168,7 @@ Papa.parse(csvUrl, {
       layout:"fitDataTable",
       columns: columns,
       movableColumns: true,
-      height: "85vh",
+      height: "85vh",       // enables vertical scrolling & freezes header
       reactiveData: true,
       initialSort:[{column:"Rank", dir:"asc"}],
     });
