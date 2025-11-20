@@ -54,8 +54,9 @@ Papa.parse(csvUrl, {
     const table = document.getElementById("creator-table");
     const tableHead = table.querySelector("thead");
     const tableBody = table.querySelector("tbody");
-    
-    const data = results.data;
+
+    // Filter out empty rows (rows without a Maker)
+    const data = results.data.filter(row => row.Maker);
 
     // Generate table header dynamically
     if (data.length > 0) {
@@ -75,13 +76,12 @@ Papa.parse(csvUrl, {
       Object.keys(row).forEach(colName => {
         const td = document.createElement("td");
 
-        // Special handling for Preview column
+        // Handle Preview column with hover image
         if (colName === "Preview" && row[colName]) {
           const hoverSpan = document.createElement("span");
           hoverSpan.textContent = "Hover";
           hoverSpan.className = "hover-preview";
 
-          // Image for hover preview
           const previewImg = document.createElement("img");
           previewImg.src = row[colName];
           previewImg.style.position = "absolute";
@@ -106,15 +106,17 @@ Papa.parse(csvUrl, {
           });
 
           td.appendChild(hoverSpan);
+
         } else if (colName === "Link" && row[colName]) {
-          // Make Link column clickable
+          // Make Link clickable
           const a = document.createElement("a");
           a.href = row[colName];
           a.target = "_blank";
           a.textContent = row[colName];
           td.appendChild(a);
+
         } else {
-          td.textContent = row[colName];
+          td.textContent = row[colName] || ""; // fallback to empty string
         }
 
         tr.appendChild(td);
