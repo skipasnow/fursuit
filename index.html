@@ -1,22 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Preview Grid</title>
+<title>Fursuit Creators</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- OG tags for link previews -->
-<meta property="og:title" content="Creator Preview">
-<meta property="og:description" content="Representative work of this creator">
-<meta property="og:image" content="https://skipasnow.github.io/fursuit/images/yiminiao.jpg">
-
 <style>
-body {
-    margin: 0;
-    padding: 20px;
-    font-family: sans-serif;
-    background: #2e2e2e;
-    color: #ffffff;
-}
+  body { background: #2e2e2e; color: #fff; font-family: sans-serif; padding: 20px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 8px; border: 1px solid #555; text-align: left; }
+  th { cursor: pointer; }
+  .hover-preview { position: relative; }
+  .hover-preview:hover::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 100%;
+    width: 200px;
+    height: 200px;
+    background-image: url(attr(data-image));
+    background-size: cover;
+    border: 2px solid #fff;
+    z-index: 100;
+  }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
+
+<h1>Fursuit Creators</h1>
+<table id="creator-table">
+  <thead>
+    <tr>
+      <th>Creator</th>
+      <th>Description</th>
+      <th>Preview</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
+
+Papa.parse(csvUrl, {
+  download: true,
+  header: true,
+  complete: function(results) {
+    const tableBody = document.querySelector("#creator-table tbody");
+    results.data.forEach(row => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${row.creator}</td>
+        <td>${row.description}</td>
+        <td><span class="hover-preview" data-image="${row.image_url}">Hover</span></td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  }
+});
+</script>
+
 </body>
+</html>
