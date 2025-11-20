@@ -5,29 +5,40 @@
 <title>Fursuit Creators</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body { background: #2e2e2e; color: #fff; font-family: sans-serif; padding: 20px; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { padding: 8px; border: 1px solid #555; text-align: left; }
-  th { cursor: pointer; }
-  .hover-preview { position: relative; }
-  .hover-preview:hover::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 100%;
-    width: 200px;
-    height: 200px;
-    background-image: url(attr(data-image));
-    background-size: cover;
-    border: 2px solid #fff;
-    z-index: 100;
+  body { 
+    background: #2e2e2e; 
+    color: #fff; 
+    font-family: sans-serif; 
+    padding: 20px; 
+  }
+
+  table { 
+    width: 100%; 
+    border-collapse: collapse; 
+  }
+
+  th, td { 
+    padding: 8px; 
+    border: 1px solid #555; 
+    text-align: left; 
+  }
+
+  th { 
+    cursor: pointer; 
+  }
+
+  .hover-preview {
+    cursor: pointer;
+    color: #00ffff;
   }
 </style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
 
 <h1>Fursuit Creators</h1>
+
 <table id="creator-table">
   <thead>
     <tr>
@@ -47,13 +58,47 @@ Papa.parse(csvUrl, {
   header: true,
   complete: function(results) {
     const tableBody = document.querySelector("#creator-table tbody");
+
     results.data.forEach(row => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${row.creator}</td>
-        <td>${row.description}</td>
-        <td><span class="hover-preview" data-image="${row.image_url}">Hover</span></td>
-      `;
+
+      // Creator name and description
+      tr.innerHTML = `<td>${row.creator}</td><td>${row.description}</td>`;
+
+      // Preview column
+      const previewTd = document.createElement("td");
+      const hoverSpan = document.createElement("span");
+      hoverSpan.textContent = "Hover";
+      hoverSpan.className = "hover-preview";
+
+      // Image for hover preview
+      const previewImg = document.createElement("img");
+      previewImg.src = row.image_url;
+      previewImg.style.position = "absolute";
+      previewImg.style.width = "200px";
+      previewImg.style.height = "200px";
+      previewImg.style.border = "2px solid #fff";
+      previewImg.style.display = "none";
+      previewImg.style.zIndex = 1000;
+      document.body.appendChild(previewImg);
+
+      // Event listeners for hover
+      hoverSpan.addEventListener("mouseenter", e => {
+        previewImg.style.display = "block";
+        previewImg.style.left = e.pageX + 20 + "px";
+        previewImg.style.top = e.pageY + 20 + "px";
+      });
+      hoverSpan.addEventListener("mousemove", e => {
+        previewImg.style.left = e.pageX + 20 + "px";
+        previewImg.style.top = e.pageY + 20 + "px";
+      });
+      hoverSpan.addEventListener("mouseleave", () => {
+        previewImg.style.display = "none";
+      });
+
+      previewTd.appendChild(hoverSpan);
+      tr.appendChild(previewTd);
+
       tableBody.appendChild(tr);
     });
   }
