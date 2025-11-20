@@ -4,177 +4,120 @@
 <meta charset="UTF-8">
 <title>Kemono Fursuit Makers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Tabulator CSS -->
+<link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator.min.css" rel="stylesheet">
 <style>
-body { 
-  background: #2e2e2e; 
-  color: #fff; 
-  font-family: sans-serif; 
-  padding: 20px; 
-}
+  body {
+    background: #2e2e2e;
+    color: #fff;
+    font-family: sans-serif;
+    padding: 20px;
+  }
 
-table { 
-  width: 100%; 
-  border-collapse: collapse; 
-  table-layout: fixed;
-}
+  #creator-table {
+    margin-top: 20px;
+  }
 
-th, td { 
-  padding: 8px; 
-  border: 1px solid #555; 
-  text-align: left; 
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+  /* Optional: hover image preview tooltip */
+  .preview-hover {
+    cursor: pointer;
+    color: #00ffff;
+    position: relative;
+  }
 
-th { 
-  cursor: pointer; 
-  position: sticky;
-  top: 0;
-  background: #2e2e2e;
-  z-index: 10;
-  resize: horizontal;       /* adjustable width */
-  overflow: auto;
-}
-
-input.filter-input {
-  width: 90%;
-  padding: 2px 4px;
-  box-sizing: border-box;
-  background: #444;
-  color: #fff;
-  border: 1px solid #666;
-}
-
-.hover-preview {
-  cursor: pointer;
-  color: #00ffff;
-}
+  .preview-hover img {
+    display: none;
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    border: 2px solid #fff;
+    z-index: 1000;
+    top: 0;
+    left: 105%;
+  }
 </style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
 
 <h1>Kemono Fursuit Makers</h1>
+<div id="creator-table"></div>
 
-<table id="creator-table">
-  <thead></thead>
-  <tbody></tbody>
-</table>
+<!-- Dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
 
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
+// Load CSV data
 Papa.parse(csvUrl, {
   download: true,
   header: true,
   complete: function(results) {
-    const table = document.getElementById("creator-table");
-    const tableHead = table.querySelector("thead");
-    const tableBody = table.querySelector("tbody");
-
     const data = results.data.filter(row => row.Maker);
-    if (data.length === 0) return;
 
-    const columns = Object.keys(data[0]);
+    if (!data.length) return;
 
-    // --- Header row with sort ---
-    const headerRow = document.createElement("tr");
-    columns.forEach((colName, colIndex) => {
-      const th = document.createElement("th");
-      th.textContent = colName;
-
-      th.addEventListener("click", () => {
-        const ascending = !th.asc;
-        th.asc = ascending;
-
-        Array.from(tableBody.rows)
-          .sort((a, b) => {
-            const aText = a.cells[colIndex].textContent.trim().toLowerCase();
-            const bText = b.cells[colIndex].textContent.trim().toLowerCase();
-            return ascending ? aText.localeCompare(bText) : bText.localeCompare(aText);
-          })
-          .forEach(row => tableBody.appendChild(row));
-      });
-
-      headerRow.appendChild(th);
+    const columns = Object.keys(data[0]).map(colName => {
+      if (colName === "Preview") {
+        return {
+          title: colName,
+          field: colName,
+          formatter: function(cell) {
+            const value = cell.getValue();
+            if (!value) return "";
+            return `<span class="preview-hover">Hover<img src="${value}" alt="Preview"></span>`;
+          },
+          headerFilter: "input",
+          hozAlign: "center",
+          width: 100,
+          resizable: true
+        };
+      } else if (colName === "Link") {
+        return {
+          title: colName,
+          field: colName,
+          formatter: "link",
+          formatterParams: { labelField: colName, urlField: colName, target: "_blank" },
+          headerFilter: "input",
+          resizable: true
+        };
+      } else {
+        return {
+          title: colName,
+          field: colName,
+          headerFilter: "input",
+          resizable: true
+        };
+      }
     });
-    tableHead.appendChild(headerRow);
 
-    // --- Filter row ---
-    const filterRow = document.createElement("tr");
-    columns.forEach((colName, colIndex) => {
-      const td = document.createElement("td");
-      const input = document.createElement("input");
-      input.type = "text";
-      input.placeholder = "Filter";
-      input.className = "filter-input";
-
-      input.addEventListener("input", () => {
-        const filterValue = input.value.toLowerCase();
-        Array.from(tableBody.rows).forEach(row => {
-          const cellText = row.cells[colIndex].textContent.toLowerCase();
-          row.style.display = cellText.includes(filterValue) ? "" : "none";
-        });
-      });
-
-      td.appendChild(input);
-      filterRow.appendChild(td);
+    // Initialize Tabulator
+    const table = new Tabulator("#creator-table", {
+      data: data,
+      layout: "fitDataTable", // columns fit content
+      columns: columns,
+      movableColumns: true,   // drag columns to reorder
+      height: "700px",
+      tooltips: true,
+      responsiveLayout: "collapse",
+      resizableRows: true,
+      placeholder: "No data available",
+      reactiveData: true,     // updates automatically if we modify data later
     });
-    tableHead.appendChild(filterRow);
 
-    // --- Table body rows ---
-    data.forEach(row => {
-      const tr = document.createElement("tr");
-
-      columns.forEach(colName => {
-        const td = document.createElement("td");
-
-        if (colName === "Preview" && row[colName]) {
-          const hoverSpan = document.createElement("span");
-          hoverSpan.textContent = "Hover";
-          hoverSpan.className = "hover-preview";
-
-          const previewImg = document.createElement("img");
-          previewImg.src = row[colName];
-          previewImg.style.position = "absolute";
-          previewImg.style.width = "200px";
-          previewImg.style.height = "200px";
-          previewImg.style.border = "2px solid #fff";
-          previewImg.style.display = "none";
-          previewImg.style.zIndex = 1000;
-          document.body.appendChild(previewImg);
-
-          hoverSpan.addEventListener("mouseenter", e => {
-            previewImg.style.display = "block";
-            previewImg.style.left = e.pageX + 20 + "px";
-            previewImg.style.top = e.pageY + 20 + "px";
-          });
-          hoverSpan.addEventListener("mousemove", e => {
-            previewImg.style.left = e.pageX + 20 + "px";
-            previewImg.style.top = e.pageY + 20 + "px";
-          });
-          hoverSpan.addEventListener("mouseleave", () => {
-            previewImg.style.display = "none";
-          });
-
-          td.appendChild(hoverSpan);
-
-        } else if (colName === "Link" && row[colName]) {
-          const a = document.createElement("a");
-          a.href = row[colName];
-          a.target = "_blank";
-          a.textContent = row[colName];
-          td.appendChild(a);
-        } else {
-          td.textContent = row[colName] || "";
-        }
-
-        tr.appendChild(td);
-      });
-
-      tableBody.appendChild(tr);
+    // Add hover preview functionality
+    document.querySelector("#creator-table").addEventListener("mouseover", function(e) {
+      if (e.target.closest(".preview-hover")) {
+        const img = e.target.closest(".preview-hover").querySelector("img");
+        if (img) img.style.display = "block";
+      }
+    });
+    document.querySelector("#creator-table").addEventListener("mouseout", function(e) {
+      if (e.target.closest(".preview-hover")) {
+        const img = e.target.closest(".preview-hover").querySelector("img");
+        if (img) img.style.display = "none";
+      }
     });
   }
 });
