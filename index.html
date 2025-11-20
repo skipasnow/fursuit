@@ -9,74 +9,49 @@
 <link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator.min.css" rel="stylesheet">
 
 <style>
-  body {
+body {
     background: #2e2e2e;
     color: #fff;
     font-family: sans-serif;
     padding: 20px;
     margin: 0;
-  }
+}
 
-  h1 {
+h1 {
     color: #fff;
-  }
+}
 
-  #creator-table {
-    margin-top: 20px;
-  }
-
-  /* Dark theme for Tabulator table */
-  .tabulator {
+/* Tabulator dark theme */
+.tabulator {
     background: #2e2e2e !important;
     color: #fff !important;
     border: 1px solid #555 !important;
-  }
+}
 
-  /* Fully dark header row */
-  .tabulator .tabulator-header,
-  .tabulator .tabulator-header .tabulator-col,
-  .tabulator .tabulator-header .tabulator-col-group,
-  .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+/* Dark header row */
+.tabulator .tabulator-header,
+.tabulator .tabulator-header .tabulator-col,
+.tabulator .tabulator-header .tabulator-col-group,
+.tabulator .tabulator-header .tabulator-col .tabulator-col-content {
     background-color: #1f1f1f !important;
     color: #fff !important;
     border-bottom: 2px solid #555 !important;
-  }
+}
 
-  /* Table rows dark theme and alternating colors */
-  .tabulator .tabulator-row {
-    border-bottom: 1px solid #444 !important;
-    color: #fff !important;
-  }
+/* Alternating dark rows */
+.tabulator .tabulator-row.tabulator-row-even { background-color: #2a2a2a !important; }
+.tabulator .tabulator-row.tabulator-row-odd { background-color: #3a3a3a !important; }
 
-  .tabulator .tabulator-row.tabulator-row-even {
-    background-color: #2a2a2a !important;
-  }
+/* Table cells */
+.tabulator .tabulator-cell { color: #fff !important; background-color: inherit !important; }
 
-  .tabulator .tabulator-row.tabulator-row-odd {
-    background-color: #3a3a3a !important;
-  }
+/* Links */
+.tabulator .tabulator-cell a { color: #FF8C00 !important; text-decoration: underline; }
+.tabulator .tabulator-cell a:visited { color: #FF8C00 !important; }
+.tabulator .tabulator-cell a:hover { color: #FFA500 !important; }
 
-  .tabulator .tabulator-cell {
-    color: #fff !important;
-    background-color: inherit !important;
-  }
-
-  /* Links in table cells (Link column) */
-  .tabulator .tabulator-cell a {
-    color: #FF8C00 !important; /* dark orange */
-    text-decoration: underline;
-  }
-
-  .tabulator .tabulator-cell a:visited {
-    color: #FF8C00 !important;
-  }
-
-  .tabulator .tabulator-cell a:hover {
-    color: #FFA500 !important; /* lighter orange on hover */
-  }
-
-  /* Hover image tooltip */
-  #hover-image {
+/* Hover image tooltip */
+#hover-image {
     position: absolute;
     display: none;
     width: 250px;
@@ -86,15 +61,15 @@
     pointer-events: none;
     background-color: #2e2e2e;
     transition: opacity 0.2s ease-in-out;
-  }
+}
 
-  /* Loader message */
-  #loader {
+/* Loader */
+#loader {
     color: #fff;
     font-size: 18px;
     text-align: center;
     margin-top: 50px;
-  }
+}
 </style>
 </head>
 <body>
@@ -111,91 +86,123 @@
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
+// Function to map numeric value to gradient color
+function valueToColor(value, min, max, reverse=false){
+    if(value === "" || isNaN(value)) return "";
+    let ratio = (value - min)/(max - min);
+    if(reverse) ratio = 1 - ratio;
+    let r = Math.floor(255 * ratio);
+    let g = Math.floor(255 * (1 - ratio));
+    return `rgb(${r},${g},0)`;
+}
+
 Papa.parse(csvUrl, {
-  download: true,
-  header: true,
-  complete: function(results) {
-    const data = results.data.filter(row => row.Maker); // remove empty rows
+    download: true,
+    header: true,
+    complete: function(results){
+        const data = results.data.filter(row => row.Maker);
 
-    if(!data.length) {
-      document.getElementById("loader").textContent = "No data found.";
-      return;
+        if(!data.length){
+            document.getElementById("loader").textContent = "No data found.";
+            return;
+        }
+
+        document.getElementById("loader").style.display = "none";
+
+        const numericCols = ["Price","Partials","Fursuits","Portfolio Size","Followers","Acct Age"];
+        let minMax = {};
+        numericCols.forEach(col=>{
+            let numbers = data.map(row=>parseFloat(row[col])).filter(n=>!isNaN(n));
+            minMax[col] = {min: Math.min(...numbers), max: Math.max(...numbers)};
+        });
+
+        const columns = Object.keys(data[0]).map(colName=>{
+            if(colName === "Rank"){
+                return { title: colName, field: colName, resizable:true, headerFilter:false, sorter:"number" };
+            } else if(colName === "Specialty"){
+                return { title: colName, field: colName, resizable:true, headerFilter:"input", sorter:"string" };
+            } else if(colName === "Preview"){
+                return {
+                    title: colName,
+                    field: colName,
+                    resizable:true,
+                    sorter:false,
+                    formatter:function(cell){
+                        const value = cell.getValue();
+                        if(!value) return "";
+                        return `<span class="preview-hover" data-src="${value}">Hover</span>`;
+                    }
+                };
+            } else if(colName === "Link"){
+                return {
+                    title: colName,
+                    field: colName,
+                    resizable:true,
+                    sorter:"string",
+                    formatter:"link",
+                    formatterParams:{labelField:colName,urlField:colName,target:"_blank"}
+                };
+            } else if(numericCols.includes(colName)){
+                const reverse = ["Partials","Fursuits","Portfolio Size","Followers","Acct Age"].includes(colName);
+                return {
+                    title: colName,
+                    field: colName,
+                    resizable:true,
+                    sorter:"number",
+                    formatter:function(cell){
+                        const val = parseFloat(cell.getValue());
+                        const colMin = minMax[colName].min;
+                        const colMax = minMax[colName].max;
+                        const color = valueToColor(val, colMin, colMax, reverse);
+                        return `<span style="color:${color}">${cell.getValue()}</span>`;
+                    }
+                };
+            } else {
+                return { title: colName, field: colName, resizable:true, sorter:"string" };
+            }
+        });
+
+        const table = new Tabulator("#creator-table",{
+            data: data,
+            layout:"fitDataTable",
+            columns: columns,
+            movableColumns:true,
+            height:"85vh",
+            reactiveData:true,
+            initialSort:[{column:"Rank", dir:"asc"}],
+        });
+
+        // Hover image tooltip
+        const hoverImg = document.getElementById("hover-image");
+        const container = document.querySelector("#creator-table");
+
+        container.addEventListener("mousemove", function(e){
+            const target = e.target.closest(".preview-hover");
+            if(target){
+                hoverImg.src = target.dataset.src;
+                hoverImg.style.display = "block";
+                hoverImg.style.opacity = 1;
+
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                let left = e.pageX + 10;
+                let top = e.pageY + 10;
+
+                if(left + hoverImg.width > window.scrollX + vw){
+                    left = e.pageX - hoverImg.width - 10;
+                }
+                if(top + hoverImg.height > window.scrollY + vh){
+                    top = e.pageY - hoverImg.height - 10;
+                }
+
+                hoverImg.style.left = left + "px";
+                hoverImg.style.top = top + "px";
+            } else {
+                hoverImg.style.opacity = 0;
+                hoverImg.style.display = "none";
+            }
+        });
     }
-
-    document.getElementById("loader").style.display = "none"; // hide loader
-
-    const columns = Object.keys(data[0]).map(colName => {
-      if(colName === "Rank"){
-        return { title: colName, field: colName, resizable: true, headerFilter:false, sorter:"number" };
-      } else if(colName === "Specialty"){
-        return { title: colName, field: colName, resizable: true, headerFilter:"input", sorter:"string" };
-      } else if(colName === "Preview"){
-        return {
-          title: colName,
-          field: colName,
-          resizable:true,
-          sorter:false,
-          formatter:function(cell){
-            const value = cell.getValue();
-            if(!value) return "";
-            return `<span class="preview-hover" data-src="${value}">Hover</span>`;
-          }
-        };
-      } else if(colName === "Link"){
-        return {
-          title: colName,
-          field: colName,
-          resizable:true,
-          sorter:"string",
-          formatter:"link",
-          formatterParams:{labelField:colName, urlField:colName, target:"_blank"}
-        };
-      } else {
-        return { title: colName, field: colName, resizable:true, sorter:"string" };
-      }
-    });
-
-    const table = new Tabulator("#creator-table", {
-      data: data,
-      layout:"fitDataTable",
-      columns: columns,
-      movableColumns: true,
-      height: "85vh",       // enables vertical scroll & freezes header
-      reactiveData: true,
-      initialSort:[{column:"Rank", dir:"asc"}],
-    });
-
-    // Hover image tooltip with edge detection
-    const hoverImg = document.getElementById("hover-image");
-    const container = document.querySelector("#creator-table");
-
-    container.addEventListener("mousemove", function(e){
-      const target = e.target.closest(".preview-hover");
-      if(target){
-        hoverImg.src = target.dataset.src;
-        hoverImg.style.display = "block";
-        hoverImg.style.opacity = 1;
-
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        let left = e.pageX + 10;
-        let top = e.pageY + 10;
-
-        if(left + hoverImg.width > window.scrollX + vw){
-          left = e.pageX - hoverImg.width - 10;
-        }
-        if(top + hoverImg.height > window.scrollY + vh){
-          top = e.pageY - hoverImg.height - 10;
-        }
-
-        hoverImg.style.left = left + "px";
-        hoverImg.style.top = top + "px";
-      } else {
-        hoverImg.style.opacity = 0;
-        hoverImg.style.display = "none";
-      }
-    });
-  }
 });
 </script>
 
