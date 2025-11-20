@@ -15,16 +15,33 @@
   table { 
     width: 100%; 
     border-collapse: collapse; 
+    table-layout: fixed;
   }
 
   th, td { 
     padding: 8px; 
     border: 1px solid #555; 
     text-align: left; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   th { 
     cursor: pointer; 
+    position: sticky;
+    top: 0;
+    background: #2e2e2e;
+    z-index: 10;
+  }
+
+  input.filter-input {
+    width: 90%;
+    padding: 2px 4px;
+    box-sizing: border-box;
+    background: #444;
+    color: #fff;
+    border: 1px solid #666;
   }
 
   .hover-preview {
@@ -58,25 +75,47 @@ Papa.parse(csvUrl, {
     // Filter out empty rows (rows without a Maker)
     const data = results.data.filter(row => row.Maker);
 
-    // Generate table header dynamically
-    if (data.length > 0) {
-      const headerRow = document.createElement("tr");
-      Object.keys(data[0]).forEach(colName => {
-        const th = document.createElement("th");
-        th.textContent = colName;
-        headerRow.appendChild(th);
-      });
-      tableHead.appendChild(headerRow);
-    }
+    if (data.length === 0) return;
 
-    // Generate table rows dynamically
+    const columns = Object.keys(data[0]);
+
+    // --- Create header row ---
+    const headerRow = document.createElement("tr");
+    columns.forEach(colName => {
+      const th = document.createElement("th");
+      th.textContent = colName;
+      headerRow.appendChild(th);
+    });
+    tableHead.appendChild(headerRow);
+
+    // --- Create filter row ---
+    const filterRow = document.createElement("tr");
+    columns.forEach((colName, colIndex) => {
+      const td = document.createElement("td");
+      const input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = "Filter";
+      input.className = "filter-input";
+      input.addEventListener("input", () => {
+        const filterValue = input.value.toLowerCase();
+        Array.from(tableBody.rows).forEach(row => {
+          const cellText = row.cells[colIndex].textContent.toLowerCase();
+          row.style.display = cellText.includes(filterValue) ? "" : "none";
+        });
+      });
+      td.appendChild(input);
+      filterRow.appendChild(td);
+    });
+    tableHead.appendChild(filterRow);
+
+    // --- Create table body rows ---
     data.forEach(row => {
       const tr = document.createElement("tr");
 
-      Object.keys(row).forEach(colName => {
+      columns.forEach(colName => {
         const td = document.createElement("td");
 
-        // Handle Preview column with hover image
+        // Preview column hover image
         if (colName === "Preview" && row[colName]) {
           const hoverSpan = document.createElement("span");
           hoverSpan.textContent = "Hover";
@@ -116,7 +155,7 @@ Papa.parse(csvUrl, {
           td.appendChild(a);
 
         } else {
-          td.textContent = row[colName] || ""; // fallback to empty string
+          td.textContent = row[colName] || "";
         }
 
         tr.appendChild(td);
