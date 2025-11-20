@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <title>Kemono Fursuit Makers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <!-- Tabulator CSS -->
 <link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator.min.css" rel="stylesheet">
+
 <style>
   body {
     background: #2e2e2e;
@@ -18,7 +20,7 @@
     margin-top: 20px;
   }
 
-  /* Optional: hover image preview tooltip */
+  /* Hover image preview tooltip */
   .preview-hover {
     cursor: pointer;
     color: #00ffff;
@@ -49,74 +51,86 @@
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// Load CSV data
 Papa.parse(csvUrl, {
   download: true,
   header: true,
   complete: function(results) {
-    const data = results.data.filter(row => row.Maker);
+    const data = results.data.filter(row => row.Maker); // remove empty rows
 
-    if (!data.length) return;
+    if(!data.length) return;
 
     const columns = Object.keys(data[0]).map(colName => {
-      if (colName === "Preview") {
+      if(colName === "Rank"){
         return {
           title: colName,
           field: colName,
-          formatter: function(cell) {
-            const value = cell.getValue();
-            if (!value) return "";
-            return `<span class="preview-hover">Hover<img src="${value}" alt="Preview"></span>`;
-          },
-          headerFilter: "input",
-          hozAlign: "center",
-          width: 100,
-          resizable: true
+          resizable: true,
+          headerFilter:false,
+          sorter:"number",
         };
-      } else if (colName === "Link") {
+      } else if(colName === "Specialty"){
         return {
           title: colName,
           field: colName,
-          formatter: "link",
-          formatterParams: { labelField: colName, urlField: colName, target: "_blank" },
-          headerFilter: "input",
-          resizable: true
+          resizable: true,
+          headerFilter:"input",
+          sorter:"string"
+        };
+      } else if(colName === "Preview"){
+        return {
+          title: colName,
+          field: colName,
+          resizable:true,
+          sorter:false,
+          formatter:function(cell){
+            const value = cell.getValue();
+            if(!value) return "";
+            return `<span class="preview-hover">Hover<img src="${value}" alt="Preview"></span>`;
+          }
+        };
+      } else if(colName === "Link"){
+        return {
+          title: colName,
+          field: colName,
+          resizable:true,
+          sorter:"string",
+          formatter:"link",
+          formatterParams:{labelField:colName, urlField:colName, target:"_blank"}
         };
       } else {
         return {
           title: colName,
           field: colName,
-          headerFilter: "input",
-          resizable: true
+          resizable:true,
+          sorter:"string"
         };
       }
     });
 
-    // Initialize Tabulator
     const table = new Tabulator("#creator-table", {
       data: data,
-      layout: "fitDataTable", // columns fit content
+      layout:"fitDataTable",      // columns auto-fit content
       columns: columns,
-      movableColumns: true,   // drag columns to reorder
-      height: "700px",
-      tooltips: true,
-      responsiveLayout: "collapse",
-      resizableRows: true,
-      placeholder: "No data available",
-      reactiveData: true,     // updates automatically if we modify data later
+      movableColumns: true,       // drag to reorder
+      height:"700px",
+      reactiveData: true,
+      initialSort:[{column:"Rank", dir:"asc"}],
     });
 
-    // Add hover preview functionality
-    document.querySelector("#creator-table").addEventListener("mouseover", function(e) {
-      if (e.target.closest(".preview-hover")) {
-        const img = e.target.closest(".preview-hover").querySelector("img");
-        if (img) img.style.display = "block";
+    // Hover image preview functionality
+    const container = document.querySelector("#creator-table");
+    container.addEventListener("mouseover", function(e) {
+      const target = e.target.closest(".preview-hover");
+      if(target){
+        const img = target.querySelector("img");
+        if(img) img.style.display = "block";
       }
     });
-    document.querySelector("#creator-table").addEventListener("mouseout", function(e) {
-      if (e.target.closest(".preview-hover")) {
-        const img = e.target.closest(".preview-hover").querySelector("img");
-        if (img) img.style.display = "none";
+    container.addEventListener("mouseout", function(e) {
+      const target = e.target.closest(".preview-hover");
+      if(target){
+        const img = target.querySelector("img");
+        if(img) img.style.display = "none";
       }
     });
   }
