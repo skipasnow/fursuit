@@ -2,7 +2,8 @@ body {
     margin: 0;
     padding: 20px;
     font-family: sans-serif;
-    background: #fafafa;
+    background: #2e2e2e; /* dark grey */
+    color: #ffffff; /* optional: change text to white for contrast */
 }
 
 #grid-container {
