@@ -2,59 +2,61 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Fursuit Creators</title>
+<title>Kemono Fursuit Makers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body { 
-    background: #2e2e2e; 
-    color: #fff; 
-    font-family: sans-serif; 
-    padding: 20px; 
-  }
+body { 
+  background: #2e2e2e; 
+  color: #fff; 
+  font-family: sans-serif; 
+  padding: 20px; 
+}
 
-  table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    table-layout: fixed;
-  }
+table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  table-layout: fixed;
+}
 
-  th, td { 
-    padding: 8px; 
-    border: 1px solid #555; 
-    text-align: left; 
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+th, td { 
+  padding: 8px; 
+  border: 1px solid #555; 
+  text-align: left; 
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  th { 
-    cursor: pointer; 
-    position: sticky;
-    top: 0;
-    background: #2e2e2e;
-    z-index: 10;
-  }
+th { 
+  cursor: pointer; 
+  position: sticky;
+  top: 0;
+  background: #2e2e2e;
+  z-index: 10;
+  resize: horizontal;       /* adjustable width */
+  overflow: auto;
+}
 
-  input.filter-input {
-    width: 90%;
-    padding: 2px 4px;
-    box-sizing: border-box;
-    background: #444;
-    color: #fff;
-    border: 1px solid #666;
-  }
+input.filter-input {
+  width: 90%;
+  padding: 2px 4px;
+  box-sizing: border-box;
+  background: #444;
+  color: #fff;
+  border: 1px solid #666;
+}
 
-  .hover-preview {
-    cursor: pointer;
-    color: #00ffff;
-  }
+.hover-preview {
+  cursor: pointer;
+  color: #00ffff;
+}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
 
-<h1>Fursuit Creators</h1>
+<h1>Kemono Fursuit Makers</h1>
 
 <table id="creator-table">
   <thead></thead>
@@ -72,23 +74,35 @@ Papa.parse(csvUrl, {
     const tableHead = table.querySelector("thead");
     const tableBody = table.querySelector("tbody");
 
-    // Filter out empty rows (rows without a Maker)
     const data = results.data.filter(row => row.Maker);
-
     if (data.length === 0) return;
 
     const columns = Object.keys(data[0]);
 
-    // --- Create header row ---
+    // --- Header row with sort ---
     const headerRow = document.createElement("tr");
-    columns.forEach(colName => {
+    columns.forEach((colName, colIndex) => {
       const th = document.createElement("th");
       th.textContent = colName;
+
+      th.addEventListener("click", () => {
+        const ascending = !th.asc;
+        th.asc = ascending;
+
+        Array.from(tableBody.rows)
+          .sort((a, b) => {
+            const aText = a.cells[colIndex].textContent.trim().toLowerCase();
+            const bText = b.cells[colIndex].textContent.trim().toLowerCase();
+            return ascending ? aText.localeCompare(bText) : bText.localeCompare(aText);
+          })
+          .forEach(row => tableBody.appendChild(row));
+      });
+
       headerRow.appendChild(th);
     });
     tableHead.appendChild(headerRow);
 
-    // --- Create filter row ---
+    // --- Filter row ---
     const filterRow = document.createElement("tr");
     columns.forEach((colName, colIndex) => {
       const td = document.createElement("td");
@@ -96,6 +110,7 @@ Papa.parse(csvUrl, {
       input.type = "text";
       input.placeholder = "Filter";
       input.className = "filter-input";
+
       input.addEventListener("input", () => {
         const filterValue = input.value.toLowerCase();
         Array.from(tableBody.rows).forEach(row => {
@@ -103,19 +118,19 @@ Papa.parse(csvUrl, {
           row.style.display = cellText.includes(filterValue) ? "" : "none";
         });
       });
+
       td.appendChild(input);
       filterRow.appendChild(td);
     });
     tableHead.appendChild(filterRow);
 
-    // --- Create table body rows ---
+    // --- Table body rows ---
     data.forEach(row => {
       const tr = document.createElement("tr");
 
       columns.forEach(colName => {
         const td = document.createElement("td");
 
-        // Preview column hover image
         if (colName === "Preview" && row[colName]) {
           const hoverSpan = document.createElement("span");
           hoverSpan.textContent = "Hover";
@@ -147,13 +162,11 @@ Papa.parse(csvUrl, {
           td.appendChild(hoverSpan);
 
         } else if (colName === "Link" && row[colName]) {
-          // Make Link clickable
           const a = document.createElement("a");
           a.href = row[colName];
           a.target = "_blank";
           a.textContent = row[colName];
           td.appendChild(a);
-
         } else {
           td.textContent = row[colName] || "";
         }
