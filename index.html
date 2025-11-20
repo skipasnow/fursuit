@@ -28,8 +28,9 @@
   }
 
   .tabulator .tabulator-header {
-    background-color: #3a3a3a;
+    background-color: #1f1f1f;
     color: #fff;
+    border-bottom: 2px solid #555;
   }
 
   .tabulator .tabulator-header .tabulator-col {
@@ -37,7 +38,17 @@
   }
 
   .tabulator .tabulator-row {
-    border-bottom: 1px solid #555;
+    border-bottom: 1px solid #444;
+    color: #fff;
+  }
+
+  /* Alternating row colors */
+  .tabulator .tabulator-row.tabulator-row-even {
+    background-color: #2a2a2a;
+  }
+
+  .tabulator .tabulator-row.tabulator-row-odd {
+    background-color: #3a3a3a;
   }
 
   .tabulator .tabulator-cell {
@@ -54,6 +65,10 @@
     z-index: 1000;
     pointer-events: none;
     background-color: #2e2e2e;
+  }
+
+  h1 {
+    color: #fff;
   }
 </style>
 </head>
@@ -128,24 +143,44 @@ Papa.parse(csvUrl, {
 
     const table = new Tabulator("#creator-table", {
       data: data,
-      layout:"fitDataTable",      // columns auto-fit content
+      layout:"fitDataTable",
       columns: columns,
-      movableColumns: true,       // drag to reorder
-      height: "85vh",             // fill ~85% of viewport
+      movableColumns: true,
+      height: "85vh",
       reactiveData: true,
       initialSort:[{column:"Rank", dir:"asc"}],
     });
 
-    // Hover image tooltip
+    // Hover image tooltip with edge detection
     const hoverImg = document.getElementById("hover-image");
     const container = document.querySelector("#creator-table");
 
     container.addEventListener("mousemove", function(e){
-      if(e.target.closest(".preview-hover")){
-        hoverImg.src = e.target.closest(".preview-hover").dataset.src;
+      const target = e.target.closest(".preview-hover");
+      if(target){
+        hoverImg.src = target.dataset.src;
         hoverImg.style.display = "block";
-        hoverImg.style.top = (e.pageY + 10) + "px";
-        hoverImg.style.left = (e.pageX + 10) + "px";
+
+        // Get viewport size
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // Calculate image position
+        let left = e.pageX + 10;
+        let top = e.pageY + 10;
+
+        // Prevent overflow right
+        if(left + hoverImg.width > window.scrollX + vw){
+          left = e.pageX - hoverImg.width - 10;
+        }
+
+        // Prevent overflow bottom
+        if(top + hoverImg.height > window.scrollY + vh){
+          top = e.pageY - hoverImg.height - 10;
+        }
+
+        hoverImg.style.left = left + "px";
+        hoverImg.style.top = top + "px";
       } else {
         hoverImg.style.display = "none";
       }
