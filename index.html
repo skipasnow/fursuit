@@ -40,13 +40,7 @@
 <h1>Fursuit Creators</h1>
 
 <table id="creator-table">
-  <thead>
-    <tr>
-      <th>Creator</th>
-      <th>Description</th>
-      <th>Preview</th>
-    </tr>
-  </thead>
+  <thead></thead>
   <tbody></tbody>
 </table>
 
@@ -57,47 +51,74 @@ Papa.parse(csvUrl, {
   download: true,
   header: true,
   complete: function(results) {
-    const tableBody = document.querySelector("#creator-table tbody");
+    const table = document.getElementById("creator-table");
+    const tableHead = table.querySelector("thead");
+    const tableBody = table.querySelector("tbody");
+    
+    const data = results.data;
 
-    results.data.forEach(row => {
+    // Generate table header dynamically
+    if (data.length > 0) {
+      const headerRow = document.createElement("tr");
+      Object.keys(data[0]).forEach(colName => {
+        const th = document.createElement("th");
+        th.textContent = colName;
+        headerRow.appendChild(th);
+      });
+      tableHead.appendChild(headerRow);
+    }
+
+    // Generate table rows dynamically
+    data.forEach(row => {
       const tr = document.createElement("tr");
 
-      // Creator name and description
-      tr.innerHTML = `<td>${row.creator}</td><td>${row.description}</td>`;
+      Object.keys(row).forEach(colName => {
+        const td = document.createElement("td");
 
-      // Preview column
-      const previewTd = document.createElement("td");
-      const hoverSpan = document.createElement("span");
-      hoverSpan.textContent = "Hover";
-      hoverSpan.className = "hover-preview";
+        // Special handling for Preview column
+        if (colName === "Preview" && row[colName]) {
+          const hoverSpan = document.createElement("span");
+          hoverSpan.textContent = "Hover";
+          hoverSpan.className = "hover-preview";
 
-      // Image for hover preview
-      const previewImg = document.createElement("img");
-      previewImg.src = row.image_url;
-      previewImg.style.position = "absolute";
-      previewImg.style.width = "200px";
-      previewImg.style.height = "200px";
-      previewImg.style.border = "2px solid #fff";
-      previewImg.style.display = "none";
-      previewImg.style.zIndex = 1000;
-      document.body.appendChild(previewImg);
+          // Image for hover preview
+          const previewImg = document.createElement("img");
+          previewImg.src = row[colName];
+          previewImg.style.position = "absolute";
+          previewImg.style.width = "200px";
+          previewImg.style.height = "200px";
+          previewImg.style.border = "2px solid #fff";
+          previewImg.style.display = "none";
+          previewImg.style.zIndex = 1000;
+          document.body.appendChild(previewImg);
 
-      // Event listeners for hover
-      hoverSpan.addEventListener("mouseenter", e => {
-        previewImg.style.display = "block";
-        previewImg.style.left = e.pageX + 20 + "px";
-        previewImg.style.top = e.pageY + 20 + "px";
+          hoverSpan.addEventListener("mouseenter", e => {
+            previewImg.style.display = "block";
+            previewImg.style.left = e.pageX + 20 + "px";
+            previewImg.style.top = e.pageY + 20 + "px";
+          });
+          hoverSpan.addEventListener("mousemove", e => {
+            previewImg.style.left = e.pageX + 20 + "px";
+            previewImg.style.top = e.pageY + 20 + "px";
+          });
+          hoverSpan.addEventListener("mouseleave", () => {
+            previewImg.style.display = "none";
+          });
+
+          td.appendChild(hoverSpan);
+        } else if (colName === "Link" && row[colName]) {
+          // Make Link column clickable
+          const a = document.createElement("a");
+          a.href = row[colName];
+          a.target = "_blank";
+          a.textContent = row[colName];
+          td.appendChild(a);
+        } else {
+          td.textContent = row[colName];
+        }
+
+        tr.appendChild(td);
       });
-      hoverSpan.addEventListener("mousemove", e => {
-        previewImg.style.left = e.pageX + 20 + "px";
-        previewImg.style.top = e.pageY + 20 + "px";
-      });
-      hoverSpan.addEventListener("mouseleave", () => {
-        previewImg.style.display = "none";
-      });
-
-      previewTd.appendChild(hoverSpan);
-      tr.appendChild(previewTd);
 
       tableBody.appendChild(tr);
     });
