@@ -25,13 +25,14 @@
     margin-top: 20px;
   }
 
-  /* Dark theme for Tabulator */
+  /* Dark theme for Tabulator table */
   .tabulator {
     background: #2e2e2e !important;
     color: #fff !important;
     border: 1px solid #555 !important;
   }
 
+  /* Fully dark header row */
   .tabulator .tabulator-header {
     background-color: #1f1f1f !important;
     color: #fff !important;
@@ -39,15 +40,21 @@
   }
 
   .tabulator .tabulator-header .tabulator-col {
+    background-color: #1f1f1f !important;
+    color: #fff !important;
     border-right: 1px solid #555 !important;
   }
 
+  .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+    color: #fff !important;
+  }
+
+  /* Table rows dark theme and alternating colors */
   .tabulator .tabulator-row {
     border-bottom: 1px solid #444 !important;
     color: #fff !important;
   }
 
-  /* Alternating row colors */
   .tabulator .tabulator-row.tabulator-row-even {
     background-color: #2a2a2a !important;
   }
@@ -61,16 +68,18 @@
     background-color: inherit !important;
   }
 
-  /* Link color overrides */
+  /* Links in table cells (Link column) */
   .tabulator .tabulator-cell a {
     color: #FF8C00 !important; /* dark orange */
     text-decoration: underline;
   }
+
   .tabulator .tabulator-cell a:visited {
     color: #FF8C00 !important;
   }
+
   .tabulator .tabulator-cell a:hover {
-    color: #FFA500 !important; /* slightly lighter on hover */
+    color: #FFA500 !important; /* lighter orange on hover */
   }
 
   /* Hover image tooltip */
@@ -83,7 +92,7 @@
     z-index: 1000;
     pointer-events: none;
     background-color: #2e2e2e;
-    transition: opacity 0.2s ease-in-out; /* smooth fade */
+    transition: opacity 0.2s ease-in-out;
   }
 
   /* Loader message */
@@ -124,21 +133,9 @@ Papa.parse(csvUrl, {
 
     const columns = Object.keys(data[0]).map(colName => {
       if(colName === "Rank"){
-        return {
-          title: colName,
-          field: colName,
-          resizable: true,
-          headerFilter:false,
-          sorter:"number",
-        };
+        return { title: colName, field: colName, resizable: true, headerFilter:false, sorter:"number" };
       } else if(colName === "Specialty"){
-        return {
-          title: colName,
-          field: colName,
-          resizable: true,
-          headerFilter:"input",
-          sorter:"string"
-        };
+        return { title: colName, field: colName, resizable: true, headerFilter:"input", sorter:"string" };
       } else if(colName === "Preview"){
         return {
           title: colName,
@@ -161,12 +158,7 @@ Papa.parse(csvUrl, {
           formatterParams:{labelField:colName, urlField:colName, target:"_blank"}
         };
       } else {
-        return {
-          title: colName,
-          field: colName,
-          resizable:true,
-          sorter:"string"
-        };
+        return { title: colName, field: colName, resizable:true, sorter:"string" };
       }
     });
 
@@ -175,7 +167,7 @@ Papa.parse(csvUrl, {
       layout:"fitDataTable",
       columns: columns,
       movableColumns: true,
-      height: "85vh",       // freezes header while scrolling
+      height: "85vh",       // enables vertical scroll & freezes header
       reactiveData: true,
       initialSort:[{column:"Rank", dir:"asc"}],
     });
