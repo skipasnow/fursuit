@@ -19,5 +19,5 @@ body {
     height: auto;
     object-fit: cover;
     border-radius: 6px;
-    background: #ddd;
+    background: #444; /* subtle dark border behind images */
 }
