@@ -211,16 +211,12 @@ function parseImageFormula(formula) {
   return match ? match[1] : formula;
 }
 
-// CHANGED: More robust cleaner. Returns NULL for empty strings.
-// This ensures Tabulator treats it as "Missing data" rather than 0 or String.
+// Clean number helper
 function cleanNumber(val) {
     if (val === null || val === undefined || val === "") return null;
-    
     if (typeof val === 'string') {
-        // Remove $ and , and spaces
         const cleaned = val.replace(/[$,\s]/g, '');
         if(cleaned === "") return null;
-        
         const num = parseFloat(cleaned);
         return isNaN(num) ? null : num;
     }
@@ -252,9 +248,9 @@ Papa.parse(csvUrl, {
     header: true,
     dynamicTyping: true,
     complete: function(results) {
-        // CHANGED: applied cleanNumber to price, partials, fursuits, portfolio
         const data = results.data.map(row => ({
-            rank: row['Rank'],
+            // FIX 1: Apply cleanNumber to Rank to ensure it's a number
+            rank: cleanNumber(row['Rank']),
             maker: row['Maker'],
             logo: parseImageFormula(row['Logo']),
             makerType: row['Maker Type'],
@@ -308,7 +304,14 @@ Papa.parse(csvUrl, {
                 {column:"rank", dir:"asc"} 
             ],
             columns: [
-                {title:"Rank", field:"rank", width:80, hozAlign:"center"},
+                // FIX 2: Added sorter:"number" explicitly
+                {
+                    title:"Rank", 
+                    field:"rank", 
+                    width:80, 
+                    hozAlign:"center",
+                    sorter:"number" 
+                },
                 {title:"Maker", field:"maker"},
                 
                 {
@@ -357,18 +360,15 @@ Papa.parse(csvUrl, {
                     headerFilterPlaceholder:"Filter on specialty here..."
                 },
                 
-                // CHANGED: Added sorter:"number" and alignEmptyValues:"bottom"
                 {
                     title:"$ Price", 
                     field:"price", 
                     hozAlign:"right", 
                     sorter:"number",
-                    sorterParams:{
-                        alignEmptyValues:"bottom"
-                    },
+                    sorterParams:{ alignEmptyValues:"bottom" },
                     formatter:function(cell){
                         const val = cell.getValue();
-                        if(val === null || val==="") return "N/A"; // Display N/A if desired, or "" for blank
+                        if(val === null || val==="") return "N/A"; 
                         const c = getGradientColor(val,colMinMax['price'].min,colMinMax['price'].max,true);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
@@ -471,12 +471,27 @@ Papa.parse(csvUrl, {
 
         // --- SORT EVENT LISTENERS ---
         
+        // Auto-trigger sort when dropdowns change (New Feature)
+        document.getElementById("sort-field").addEventListener("change", function(){
+             const field = this.value;
+             const dir = document.getElementById("sort-dir").value;
+             table.setSort(field, dir);
+        });
+
+        document.getElementById("sort-dir").addEventListener("change", function(){
+             const field = document.getElementById("sort-field").value;
+             const dir = this.value;
+             table.setSort(field, dir);
+        });
+
+        // Manual Apply Button
         document.getElementById("apply-sort").addEventListener("click", function(){
             const field = document.getElementById("sort-field").value;
             const dir = document.getElementById("sort-dir").value;
             table.setSort(field, dir);
         });
 
+        // Reset Button
         document.getElementById("reset-sort").addEventListener("click", function(){
             document.getElementById("sort-field").value = "rank";
             document.getElementById("sort-dir").value = "asc";
