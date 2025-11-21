@@ -21,39 +21,50 @@
     margin: auto;
   }
 
-  /* Logo hover zoom */
+  /* Hover preview for logos */
   .hover-preview {
-    display: inline-block;
-    width: 30px;
-    height: 30px;
-    background-size: cover;
-    background-position: center;
-    position: relative;
+      display: inline-block;
+      position: relative;
+      width: 30px;
+      height: 30px;
+      text-align: center;
+  }
+
+  .hover-preview img {
+      width: 100%;
+      height: auto;
+      display: block;
+  }
+
+  .hover-preview::after {
+      content: '';
+      position: absolute;
+      top: -150px; /* adjust as needed */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 150px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      border: 2px solid #fff;
+      z-index: 1000;
+      pointer-events: none;
+      display: none;
   }
 
   .hover-preview:hover::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 100%;
-    width: 150px;
-    height: 150px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    border: 2px solid #fff;
-    z-index: 1000;
+      display: block;
   }
 
   /* Custom header color */
   .tabulator .tabulator-header {
     background-color: #1f1f1f !important;
-    color: #fff;
   }
 
-  /* Table borders */
-  .tabulator-cell, .tabulator-row {
-    border: 1px solid #fff !important;
+  /* Row borders */
+  .tabulator-row {
+    border-bottom: 1px solid #fff;
   }
 
   /* URL styling */
@@ -78,36 +89,26 @@
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// Function to parse =IMAGE("URL") from Google Sheets
-function parseImageFormula(formula) {
-  const match = formula.match(/=IMAGE\("(.+)"\)/);
-  return match ? match[1] : formula;
-}
-
-// Gradient helper with dark midpoint
-function getCustomGradient(value, min, max, reverse=false){
-    if(value == null || isNaN(value)) return "#2e2e2e";
+// Gradient helper
+function getGradientColor(value, min, max, reverse=false){
     const ratio = (value - min) / (max - min);
-    const midColor = {r:46, g:46, b:46};     // dark row color
-    const greenColor = {r:46, g:111, b:64};  // #2E6F40
-    const redColor = {r:179, g:27, b:27};    // #B31B1B
-    let r,g,b;
-
-    if(ratio < 0.5){
-        const t = ratio / 0.5;
-        r = Math.round(greenColor.r + (midColor.r - greenColor.r) * t);
-        g = Math.round(greenColor.g + (midColor.g - greenColor.g) * t);
-        b = Math.round(greenColor.b + (midColor.b - greenColor.b) * t);
+    // colors: dark row midpoint #2e2e2e, green #2E6F40, red #B31B1B
+    const midpoint = 0.5;
+    let r, g, b;
+    if(ratio < midpoint){
+        // dark to green
+        const t = ratio / midpoint;
+        r = Math.round(46 + t*(46-46));   // #2E6F40
+        g = Math.round(46 + t*(111-46));
+        b = Math.round(46 + t*(64-46));
     } else {
-        const t = (ratio - 0.5) / 0.5;
-        r = Math.round(midColor.r + (redColor.r - midColor.r) * t);
-        g = Math.round(midColor.g + (redColor.g - midColor.g) * t);
-        b = Math.round(midColor.b + (redColor.b - midColor.b) * t);
+        // green to red
+        const t = (ratio-midpoint)/(1-midpoint);
+        r = Math.round(46 + t*(179-46));
+        g = Math.round(111 + t*(27-111));
+        b = Math.round(64 + t*(27-64));
     }
-
-    if(reverse){
-        return `rgb(${redColor.r + greenColor.r - r},${redColor.g + greenColor.g - g},${redColor.b + greenColor.b - b})`;
-    }
+    if(reverse) r=255-r, g=255-g, b=255-b;
     return `rgb(${r},${g},${b})`;
 }
 
@@ -116,46 +117,50 @@ Papa.parse(csvUrl, {
     header: true,
     dynamicTyping: true,
     complete: function(results) {
-        const data = results.data.map(row => ({
-            rank: row['Rank'],
-            maker: row['Maker'],
-            logo: parseImageFormula(row['Logo']),
-            makerType: row['Maker Type'],
-            link: row['Link'],
-            preview: row['Preview'],
-            price: row['$ Price'],
-            shipOrFly: row['$ Ship or Fly'],
-            tariff: row['$ Tariff (2025)'],
-            ship: row['$ Ship'],
-            airTravel: row['$ Air Travel'],
-            travelSurplus: row['$ Travel Surplus'],
-            aesthetic: row['Aesthetic'],
-            status: row['Status'],
-            specialty: row['Specialty'],
-            partials: row['Partials'],
-            fursuits: row['Fursuits'],
-            portfolio: row['Portfolio Size'],
-            country: row['Country'],
-            followers: row['Followers'],
-            acctAge: row['Acct Age'],
-            rep: row['Rep'],
-            timeline: row['Timeline'],
-            acctDate: row['Acct Date'],
-            rankScore: row['Rank Score'],
-            imperfections: row['Imperfections'],
-            worksPerYear: row['Works Per Year'],
-            worksRank: row['Works Rank'],
-            followersRank: row['Followers Rank'],
-            acctDateRank: row['Acct Date Rank'],
-            partialsRank: row['Partials Rank'],
-            fursuitsRank: row['Fursuits Rank'],
-            priceRank: row['Price Rank']
-        }));
+        const data = results.data.map((row, idx) => {
+            // Prepare hover image for Tabulator
+            const logoUrl = row['Logo'];
+            return {
+                rank: row['Rank'],
+                maker: row['Maker'],
+                logo: logoUrl,
+                makerType: row['Maker Type'],
+                link: row['Link'],
+                preview: row['Preview'],
+                price: row['$ Price'],
+                shipOrFly: row['$ Ship or Fly'],
+                tariff: row['$ Tariff (2025)'],
+                ship: row['$ Ship'],
+                airTravel: row['$ Air Travel'],
+                travelSurplus: row['$ Travel Surplus'],
+                aesthetic: row['Aesthetic'],
+                status: row['Status'],
+                specialty: row['Specialty'],
+                partials: row['Partials'],
+                fursuits: row['Fursuits'],
+                portfolio: row['Portfolio Size'],
+                country: row['Country'],
+                followers: row['Followers'],
+                acctAge: row['Acct Age'],
+                rep: row['Rep'],
+                timeline: row['Timeline'],
+                acctDate: row['Acct Date'],
+                rankScore: row['Rank Score'],
+                imperfections: row['Imperfections'],
+                worksPerYear: row['Works Per Year'],
+                worksRank: row['Works Rank'],
+                followersRank: row['Followers Rank'],
+                acctDateRank: row['Acct Date Rank'],
+                partialsRank: row['Partials Rank'],
+                fursuitsRank: row['Fursuits Rank'],
+                priceRank: row['Price Rank']
+            };
+        });
 
-        // Min/Max for gradients
-        const numericCols = ['price','partials','fursuits','portfolio','acctAge'];
+        // Calculate min/max for gradient columns individually
+        const gradientCols = ['price','partials','fursuits','portfolio','acctAge'];
         const colMinMax = {};
-        numericCols.forEach(col=>{
+        gradientCols.forEach(col=>{
             const values = data.map(d=>d[col]).filter(v=>v!=null && !isNaN(v));
             colMinMax[col] = {min: Math.min(...values), max: Math.max(...values)};
         });
@@ -163,65 +168,59 @@ Papa.parse(csvUrl, {
         // Initialize Tabulator
         new Tabulator("#creator-table", {
             data: data,
-            layout: "fitDataTable",
+            layout: "fitData",
             movableColumns: true,
             resizableColumns: true,
-            height: "85vh",
-            tooltips:true,
-            columnHeaderVertAlign:"middle",
-            placeholder:"No Data Available",
-            columns:[
+            height:"85vh", // 85% of viewport height
+            columns: [
                 {title:"Rank", field:"rank", width:60, hozAlign:"center"},
                 {title:"Maker", field:"maker"},
                 {title:"Logo", field:"logo", formatter:function(cell){
                     const val = cell.getValue();
-                    if(!val) return "";
-                    return `<span class="hover-preview" style="background-image:url(${val});"></span>`;
-                }, hozAlign:"center", headerFilter:false},
+                    return `<span class="hover-preview"><img src="${val}" onmouseover="this.parentElement.style.setProperty('background-image', 'url(${val})')"/></span>`;
+                }, hozAlign:"center", width:60},
                 {title:"Maker Type", field:"makerType"},
                 {title:"Link", field:"link", formatter:"link", formatterParams:{labelField:"link", urlField:"link"}},
                 {title:"Preview", field:"preview", formatter:function(cell){
                     const val = cell.getValue();
-                    if(!val) return "";
-                    return `<span class="hover-preview" style="background-image:url(${val}); width:30px; height:30px;"></span>`;
+                    return `<span class="hover-preview" style="background-image:url(${val}); width:30px; height:30px; display:inline-block;"></span>`;
                 }, hozAlign:"center"},
                 {title:"Specialty", field:"specialty", headerFilter:"input"},
                 {title:"$ Price", field:"price", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = getCustomGradient(val, colMinMax['price'].min, colMinMax['price'].max);
+                    const c = getGradientColor(val, colMinMax['price'].min, colMinMax['price'].max);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color="#fff";
                     return val;
                 }},
                 {title:"Partials", field:"partials", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = getCustomGradient(val, colMinMax['partials'].min, colMinMax['partials'].max, true);
+                    const c = getGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max, true);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color="#fff";
                     return val;
                 }},
                 {title:"Fursuits", field:"fursuits", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = getCustomGradient(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, true);
+                    const c = getGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, true);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color="#fff";
                     return val;
                 }},
                 {title:"Portfolio Size", field:"portfolio", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = getCustomGradient(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, true);
+                    const c = getGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, true);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color="#fff";
                     return val;
                 }},
                 {title:"Acct Age", field:"acctAge", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = getCustomGradient(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max);
+                    const c = getGradientColor(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color="#fff";
                     return val;
                 }},
-                // Additional columns
                 {title:"Status", field:"status"},
                 {title:"Aesthetic", field:"aesthetic"},
                 {title:"Timeline", field:"timeline"},
@@ -230,11 +229,16 @@ Papa.parse(csvUrl, {
             ],
             rowFormatter:function(row){
                 const el = row.getElement();
-                el.style.backgroundColor = (row.getIndex()%2 ===0) ? "#383838" : "#2e2e2e";
+                if(row.getIndex() % 2 === 0){
+                    el.style.backgroundColor = "#383838";
+                }else{
+                    el.style.backgroundColor = "#2e2e2e";
+                }
             }
         });
     }
 });
 </script>
+
 </body>
 </html>
