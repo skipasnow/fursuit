@@ -22,7 +22,7 @@
     height: 85vh;
   }
 
-  /* --- HOVER PREVIEW FIX --- */
+  /* Thumbnail in the table */
   .hover-preview {
     display: inline-block;
     width: 30px;
@@ -33,28 +33,24 @@
     cursor: pointer;
   }
 
-  /* We use the CSS variable --preview-url defined in the JS formatter */
-  .hover-preview:hover::after {
-    content: '';
-    position: fixed; /* Breaks out of the table cell constraints */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  /* THE FLOATING TOOLTIP 
+   Position fixed allows it to float over everything.
+   Pointer-events: none prevents the "flicker/jump" bug.
+  */
+  #image-tooltip {
+    display: none; /* Hidden by default */
+    position: fixed;
     width: 200px;
     height: 200px;
-    
-    /* Load image from the variable */
-    background-image: var(--preview-url);
+    background-color: #222;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    background-color: #222; /* Dark background behind transparent logos */
-    
     border: 2px solid #fff;
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
-    z-index: 99999; /* Ensure it sits on top of everything */
-    pointer-events: none;
+    z-index: 99999;
     border-radius: 8px;
+    pointer-events: none; /* CRITICAL: Mouse clicks pass through, preventing layout jumping */
   }
 
   /* Custom header color */
@@ -88,6 +84,9 @@
 <body>
 
 <h1>Kemono Fursuit Makers</h1>
+
+<div id="image-tooltip"></div>
+
 <div id="creator-table"></div>
 
 <script src="https://unpkg.com/tabulator-tables@5.6.0/dist/js/tabulator.min.js"></script>
@@ -96,14 +95,49 @@
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// Parse =IMAGE("URL") from Google Sheets
+// --- TOOLTIP LOGIC ---
+const tooltipEl = document.getElementById("image-tooltip");
+
+function showTooltip(e, url) {
+    if(!url) return;
+    tooltipEl.style.backgroundImage = `url('${url}')`;
+    tooltipEl.style.display = "block";
+    moveTooltip(e); // Position immediately
+}
+
+function hideTooltip() {
+    tooltipEl.style.display = "none";
+}
+
+function moveTooltip(e) {
+    const tooltipSize = 200; // Match the CSS width/height
+    const offset = 15; // Distance from cursor
+    const windowHeight = window.innerHeight;
+    
+    // Horizontal: Always to the right of cursor
+    let left = e.clientX + offset;
+    
+    // Vertical: Check if we are hitting the bottom
+    let top = e.clientY + offset;
+    
+    // If the bottom of the tooltip would go off-screen...
+    if (top + tooltipSize > windowHeight) {
+        // ...flip it to appear ABOVE the cursor instead
+        top = e.clientY - tooltipSize - offset;
+    }
+
+    tooltipEl.style.left = left + "px";
+    tooltipEl.style.top = top + "px";
+}
+
+// --- DATA PARSING ---
+
 function parseImageFormula(formula) {
   if(!formula) return "";
   const match = formula.match(/=IMAGE\("(.+)"\)/);
   return match ? match[1] : formula;
 }
 
-// Helper to clean numbers (remove commas from "27,600")
 function cleanNumber(val) {
     if (typeof val === 'string') {
         return parseFloat(val.replace(/,/g, ''));
@@ -111,7 +145,6 @@ function cleanNumber(val) {
     return val;
 }
 
-// Independent gradient helper
 function getGradientColor(value, min, max, lowIsGreen=false){
     if(value === null || value === undefined || value === "" || isNaN(value)) return "";
     
@@ -120,8 +153,8 @@ function getGradientColor(value, min, max, lowIsGreen=false){
     
     let r,g;
     if(lowIsGreen){
-        r = Math.floor(179 * cappedRatio + 46 * (1-cappedRatio)); // red
-        g = Math.floor(27 * cappedRatio + 111 * (1-cappedRatio)); // green
+        r = Math.floor(179 * cappedRatio + 46 * (1-cappedRatio)); 
+        g = Math.floor(27 * cappedRatio + 111 * (1-cappedRatio)); 
     } else {
         r = Math.floor(46 * cappedRatio + 179 * (1-cappedRatio));
         g = Math.floor(111 * cappedRatio + 27 * (1-cappedRatio));
@@ -154,7 +187,6 @@ Papa.parse(csvUrl, {
             fursuits: row['Fursuits'],
             portfolio: row['Portfolio Size'],
             country: row['Country'],
-            // FIX: Clean the comma out of "27,600" so it becomes a real Number for sorting/gradients
             followers: cleanNumber(row['Followers']), 
             acctAge: row['Acct Age'],
             rep: row['Rep'],
@@ -171,9 +203,7 @@ Papa.parse(csvUrl, {
             priceRank: row['Price Rank']
         }));
 
-        // Calculate min/max per column for independent gradients
         const colMinMax = {};
-        // FIX: Added 'followers' to this list
         const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
         
         gradientColumns.forEach(col=>{
@@ -192,23 +222,37 @@ Papa.parse(csvUrl, {
                 {title:"Rank", field:"rank", width:60, hozAlign:"center"},
                 {title:"Maker", field:"maker"},
                 
-                // FIX: Updated Logo Formatter to use CSS Variables
-                {title:"Logo", field:"logo", formatter:function(cell){
-                    const val = cell.getValue();
-                    if(!val) return "";
-                    // We pass the URL into --preview-url so the ::after CSS can read it
-                    return `<span class="hover-preview" style="background-image:url('${val}'); --preview-url: url('${val}');"></span>`;
-                }, hozAlign:"center"},
+                // LOGO COLUMN: Using Tabulator Mouse Events
+                {
+                    title:"Logo", field:"logo", 
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(!val) return "";
+                        return `<span class="hover-preview" style="background-image:url('${val}');"></span>`;
+                    }, 
+                    hozAlign:"center",
+                    // Attach JS logic to this specific column
+                    cellMouseEnter:function(e, cell){ showTooltip(e, cell.getValue()); },
+                    cellMouseLeave:function(e, cell){ hideTooltip(); },
+                    cellMouseMove:function(e, cell){ moveTooltip(e); }
+                },
                 
                 {title:"Maker Type", field:"makerType"},
                 {title:"Link", field:"link", formatter:"link", formatterParams:{labelField:"link", urlField:"link"}},
                 
-                // FIX: Updated Preview Formatter similarly
-                {title:"Preview", field:"preview", formatter:function(cell){
-                    const val = cell.getValue();
-                    if(!val) return "";
-                    return `<span class="hover-preview" style="background-image:url('${val}'); --preview-url: url('${val}');"></span>`;
-                }, hozAlign:"center"},
+                // PREVIEW COLUMN: Same Mouse Event Logic
+                {
+                    title:"Preview", field:"preview", 
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(!val) return "";
+                        return `<span class="hover-preview" style="background-image:url('${val}');"></span>`;
+                    }, 
+                    hozAlign:"center",
+                    cellMouseEnter:function(e, cell){ showTooltip(e, cell.getValue()); },
+                    cellMouseLeave:function(e, cell){ hideTooltip(); },
+                    cellMouseMove:function(e, cell){ moveTooltip(e); }
+                },
                 
                 {title:"Specialty", field:"specialty", headerFilter:"input"},
                 
@@ -244,20 +288,15 @@ Papa.parse(csvUrl, {
                     cell.getElement().style.color="#fff";
                     return val;
                 }},
-                
-                // FIX: Added Gradient Logic to Followers
                 {title:"Followers", field:"followers", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
                     if(val === null || val==="") return "";
-                    // Format number with commas for display (since we cleaned them earlier)
                     const displayVal = val.toLocaleString(); 
-                    
                     const c = getGradientColor(val,colMinMax['followers'].min,colMinMax['followers'].max,false);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color="#fff";
                     return displayVal;
                 }},
-                
                 {title:"Acct Age", field:"acctAge", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
                     if(val === null || val==="") return "";
