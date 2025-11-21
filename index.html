@@ -17,10 +17,11 @@
   }
 
   #creator-table {
-    width: 108%;
+    width: 95%;
     margin: auto;
   }
 
+  /* Logo styling */
   .hover-preview {
     position: relative;
     display: inline-block;
@@ -29,26 +30,26 @@
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
+    transition: transform 0.2s;
   }
 
-  /* Hover zoom for logos */
-  .hover-preview::after {
+  /* Hover zoom */
+  .hover-preview:hover::after {
     content: '';
     position: absolute;
-    top: -75px; /* adjust to appear above */
-    left: 35px; /* adjust to appear beside */
-    width: 30px;  /* match default logo size */
-    height: 30px;
+    top: -60px; /* adjust vertical position */
+    left: 40px;  /* adjust horizontal position */
+    width: 150px;
+    height: 150px;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     border: 2px solid #fff;
     z-index: 100;
-    display: none;
   }
 
   .hover-preview:hover::after {
-    display: block;
+    background-image: inherit;
   }
 
   a {
@@ -169,6 +170,7 @@ Papa.parse(csvUrl,{
             layout:"fitDataTable",
             movableColumns:true,
             resizableColumns:true,
+            placeholder:"No Data Available",
             columns:[
                 {title:"Rank", field:"rank", width:60, hozAlign:"center"},
                 {title:"Maker", field:"maker"},
