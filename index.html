@@ -16,10 +16,61 @@
     padding: 20px;
   }
 
+  h1 {
+    margin-bottom: 10px;
+  }
+
+  /* --- CONTROLS SECTION --- */
+  .controls-container {
+    background: #1f1f1f;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+    border: 1px solid #444;
+  }
+
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  select, button {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background: #333;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  select:hover, button:hover {
+    background: #444;
+    border-color: darkorange;
+  }
+
+  button.reset-btn {
+    background: #d32f2f;
+    border-color: #b71c1c;
+  }
+  button.reset-btn:hover {
+    background: #f44336;
+  }
+
+  label {
+    font-weight: bold;
+    color: #ccc;
+  }
+
   #creator-table {
-    width: 95%;
+    width: 100%;
     margin: auto;
-    height: 85vh;
+    height: 80vh;
   }
 
   /* Thumbnail in the table */
@@ -47,7 +98,7 @@
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     z-index: 99999;
     border-radius: 8px;
-    pointer-events: none; /* Mouse clicks pass through */
+    pointer-events: none; 
   }
 
   /* Custom header color */
@@ -81,6 +132,36 @@
 <body>
 
 <h1>Kemono Fursuit Makers</h1>
+
+<div class="controls-container">
+  <div class="control-group">
+    <label>Sort By:</label>
+    <select id="sort-field">
+      <option value="rank">Rank (Default)</option>
+      <option value="price">Price</option>
+      <option value="portfolio">Portfolio Size</option>
+      <option value="followers">Followers</option>
+      <option value="acctAge">Account Age</option>
+      <option value="partials">Partials Count</option>
+      <option value="fursuits">Fursuits Count</option>
+    </select>
+  </div>
+
+  <div class="control-group">
+    <label>Order:</label>
+    <select id="sort-dir">
+      <option value="asc">Low to High (Ascending)</option>
+      <option value="desc">High to Low (Descending)</option>
+    </select>
+  </div>
+
+  <button id="apply-sort">Apply Sort</button>
+  <button id="reset-sort" class="reset-btn">Reset to Default</button>
+  
+  <div style="margin-left: auto; font-size: 0.9em; color: #aaa;">
+    *Tip: Hold <b>Shift</b> and click column headers to multi-sort!
+  </div>
+</div>
 
 <div id="image-tooltip"></div>
 
@@ -154,6 +235,9 @@ function getGradientColor(value, min, max, lowIsGreen=false){
     return `rgb(${r},${g},0)`;
 }
 
+// Global variable for the table instance
+let table;
+
 Papa.parse(csvUrl, {
     download: true,
     header: true,
@@ -203,13 +287,16 @@ Papa.parse(csvUrl, {
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
 
-        new Tabulator("#creator-table", {
+        table = new Tabulator("#creator-table", {
             data: data,
             layout: "fitData",
             movableColumns: true,
             resizableColumns: true,
             placeholder:"No Data Available",
-            height:"85vh",
+            height:"80vh", // Reduced slightly to fit controls
+            initialSort:[
+                {column:"rank", dir:"asc"} // Default sort on load
+            ],
             columns: [
                 {title:"Rank", field:"rank", width:80, hozAlign:"center"},
                 {title:"Maker", field:"maker"},
@@ -229,7 +316,6 @@ Papa.parse(csvUrl, {
                 
                 {title:"Maker Type", field:"makerType"},
                 
-                // CHANGED: Added target:"_blank" to formatterParams
                 {
                     title:"Link", 
                     field:"link", 
@@ -237,7 +323,7 @@ Papa.parse(csvUrl, {
                     formatterParams:{
                         labelField:"link", 
                         urlField:"link", 
-                        target:"_blank" // This opens in a new tab
+                        target:"_blank"
                     }
                 },
                 
@@ -254,7 +340,6 @@ Papa.parse(csvUrl, {
                     cellMouseMove:function(e, cell){ moveTooltip(e); }
                 },
                 
-                // CHANGED: Added headerFilterPlaceholder
                 {
                     title:"Specialty", 
                     field:"specialty", 
@@ -327,6 +412,27 @@ Papa.parse(csvUrl, {
             },
             reactiveData:true,
             virtualDom:true,
+        });
+
+        // --- SORT EVENT LISTENERS ---
+        
+        // Apply Sort Button
+        document.getElementById("apply-sort").addEventListener("click", function(){
+            const field = document.getElementById("sort-field").value;
+            const dir = document.getElementById("sort-dir").value;
+            
+            // If they chose Price, they probably want Lowest Price (Asc)
+            // If they chose Portfolio, they probably want Largest (Desc)
+            // But we let the user choose via the dropdown.
+            table.setSort(field, dir);
+        });
+
+        // Reset Button
+        document.getElementById("reset-sort").addEventListener("click", function(){
+            document.getElementById("sort-field").value = "rank";
+            document.getElementById("sort-dir").value = "asc";
+            table.setSort("rank", "asc");
+            table.clearHeaderFilter(); // Optional: also clears text filters
         });
     }
 });
