@@ -211,11 +211,20 @@ function parseImageFormula(formula) {
   return match ? match[1] : formula;
 }
 
+// CHANGED: More robust cleaner. Returns NULL for empty strings.
+// This ensures Tabulator treats it as "Missing data" rather than 0 or String.
 function cleanNumber(val) {
+    if (val === null || val === undefined || val === "") return null;
+    
     if (typeof val === 'string') {
-        return parseFloat(val.replace(/,/g, ''));
+        // Remove $ and , and spaces
+        const cleaned = val.replace(/[$,\s]/g, '');
+        if(cleaned === "") return null;
+        
+        const num = parseFloat(cleaned);
+        return isNaN(num) ? null : num;
     }
-    return val;
+    return val; 
 }
 
 function getGradientColor(value, min, max, lowIsGreen=false){
@@ -243,6 +252,7 @@ Papa.parse(csvUrl, {
     header: true,
     dynamicTyping: true,
     complete: function(results) {
+        // CHANGED: applied cleanNumber to price, partials, fursuits, portfolio
         const data = results.data.map(row => ({
             rank: row['Rank'],
             maker: row['Maker'],
@@ -250,7 +260,7 @@ Papa.parse(csvUrl, {
             makerType: row['Maker Type'],
             link: row['Link'],
             preview: row['Preview'],
-            price: row['$ Price'],
+            price: cleanNumber(row['$ Price']),
             shipOrFly: row['$ Ship or Fly'],
             tariff: row['$ Tariff (2025)'],
             ship: row['$ Ship'],
@@ -259,12 +269,12 @@ Papa.parse(csvUrl, {
             aesthetic: row['Aesthetic'],
             status: row['Status'],
             specialty: row['Specialty'],
-            partials: row['Partials'],
-            fursuits: row['Fursuits'],
-            portfolio: row['Portfolio Size'],
+            partials: cleanNumber(row['Partials']),
+            fursuits: cleanNumber(row['Fursuits']),
+            portfolio: cleanNumber(row['Portfolio Size']),
             country: row['Country'],
             followers: cleanNumber(row['Followers']), 
-            acctAge: row['Acct Age'],
+            acctAge: cleanNumber(row['Acct Age']),
             rep: row['Rep'],
             timeline: row['Timeline'],
             acctDate: row['Acct Date'],
@@ -293,9 +303,9 @@ Papa.parse(csvUrl, {
             movableColumns: true,
             resizableColumns: true,
             placeholder:"No Data Available",
-            height:"80vh", // Reduced slightly to fit controls
+            height:"80vh",
             initialSort:[
-                {column:"rank", dir:"asc"} // Default sort on load
+                {column:"rank", dir:"asc"} 
             ],
             columns: [
                 {title:"Rank", field:"rank", width:80, hozAlign:"center"},
@@ -347,55 +357,100 @@ Papa.parse(csvUrl, {
                     headerFilterPlaceholder:"Filter on specialty here..."
                 },
                 
-                {title:"$ Price", field:"price", hozAlign:"right", formatter:function(cell){
-                    const val = cell.getValue();
-                    if(val === null || val==="") return "";
-                    const c = getGradientColor(val,colMinMax['price'].min,colMinMax['price'].max,true);
-                    cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color="#fff";
-                    return val;
-                }},
-                {title:"Partials", field:"partials", hozAlign:"right", formatter:function(cell){
-                    const val = cell.getValue();
-                    if(val === null || val==="") return "";
-                    const c = getGradientColor(val,colMinMax['partials'].min,colMinMax['partials'].max,false);
-                    cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color="#fff";
-                    return val;
-                }},
-                {title:"Fursuits", field:"fursuits", hozAlign:"right", formatter:function(cell){
-                    const val = cell.getValue();
-                    if(val === null || val==="") return "";
-                    const c = getGradientColor(val,colMinMax['fursuits'].min,colMinMax['fursuits'].max,false);
-                    cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color="#fff";
-                    return val;
-                }},
-                {title:"Portfolio Size", field:"portfolio", hozAlign:"right", formatter:function(cell){
-                    const val = cell.getValue();
-                    if(val === null || val==="") return "";
-                    const c = getGradientColor(val,colMinMax['portfolio'].min,colMinMax['portfolio'].max,false);
-                    cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color="#fff";
-                    return val;
-                }},
-                {title:"Followers", field:"followers", hozAlign:"right", formatter:function(cell){
-                    const val = cell.getValue();
-                    if(val === null || val==="") return "";
-                    const displayVal = val.toLocaleString(); 
-                    const c = getGradientColor(val,colMinMax['followers'].min,colMinMax['followers'].max,false);
-                    cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color="#fff";
-                    return displayVal;
-                }},
-                {title:"Acct Age", field:"acctAge", hozAlign:"right", formatter:function(cell){
-                    const val = cell.getValue();
-                    if(val === null || val==="") return "";
-                    const c = getGradientColor(val,colMinMax['acctAge'].min,colMinMax['acctAge'].max,false);
-                    cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color="#fff";
-                    return val;
-                }},
+                // CHANGED: Added sorter:"number" and alignEmptyValues:"bottom"
+                {
+                    title:"$ Price", 
+                    field:"price", 
+                    hozAlign:"right", 
+                    sorter:"number",
+                    sorterParams:{
+                        alignEmptyValues:"bottom"
+                    },
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(val === null || val==="") return "N/A"; // Display N/A if desired, or "" for blank
+                        const c = getGradientColor(val,colMinMax['price'].min,colMinMax['price'].max,true);
+                        cell.getElement().style.backgroundColor = c;
+                        cell.getElement().style.color="#fff";
+                        return val;
+                    }
+                },
+                {
+                    title:"Partials", 
+                    field:"partials", 
+                    hozAlign:"right",
+                    sorter:"number",
+                    sorterParams:{ alignEmptyValues:"bottom" },
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(val === null || val==="") return "";
+                        const c = getGradientColor(val,colMinMax['partials'].min,colMinMax['partials'].max,false);
+                        cell.getElement().style.backgroundColor = c;
+                        cell.getElement().style.color="#fff";
+                        return val;
+                    }
+                },
+                {
+                    title:"Fursuits", 
+                    field:"fursuits", 
+                    hozAlign:"right",
+                    sorter:"number",
+                    sorterParams:{ alignEmptyValues:"bottom" },
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(val === null || val==="") return "";
+                        const c = getGradientColor(val,colMinMax['fursuits'].min,colMinMax['fursuits'].max,false);
+                        cell.getElement().style.backgroundColor = c;
+                        cell.getElement().style.color="#fff";
+                        return val;
+                    }
+                },
+                {
+                    title:"Portfolio Size", 
+                    field:"portfolio", 
+                    hozAlign:"right", 
+                    sorter:"number",
+                    sorterParams:{ alignEmptyValues:"bottom" },
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(val === null || val==="") return "";
+                        const c = getGradientColor(val,colMinMax['portfolio'].min,colMinMax['portfolio'].max,false);
+                        cell.getElement().style.backgroundColor = c;
+                        cell.getElement().style.color="#fff";
+                        return val;
+                    }
+                },
+                {
+                    title:"Followers", 
+                    field:"followers", 
+                    hozAlign:"right", 
+                    sorter:"number",
+                    sorterParams:{ alignEmptyValues:"bottom" },
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(val === null || val==="") return "";
+                        const displayVal = val.toLocaleString(); 
+                        const c = getGradientColor(val,colMinMax['followers'].min,colMinMax['followers'].max,false);
+                        cell.getElement().style.backgroundColor = c;
+                        cell.getElement().style.color="#fff";
+                        return displayVal;
+                    }
+                },
+                {
+                    title:"Acct Age", 
+                    field:"acctAge", 
+                    hozAlign:"right",
+                    sorter:"number",
+                    sorterParams:{ alignEmptyValues:"bottom" }, 
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(val === null || val==="") return "";
+                        const c = getGradientColor(val,colMinMax['acctAge'].min,colMinMax['acctAge'].max,false);
+                        cell.getElement().style.backgroundColor = c;
+                        cell.getElement().style.color="#fff";
+                        return val;
+                    }
+                },
                 {title:"Status", field:"status"},
                 {title:"Aesthetic", field:"aesthetic"},
                 {title:"Timeline", field:"timeline"},
@@ -416,23 +471,17 @@ Papa.parse(csvUrl, {
 
         // --- SORT EVENT LISTENERS ---
         
-        // Apply Sort Button
         document.getElementById("apply-sort").addEventListener("click", function(){
             const field = document.getElementById("sort-field").value;
             const dir = document.getElementById("sort-dir").value;
-            
-            // If they chose Price, they probably want Lowest Price (Asc)
-            // If they chose Portfolio, they probably want Largest (Desc)
-            // But we let the user choose via the dropdown.
             table.setSort(field, dir);
         });
 
-        // Reset Button
         document.getElementById("reset-sort").addEventListener("click", function(){
             document.getElementById("sort-field").value = "rank";
             document.getElementById("sort-dir").value = "asc";
             table.setSort("rank", "asc");
-            table.clearHeaderFilter(); // Optional: also clears text filters
+            table.clearHeaderFilter(); 
         });
     }
 });
