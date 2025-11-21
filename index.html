@@ -22,7 +22,6 @@
     height: 85vh;
   }
 
-  /* Floating hover preview */
   #logo-hover {
     position: absolute;
     display: none;
@@ -36,12 +35,10 @@
     background-position: center;
   }
 
-  /* Custom header color */
   .tabulator .tabulator-header {
     background-color: #1f1f1f !important;
   }
 
-  /* URL styling */
   a {
     color: darkorange;
     text-decoration: none;
@@ -49,7 +46,6 @@
   a:hover {
     color: orange;
   }
-
 </style>
 </head>
 <body>
@@ -58,39 +54,37 @@
 <div id="creator-table"></div>
 <div id="logo-hover"></div>
 
-<!-- Tabulator JS -->
 <script src="https://unpkg.com/tabulator-tables@5.6.0/dist/js/tabulator.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// Function to get gradient color for a single column independently
 function computeGradientColor(value, min, max, reverse=false){
+    if(value == null || value === "") return null; // Do not apply gradient to blank cells
     const ratio = (value - min) / (max - min);
     let r,g,b;
     if(ratio <= 0.5){
-        // dark row to green
         const t = ratio / 0.5;
         r = Math.round(46*(1-t) + 46*t);
         g = Math.round(46*(1-t) + 111*t);
         b = Math.round(46*(1-t) + 64*t);
     } else {
-        // green to maroon
         const t = (ratio-0.5)/0.5;
         r = Math.round(46*(1-t) + 179*t);
         g = Math.round(111*(1-t) + 27*t);
         b = Math.round(64*(1-t) + 27*t);
     }
     if(reverse){
-        r = 255-r;
-        g = 255-g;
-        b = 255-b;
+        // Flip ratio for columns where high = green
+        r = 255 - r;
+        g = 255 - g;
+        b = 255 - b;
     }
     return `rgb(${r},${g},${b})`;
 }
 
-// Floating hover for logos
+// Hover for logos
 const hoverDiv = document.getElementById('logo-hover');
 function attachHover(el, url){
     el.addEventListener('mouseenter', e=>{
@@ -130,7 +124,7 @@ Papa.parse(csvUrl, {
             specialty: row['Specialty'],
         }));
 
-        // Calculate min/max per column independently
+        // Calculate independent min/max for each gradient column
         const gradientColumns = ['price','partials','fursuits','portfolio','acctAge'];
         const colMinMax = {};
         gradientColumns.forEach(col=>{
@@ -146,10 +140,11 @@ Papa.parse(csvUrl, {
             height: "85vh",
             placeholder: "No Data Available",
             columns: [
-                {title:"Rank", field:"rank", width:60, hozAlign:"center", headerFilter:false},
-                {title:"Maker", field:"maker", headerFilter:false},
+                {title:"Rank", field:"rank", width:60, hozAlign:"center"},
+                {title:"Maker", field:"maker"},
                 {title:"Logo", field:"logo", formatter:function(cell){
                     const val = cell.getValue();
+                    if(!val) return "";
                     const img = document.createElement('img');
                     img.src = val;
                     img.style.height = '30px';
@@ -158,14 +153,13 @@ Papa.parse(csvUrl, {
                     img.style.margin = '0 auto';
                     attachHover(img, val);
                     return img;
-                }, headerFilter:false, hozAlign:"center", width:60},
+                }, hozAlign:"center", width:60},
                 {title:"Maker Type", field:"makerType"},
-                {title:"Link", field:"link", formatter:"link", formatterParams:{labelField:"link", urlField:"link"}, headerFilter:false},
-                {title:"Preview", field:"preview", headerFilter:false, hozAlign:"center"},
+                {title:"Link", field:"link", formatter:"link", formatterParams:{labelField:"link", urlField:"link"}},
                 {title:"Specialty", field:"specialty", headerFilter:"input"},
-                // Gradient Columns
                 {title:"$ Price", field:"price", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
+                    if(val == null || val === "") return "";
                     const c = computeGradientColor(val, colMinMax['price'].min, colMinMax['price'].max);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
@@ -173,39 +167,43 @@ Papa.parse(csvUrl, {
                 }},
                 {title:"Partials", field:"partials", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = computeGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max);
+                    if(val == null || val === "") return "";
+                    const c = computeGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max, true);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
                 }},
                 {title:"Fursuits", field:"fursuits", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = computeGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max);
+                    if(val == null || val === "") return "";
+                    const c = computeGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, true);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
                 }},
                 {title:"Portfolio Size", field:"portfolio", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = computeGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max);
+                    if(val == null || val === "") return "";
+                    const c = computeGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, true);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
                 }},
                 {title:"Acct Age", field:"acctAge", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = computeGradientColor(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max);
+                    if(val == null || val === "") return "";
+                    const c = computeGradientColor(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max, true);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
                 }},
-                // Remaining standard columns
                 {title:"Status", field:"status"},
                 {title:"Aesthetic", field:"aesthetic"}
             ],
             rowFormatter:function(row){
                 const el = row.getElement();
                 el.style.borderBottom = "1px solid #fff";
+                el.style.borderRight = "1px solid #fff";
                 if(row.getIndex() %2 ===0){
                     el.style.backgroundColor = "#383838";
                 } else {
@@ -216,6 +214,5 @@ Papa.parse(csvUrl, {
     }
 });
 </script>
-
 </body>
 </html>
