@@ -60,7 +60,7 @@
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// Function to attach hover zoom to logo images
+// Logo hover helper
 const hoverDiv = document.getElementById('logo-hover');
 function attachHover(el, url){
     el.addEventListener('mouseenter', e=>{
@@ -79,10 +79,11 @@ function attachHover(el, url){
 }
 
 // Gradient helper
-function getGradientColor(value, min, max){
+function getGradientColor(value, min, max, reverse=false){
     if(value == null || value === "") return null;
-    const ratio = (value - min) / (max - min);
-    const r = Math.round(179 * ratio + 46 * (1 - ratio)); // maroon to dark row green
+    let ratio = (value - min) / (max - min);
+    if(reverse) ratio = 1 - ratio; // invert for specific columns
+    const r = Math.round(179 * ratio + 46 * (1 - ratio)); // maroon to green
     const g = Math.round(27 * ratio + 111 * (1 - ratio));
     const b = Math.round(27 * ratio + 64 * (1 - ratio));
     return `rgb(${r},${g},${b})`;
@@ -144,7 +145,7 @@ Papa.parse(csvUrl, {
                 {title:"$ Price", field:"price", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['price'].min, colMinMax['price'].max);
+                    const c = getGradientColor(val, colMinMax['price'].min, colMinMax['price'].max, false); // normal
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
@@ -152,7 +153,7 @@ Papa.parse(csvUrl, {
                 {title:"Partials", field:"partials", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max);
+                    const c = getGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max, false); // lowest=red, highest=green
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
@@ -160,7 +161,7 @@ Papa.parse(csvUrl, {
                 {title:"Fursuits", field:"fursuits", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max);
+                    const c = getGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, false); // lowest=red, highest=green
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
@@ -168,7 +169,7 @@ Papa.parse(csvUrl, {
                 {title:"Portfolio Size", field:"portfolio", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max);
+                    const c = getGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, false); // lowest=red, highest=green
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
@@ -176,7 +177,7 @@ Papa.parse(csvUrl, {
                 {title:"Acct Age", field:"acctAge", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max);
+                    const c = getGradientColor(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max, false); // normal
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
