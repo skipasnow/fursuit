@@ -52,13 +52,6 @@
     border-color: darkorange;
   }
 
-  button.action-btn {
-    background: #e65100;
-    border-color: #ff9800;
-    font-weight: bold;
-  }
-  button.action-btn:hover { background: #ef6c00; }
-
   button.reset-btn {
     background: #c62828;
     border-color: #e53935;
@@ -70,15 +63,12 @@
     color: #ccc;
   }
 
-  /* Restore pointer cursor since headerSort is disabled */
-  .tabulator-col-content {
-    cursor: pointer !important;
-  }
-
   #creator-table {
     width: 100%;
     margin: auto;
-    height: 80vh;
+    /* Adjusted height to ensure horizontal scrollbar is visible on most screens */
+    height: 75vh; 
+    border: 1px solid #444;
   }
 
   .hover-preview {
@@ -122,7 +112,7 @@
 
 <div class="controls-container">
   <div class="control-group">
-    <label>Sort By:</label>
+    <label>Quick Sort:</label>
     <select id="sort-field">
       <option value="rank">Rank (Default)</option>
       <option value="price">Price</option>
@@ -142,11 +132,10 @@
     </select>
   </div>
 
-  <button id="apply-sort" class="action-btn">Apply / Execute Sort</button>
-  <button id="reset-sort" class="reset-btn">Reset Default</button>
+  <button id="reset-sort" class="reset-btn">Reset Sort</button>
   
   <div style="margin-left: auto; font-size: 0.9em; color: #aaa; width: 100%; margin-top:10px;">
-    <b>How to Multi-Sort:</b> Hold <b>Shift</b> and click headers to build a queue. The table will NOT update yet. Click <b>"Apply Sort"</b> when ready.
+    *Hold <b>Shift</b> and click column headers to sort by multiple columns at once.
   </div>
 </div>
 
@@ -213,80 +202,13 @@ function getGradientColor(value, min, max, lowIsGreen=false){
     return `rgb(${r},${g},0)`;
 }
 
-// --- STATE MANAGEMENT ---
+// --- MAIN SCRIPT ---
 let table;
-let currentSorts = []; 
-
-// Global Column Definitions (Source of Truth)
-// This allows us to always know the "Original Title" without guessing.
-// NOTE: 'headerClick' is attached to this config, but processed later.
-let baseColumnDefinitions = [];
-
-// We define the updateVisuals function BEFORE we init the table
-function updateHeaderVisuals() {
-    // Loop through every active column in the table
-    table.getColumns().forEach(col => {
-        const field = col.getField();
-        
-        // Find the original base definition for this field to get the clean title
-        const baseDef = baseColumnDefinitions.find(d => d.field === field);
-        if(!baseDef) return; // Skip if not found (prevents undefined)
-
-        const originalTitle = baseDef.title;
-        
-        // Check if this field is in our active sort stack
-        const activeSort = currentSorts.find(s => s.column === field);
-        const sortIndex = currentSorts.findIndex(s => s.column === field);
-
-        if (activeSort) {
-            const arrow = activeSort.dir === "asc" ? "▲" : "▼";
-            const number = currentSorts.length > 1 ? `<small>(${sortIndex + 1})</small>` : "";
-            col.updateDefinition({ title: `${originalTitle} ${arrow} ${number}` });
-        } else {
-            // Reset to original title
-            col.updateDefinition({ title: originalTitle });
-        }
-    });
-}
-
-function handleHeaderClick(e, column) {
-    const field = column.getField();
-    // Columns to ignore sorting on
-    const noSortCols = ['logo','link','preview','makerType','status','aesthetic','timeline','imperfections'];
-    if(noSortCols.includes(field)) return;
-
-    if (e.shiftKey) {
-        // Deferred Sort Mode
-        const existingIndex = currentSorts.findIndex(s => s.column === field);
-        
-        if (existingIndex > -1) {
-            // Toggle direction
-            currentSorts[existingIndex].dir = currentSorts[existingIndex].dir === "asc" ? "desc" : "asc";
-        } else {
-            // Add to stack
-            currentSorts.push({ column: field, dir: "asc" });
-        }
-        updateHeaderVisuals();
-    } else {
-        // Instant Sort Mode
-        const existingIndex = currentSorts.findIndex(s => s.column === field);
-        let newDir = "asc";
-        if(currentSorts.length === 1 && currentSorts[0].column === field) {
-            newDir = currentSorts[0].dir === "asc" ? "desc" : "asc";
-        }
-        currentSorts = [{ column: field, dir: newDir }];
-        updateHeaderVisuals();
-        table.setSort(currentSorts);
-        
-        // Sync dropdowns
-        document.getElementById("sort-field").value = field;
-        document.getElementById("sort-dir").value = newDir;
-    }
-}
 
 Papa.parse(csvUrl, {
     download: true, header: true, dynamicTyping: true,
     complete: function(results) {
+        // Map all requested columns from CSV
         const data = results.data.map(row => ({
             rank: cleanNumber(row['Rank']),
             maker: row['Maker'],
@@ -295,11 +217,14 @@ Papa.parse(csvUrl, {
             link: row['Link'],
             preview: row['Preview'],
             price: cleanNumber(row['$ Price']),
-            shipOrFly: row['$ Ship or Fly'],
-            tariff: row['$ Tariff (2025)'],
-            ship: row['$ Ship'],
-            airTravel: row['$ Air Travel'],
-            travelSurplus: row['$ Travel Surplus'],
+            
+            // NEW COLUMNS MAPPED HERE
+            shipOrFly: cleanNumber(row['$ Ship or Fly']),
+            tariff: cleanNumber(row['$ Tariff (2025)']),
+            ship: cleanNumber(row['$ Ship']),
+            airTravel: cleanNumber(row['$ Air Travel']),
+            travelSurplus: cleanNumber(row['$ Travel Surplus']),
+            
             aesthetic: row['Aesthetic'],
             status: row['Status'],
             specialty: row['Specialty'],
@@ -309,18 +234,7 @@ Papa.parse(csvUrl, {
             country: row['Country'],
             followers: cleanNumber(row['Followers']), 
             acctAge: cleanNumber(row['Acct Age']),
-            rep: row['Rep'],
-            timeline: row['Timeline'],
-            acctDate: row['Acct Date'],
-            rankScore: row['Rank Score'],
-            imperfections: row['Imperfections'],
-            worksPerYear: row['Works Per Year'],
-            worksRank: row['Works Rank'],
-            followersRank: row['Followers Rank'],
-            acctDateRank: row['Acct Date Rank'],
-            partialsRank: row['Partials Rank'],
-            fursuitsRank: row['Fursuits Rank'],
-            priceRank: row['Price Rank']
+            acctDate: row['Acct Date'], // Keep as string for display
         }));
 
         const colMinMax = {};
@@ -330,129 +244,132 @@ Papa.parse(csvUrl, {
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
 
-        // Define the columns config ONCE here.
-        // We will use this variable to reset titles later.
-        baseColumnDefinitions = [
-            { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", headerClick:handleHeaderClick },
-            { title:"Maker", field:"maker", headerClick:handleHeaderClick },
-            {
-                title:"Logo", field:"logo", hozAlign:"center",
-                formatter:function(cell){
-                    const val = cell.getValue();
-                    return val ? `<span class="hover-preview" style="background-image:url('${val}');"></span>` : "";
-                }, 
-                cellMouseEnter:function(e, cell){ showTooltip(e, cell.getValue()); },
-                cellMouseLeave:function(e, cell){ hideTooltip(); },
-                cellMouseMove:function(e, cell){ moveTooltip(e); }
-            },
-            { title:"Maker Type", field:"makerType" },
-            {
-                title:"Link", field:"link", formatter:"link", 
-                formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
-            },
-            {
-                title:"Preview", field:"preview", hozAlign:"center",
-                formatter:function(cell){
-                    const val = cell.getValue();
-                    return val ? `<span class="hover-preview" style="background-image:url('${val}');"></span>` : "";
-                }, 
-                cellMouseEnter:function(e, cell){ showTooltip(e, cell.getValue()); },
-                cellMouseLeave:function(e, cell){ hideTooltip(); },
-                cellMouseMove:function(e, cell){ moveTooltip(e); }
-            },
-            {
-                title:"Specialty", field:"specialty", headerClick:handleHeaderClick,
-                headerFilter:"input", headerFilterPlaceholder:"Filter on specialty here..."
-            },
-            {
-                title:"$ Price", field:"price", hozAlign:"right", sorter:"number", headerClick:handleHeaderClick,
-                sorterParams:{ alignEmptyValues:"bottom" },
-                formatter:function(cell){
-                    const val = cell.getValue();
-                    if(val === null) return "N/A"; 
-                    const c = getGradientColor(val,colMinMax['price'].min,colMinMax['price'].max,true);
-                    cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color="#fff";
-                    return val;
-                }
-            },
-            {
-                title:"Partials", field:"partials", hozAlign:"right", sorter:"number", headerClick:handleHeaderClick,
-                sorterParams:{ alignEmptyValues:"bottom" },
-                formatter:function(cell){
-                    const val = cell.getValue();
-                    if(val === null) return "";
-                    const c = getGradientColor(val,colMinMax['partials'].min,colMinMax['partials'].max,false);
-                    cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color="#fff";
-                    return val;
-                }
-            },
-            {
-                title:"Fursuits", field:"fursuits", hozAlign:"right", sorter:"number", headerClick:handleHeaderClick,
-                sorterParams:{ alignEmptyValues:"bottom" },
-                formatter:function(cell){
-                    const val = cell.getValue();
-                    if(val === null) return "";
-                    const c = getGradientColor(val,colMinMax['fursuits'].min,colMinMax['fursuits'].max,false);
-                    cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color="#fff";
-                    return val;
-                }
-            },
-            {
-                title:"Portfolio Size", field:"portfolio", hozAlign:"right", sorter:"number", headerClick:handleHeaderClick,
-                sorterParams:{ alignEmptyValues:"bottom" },
-                formatter:function(cell){
-                    const val = cell.getValue();
-                    if(val === null) return "";
-                    const c = getGradientColor(val,colMinMax['portfolio'].min,colMinMax['portfolio'].max,false);
-                    cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color="#fff";
-                    return val;
-                }
-            },
-            {
-                title:"Followers", field:"followers", hozAlign:"right", sorter:"number", headerClick:handleHeaderClick,
-                sorterParams:{ alignEmptyValues:"bottom" },
-                formatter:function(cell){
-                    const val = cell.getValue();
-                    if(val === null) return "";
-                    const displayVal = val.toLocaleString(); 
-                    const c = getGradientColor(val,colMinMax['followers'].min,colMinMax['followers'].max,false);
-                    cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color="#fff";
-                    return displayVal;
-                }
-            },
-            {
-                title:"Acct Age", field:"acctAge", hozAlign:"right", sorter:"number", headerClick:handleHeaderClick,
-                sorterParams:{ alignEmptyValues:"bottom" }, 
-                formatter:function(cell){
-                    const val = cell.getValue();
-                    if(val === null) return "";
-                    const c = getGradientColor(val,colMinMax['acctAge'].min,colMinMax['acctAge'].max,false);
-                    cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color="#fff";
-                    return val;
-                }
-            },
-            {title:"Status", field:"status"},
-            {title:"Aesthetic", field:"aesthetic"},
-            {title:"Timeline", field:"timeline"},
-            {title:"Rank Score", field:"rankScore"},
-            {title:"Imperfections", field:"imperfections"}
-        ];
-
         table = new Tabulator("#creator-table", {
             data: data,
             layout: "fitData",
             movableColumns: true,
             resizableColumns: true,
             placeholder:"No Data Available",
-            height:"80vh",
-            headerSort: false, // Disable built-in sort
-            columns: baseColumnDefinitions, // Use our source of truth
+            height:"75vh", // Ensuring scrollbar visibility
+            initialSort:[ {column:"rank", dir:"asc"} ],
+            
+            columns: [
+                { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number" },
+                { title:"Maker", field:"maker" },
+                {
+                    title:"Logo", field:"logo", hozAlign:"center",
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        return val ? `<span class="hover-preview" style="background-image:url('${val}');"></span>` : "";
+                    }, 
+                    cellMouseEnter:function(e, cell){ showTooltip(e, cell.getValue()); },
+                    cellMouseLeave:function(e, cell){ hideTooltip(); },
+                    cellMouseMove:function(e, cell){ moveTooltip(e); }
+                },
+                { title:"Maker Type", field:"makerType" },
+                {
+                    title:"Link", field:"link", formatter:"link", 
+                    formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
+                },
+                {
+                    title:"Preview", field:"preview", hozAlign:"center",
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        return val ? `<span class="hover-preview" style="background-image:url('${val}');"></span>` : "";
+                    }, 
+                    cellMouseEnter:function(e, cell){ showTooltip(e, cell.getValue()); },
+                    cellMouseLeave:function(e, cell){ hideTooltip(); },
+                    cellMouseMove:function(e, cell){ moveTooltip(e); }
+                },
+                {
+                    title:"$ Price", field:"price", hozAlign:"right", sorter:"number",
+                    sorterParams:{ alignEmptyValues:"bottom" },
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(val === null) return "N/A"; 
+                        const c = getGradientColor(val,colMinMax['price'].min,colMinMax['price'].max,true);
+                        cell.getElement().style.backgroundColor = c;
+                        cell.getElement().style.color="#fff";
+                        return val;
+                    }
+                },
+                // NEW COLUMNS
+                { title:"$ Ship or Fly", field:"shipOrFly", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
+                { title:"$ Tariff (2025)", field:"tariff", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
+                { title:"$ Ship", field:"ship", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
+                { title:"$ Air Travel", field:"airTravel", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
+                { title:"$ Travel Surplus", field:"travelSurplus", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
+                
+                { title:"Aesthetic", field:"aesthetic" },
+                { title:"Status", field:"status" },
+                {
+                    title:"Specialty", field:"specialty",
+                    headerFilter:"input", headerFilterPlaceholder:"Filter on specialty here..."
+                },
+                {
+                    title:"Partials", field:"partials", hozAlign:"right", sorter:"number",
+                    sorterParams:{ alignEmptyValues:"bottom" },
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(val === null) return "";
+                        const c = getGradientColor(val,colMinMax['partials'].min,colMinMax['partials'].max,false);
+                        cell.getElement().style.backgroundColor = c;
+                        cell.getElement().style.color="#fff";
+                        return val;
+                    }
+                },
+                {
+                    title:"Fursuits", field:"fursuits", hozAlign:"right", sorter:"number",
+                    sorterParams:{ alignEmptyValues:"bottom" },
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(val === null) return "";
+                        const c = getGradientColor(val,colMinMax['fursuits'].min,colMinMax['fursuits'].max,false);
+                        cell.getElement().style.backgroundColor = c;
+                        cell.getElement().style.color="#fff";
+                        return val;
+                    }
+                },
+                {
+                    title:"Portfolio Size", field:"portfolio", hozAlign:"right", sorter:"number",
+                    sorterParams:{ alignEmptyValues:"bottom" },
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(val === null) return "";
+                        const c = getGradientColor(val,colMinMax['portfolio'].min,colMinMax['portfolio'].max,false);
+                        cell.getElement().style.backgroundColor = c;
+                        cell.getElement().style.color="#fff";
+                        return val;
+                    }
+                },
+                { title:"Country", field:"country" },
+                {
+                    title:"Followers", field:"followers", hozAlign:"right", sorter:"number",
+                    sorterParams:{ alignEmptyValues:"bottom" },
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(val === null) return "";
+                        const displayVal = val.toLocaleString(); 
+                        const c = getGradientColor(val,colMinMax['followers'].min,colMinMax['followers'].max,false);
+                        cell.getElement().style.backgroundColor = c;
+                        cell.getElement().style.color="#fff";
+                        return displayVal;
+                    }
+                },
+                {
+                    title:"Acct Age", field:"acctAge", hozAlign:"right", sorter:"number",
+                    sorterParams:{ alignEmptyValues:"bottom" }, 
+                    formatter:function(cell){
+                        const val = cell.getValue();
+                        if(val === null) return "";
+                        const c = getGradientColor(val,colMinMax['acctAge'].min,colMinMax['acctAge'].max,false);
+                        cell.getElement().style.backgroundColor = c;
+                        cell.getElement().style.color="#fff";
+                        return val;
+                    }
+                },
+                { title:"Acct Date", field:"acctDate" }
+            ],
             rowFormatter:function(row){
                 const el = row.getElement();
                 if(row.getIndex()%2===0) el.style.backgroundColor="#383838";
@@ -461,20 +378,10 @@ Papa.parse(csvUrl, {
             reactiveData:true, virtualDom:true
         });
 
-        // Init default Sort
-        currentSorts = [{ column: "rank", dir: "asc" }];
-        updateHeaderVisuals();
-        table.setSort(currentSorts);
-
         // --- EVENT LISTENERS ---
-        document.getElementById("apply-sort").addEventListener("click", function(){
-            table.setSort(currentSorts);
-        });
-
         document.getElementById("reset-sort").addEventListener("click", function(){
-            currentSorts = [{ column: "rank", dir: "asc" }];
-            updateHeaderVisuals();
-            table.setSort(currentSorts);
+            table.clearSort();
+            table.setSort("rank", "asc");
             table.clearHeaderFilter(); 
             document.getElementById("sort-field").value = "rank";
             document.getElementById("sort-dir").value = "asc";
@@ -483,17 +390,13 @@ Papa.parse(csvUrl, {
         document.getElementById("sort-field").addEventListener("change", function(){
              const field = this.value;
              const dir = document.getElementById("sort-dir").value;
-             currentSorts = [{ column: field, dir: dir }];
-             updateHeaderVisuals();
-             table.setSort(currentSorts);
+             table.setSort(field, dir);
         });
 
         document.getElementById("sort-dir").addEventListener("change", function(){
              const field = document.getElementById("sort-field").value;
              const dir = this.value;
-             currentSorts = [{ column: field, dir: dir }];
-             updateHeaderVisuals();
-             table.setSort(currentSorts);
+             table.setSort(field, dir);
         });
     }
 });
