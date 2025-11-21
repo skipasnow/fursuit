@@ -17,7 +17,7 @@
   }
 
   #creator-table {
-    width: 95%;
+    width: 98%;
     margin: auto;
   }
 
@@ -26,13 +26,14 @@
     display: inline-block;
   }
 
+  /* Hover zoom for logos */
   .hover-preview::after {
     content: '';
     position: absolute;
     top: 0;
     left: 100%;
-    width: 200px;
-    height: 200px;
+    width: 150px;   /* 5x original 30px */
+    height: 150px;
     background-size: cover;
     border: 2px solid #fff;
     z-index: 100;
@@ -111,13 +112,6 @@ function getGradientColor(value, min, max, reverse=false){
     return `rgb(${r},${g},${b})`;
 }
 
-// Dynamic text color
-function getTextColor(value,min,max){
-    if(value==null||isNaN(value)) return "#fff";
-    const ratio = (value-min)/(max-min);
-    return (ratio>0.45 && ratio<0.55) ? "#2e2e2e" : "#000";
-}
-
 Papa.parse(csvUrl,{
     download:true,
     header:true,
@@ -175,9 +169,7 @@ Papa.parse(csvUrl,{
             columns:[
                 {title:"Rank", field:"rank", width:60, hozAlign:"center"},
                 {title:"Maker", field:"maker"},
-                {title:"Logo", field:"logo", formatter:"image", hozAlign:"center", cellClick:function(e,cell){
-                    // optional hover zoom
-                }, cellMouseOver:function(e,cell){
+                {title:"Logo", field:"logo", formatter:"image", hozAlign:"center", cellMouseOver:function(e,cell){
                     e.target.style.maxWidth = cell.getWidth() + "px";
                     e.target.style.maxHeight = cell.getHeight() + "px";
                 }},
@@ -192,42 +184,42 @@ Papa.parse(csvUrl,{
                     const val = cell.getValue();
                     const c = getGradientColor(val,colMinMax['price'].min,colMinMax['price'].max);
                     cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color = getTextColor(val,colMinMax['price'].min,colMinMax['price'].max);
+                    cell.getElement().style.color = "#fff";
                     return val;
                 }},
                 {title:"Partials", field:"partials", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
                     const c = getGradientColor(val,colMinMax['partials'].min,colMinMax['partials'].max,true);
                     cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color = getTextColor(val,colMinMax['partials'].min,colMinMax['partials'].max);
+                    cell.getElement().style.color = "#fff";
                     return val;
                 }},
                 {title:"Fursuits", field:"fursuits", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
                     const c = getGradientColor(val,colMinMax['fursuits'].min,colMinMax['fursuits'].max,true);
                     cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color = getTextColor(val,colMinMax['fursuits'].min,colMinMax['fursuits'].max);
+                    cell.getElement().style.color = "#fff";
                     return val;
                 }},
                 {title:"Portfolio Size", field:"portfolio", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
                     const c = getGradientColor(val,colMinMax['portfolio'].min,colMinMax['portfolio'].max,true);
                     cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color = getTextColor(val,colMinMax['portfolio'].min,colMinMax['portfolio'].max);
+                    cell.getElement().style.color = "#fff";
                     return val;
                 }},
                 {title:"Followers", field:"followers", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
                     const c = getGradientColor(val,colMinMax['followers'].min,colMinMax['followers'].max,true);
                     cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color = getTextColor(val,colMinMax['followers'].min,colMinMax['followers'].max);
+                    cell.getElement().style.color = "#fff";
                     return val;
                 }},
                 {title:"Acct Age", field:"acctAge", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
                     const c = getGradientColor(val,colMinMax['acctAge'].min,colMinMax['acctAge'].max);
                     cell.getElement().style.backgroundColor = c;
-                    cell.getElement().style.color = getTextColor(val,colMinMax['acctAge'].min,colMinMax['acctAge'].max);
+                    cell.getElement().style.color = "#fff";
                     return val;
                 }},
                 {title:"Status", field:"status"},
