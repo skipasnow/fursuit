@@ -82,8 +82,8 @@ function attachHover(el, url){
 function getGradientColor(value, min, max, reverse=false){
     if(value == null || value === "") return null;
     let ratio = (value - min) / (max - min);
-    if(reverse) ratio = 1 - ratio; // invert for specific columns
-    const r = Math.round(179 * ratio + 46 * (1 - ratio)); // maroon to green
+    if(reverse) ratio = 1 - ratio;
+    const r = Math.round(179 * ratio + 46 * (1 - ratio)); // maroon to forest green
     const g = Math.round(27 * ratio + 111 * (1 - ratio));
     const b = Math.round(27 * ratio + 64 * (1 - ratio));
     return `rgb(${r},${g},${b})`;
@@ -145,7 +145,7 @@ Papa.parse(csvUrl, {
                 {title:"$ Price", field:"price", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['price'].min, colMinMax['price'].max, false); // normal
+                    const c = getGradientColor(val, colMinMax['price'].min, colMinMax['price'].max, true); // reverse for Price
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
@@ -153,7 +153,7 @@ Papa.parse(csvUrl, {
                 {title:"Partials", field:"partials", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max, false); // lowest=red, highest=green
+                    const c = getGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max, false); // low=red, high=green
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
@@ -161,7 +161,7 @@ Papa.parse(csvUrl, {
                 {title:"Fursuits", field:"fursuits", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, false); // lowest=red, highest=green
+                    const c = getGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, false);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
@@ -169,7 +169,7 @@ Papa.parse(csvUrl, {
                 {title:"Portfolio Size", field:"portfolio", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, false); // lowest=red, highest=green
+                    const c = getGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, false);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
@@ -177,7 +177,7 @@ Papa.parse(csvUrl, {
                 {title:"Acct Age", field:"acctAge", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max, false); // normal
+                    const c = getGradientColor(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max, false); // low=red, high=green
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
