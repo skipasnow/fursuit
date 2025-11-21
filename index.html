@@ -5,24 +5,23 @@
 <title>Kemono Fursuit Makers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Tabulator CSS -->
 <link href="https://unpkg.com/tabulator-tables@5.6.0/dist/css/tabulator_midnight.min.css" rel="stylesheet">
 
 <style>
-  body {
+body {
     background: #2e2e2e;
     color: #fff;
     font-family: sans-serif;
     padding: 20px;
-  }
+}
 
-  #creator-table {
+#creator-table {
     width: 95%;
     margin: auto;
     height: 85vh;
-  }
+}
 
-  #logo-hover {
+#logo-hover {
     position: absolute;
     display: none;
     width: 150px;
@@ -33,19 +32,19 @@
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-  }
+}
 
-  .tabulator .tabulator-header {
+.tabulator .tabulator-header {
     background-color: #1f1f1f !important;
-  }
+}
 
-  a {
+a {
     color: darkorange;
     text-decoration: none;
-  }
-  a:hover {
+}
+a:hover {
     color: orange;
-  }
+}
 </style>
 </head>
 <body>
@@ -60,7 +59,7 @@
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// Logo hover helper
+// Hover helper
 const hoverDiv = document.getElementById('logo-hover');
 function attachHover(el, url){
     el.addEventListener('mouseenter', e=>{
@@ -79,15 +78,18 @@ function attachHover(el, url){
 }
 
 // Gradient helper
-function getGradientColor(value, min, max, reverse=false){
+function getGradientColor(value, min, max, startColor, endColor){
     if(value == null || value === "") return null;
-    let ratio = (value - min) / (max - min);
-    if(reverse) ratio = 1 - ratio;
-    const r = Math.round(179 * ratio + 46 * (1 - ratio)); // maroon to forest green
-    const g = Math.round(27 * ratio + 111 * (1 - ratio));
-    const b = Math.round(27 * ratio + 64 * (1 - ratio));
+    const ratio = (value - min) / (max - min);
+    const r = Math.round(startColor[0]*(1-ratio) + endColor[0]*ratio);
+    const g = Math.round(startColor[1]*(1-ratio) + endColor[1]*ratio);
+    const b = Math.round(startColor[2]*(1-ratio) + endColor[2]*ratio);
     return `rgb(${r},${g},${b})`;
 }
+
+// Colors: maroon -> forest green
+const maroon = [179, 27, 27];
+const forestGreen = [46, 111, 64];
 
 Papa.parse(csvUrl, {
     download: true,
@@ -110,9 +112,9 @@ Papa.parse(csvUrl, {
             aesthetic: row['Aesthetic']
         }));
 
-        // Compute min/max for each gradient column separately
-        const gradientCols = ['price','partials','fursuits','portfolio','acctAge'];
+        // Compute min/max per gradient column
         const colMinMax = {};
+        const gradientCols = ['price','partials','fursuits','portfolio','acctAge'];
         gradientCols.forEach(col=>{
             const vals = data.map(d=>d[col]).filter(v=>v!=null && !isNaN(v));
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
@@ -142,18 +144,20 @@ Papa.parse(csvUrl, {
                 {title:"Maker Type", field:"makerType"},
                 {title:"Link", field:"link", formatter:"link", formatterParams:{labelField:"link", urlField:"link"}},
                 {title:"Specialty", field:"specialty", headerFilter:"input"},
+                // Price column: low=green, high=red
                 {title:"$ Price", field:"price", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['price'].min, colMinMax['price'].max, true); // reverse for Price
+                    const c = getGradientColor(val, colMinMax['price'].min, colMinMax['price'].max, forestGreen, maroon);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
                 }},
+                // Partials, Fursuits, Portfolio, Acct Age: low=red, high=green
                 {title:"Partials", field:"partials", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max, false); // low=red, high=green
+                    const c = getGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max, maroon, forestGreen);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
@@ -161,7 +165,7 @@ Papa.parse(csvUrl, {
                 {title:"Fursuits", field:"fursuits", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, false);
+                    const c = getGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, maroon, forestGreen);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
@@ -169,7 +173,7 @@ Papa.parse(csvUrl, {
                 {title:"Portfolio Size", field:"portfolio", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, false);
+                    const c = getGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, maroon, forestGreen);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
@@ -177,7 +181,7 @@ Papa.parse(csvUrl, {
                 {title:"Acct Age", field:"acctAge", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max, false); // low=red, high=green
+                    const c = getGradientColor(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max, maroon, forestGreen);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
