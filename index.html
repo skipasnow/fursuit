@@ -16,9 +16,7 @@
     padding: 20px;
   }
 
-  h1 {
-    margin-bottom: 10px;
-  }
+  h1 { margin-bottom: 10px; }
 
   /* --- CONTROLS SECTION --- */
   .controls-container {
@@ -54,17 +52,27 @@
     border-color: darkorange;
   }
 
+  button.action-btn {
+    background: #e65100; /* Orange */
+    border-color: #ff9800;
+    font-weight: bold;
+  }
+  button.action-btn:hover { background: #ef6c00; }
+
   button.reset-btn {
-    background: #d32f2f;
-    border-color: #b71c1c;
+    background: #c62828; /* Red */
+    border-color: #e53935;
   }
-  button.reset-btn:hover {
-    background: #f44336;
-  }
+  button.reset-btn:hover { background: #d32f2f; }
 
   label {
     font-weight: bold;
     color: #ccc;
+  }
+
+  /* Because we disabled native headerSort, we need to manually restore the pointer cursor */
+  .tabulator-col-content {
+    cursor: pointer !important;
   }
 
   #creator-table {
@@ -73,7 +81,6 @@
     height: 80vh;
   }
 
-  /* Thumbnail in the table */
   .hover-preview {
     display: inline-block;
     width: 30px;
@@ -86,7 +93,7 @@
 
   /* THE FLOATING TOOLTIP */
   #image-tooltip {
-    display: none; /* Hidden by default */
+    display: none; 
     position: fixed;
     width: 200px;
     height: 200px;
@@ -101,32 +108,12 @@
     pointer-events: none; 
   }
 
-  /* Custom header color */
-  .tabulator .tabulator-header {
-    background-color: #1f1f1f !important;
-  }
-
-  /* URL styling */
-  a {
-    color: darkorange;
-    text-decoration: none;
-  }
-  a:hover {
-    color: orange;
-  }
-
-  /* Row borders */
-  .tabulator .tabulator-row .tabulator-cell {
-    border: 1px solid #444;
-  }
-
-  /* Alternating dark row colors */
-  .tabulator .tabulator-row:nth-child(even) {
-    background-color: #383838;
-  }
-  .tabulator .tabulator-row:nth-child(odd) {
-    background-color: #2e2e2e;
-  }
+  .tabulator .tabulator-header { background-color: #1f1f1f !important; }
+  a { color: darkorange; text-decoration: none; }
+  a:hover { color: orange; }
+  .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; }
+  .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
+  .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
 </style>
 </head>
 <body>
@@ -150,21 +137,20 @@
   <div class="control-group">
     <label>Order:</label>
     <select id="sort-dir">
-      <option value="asc">Low to High (Ascending)</option>
-      <option value="desc">High to Low (Descending)</option>
+      <option value="asc">Low to High (Asc)</option>
+      <option value="desc">High to Low (Desc)</option>
     </select>
   </div>
 
-  <button id="apply-sort">Apply Sort</button>
-  <button id="reset-sort" class="reset-btn">Reset to Default</button>
+  <button id="apply-sort" class="action-btn">Apply / Execute Sort</button>
+  <button id="reset-sort" class="reset-btn">Reset Default</button>
   
-  <div style="margin-left: auto; font-size: 0.9em; color: #aaa;">
-    *Tip: Hold <b>Shift</b> and click column headers to multi-sort!
+  <div style="margin-left: auto; font-size: 0.9em; color: #aaa; width: 100%; margin-top:10px;">
+    <b>How to Multi-Sort:</b> Hold <b>Shift</b> and click headers to build a queue (e.g., "Price" then "Portfolio"). The table will NOT update yet. Click <b>"Apply Sort"</b> when ready.
   </div>
 </div>
 
 <div id="image-tooltip"></div>
-
 <div id="creator-table"></div>
 
 <script src="https://unpkg.com/tabulator-tables@5.6.0/dist/js/tabulator.min.js"></script>
@@ -182,36 +168,25 @@ function showTooltip(e, url) {
     tooltipEl.style.display = "block";
     moveTooltip(e); 
 }
-
-function hideTooltip() {
-    tooltipEl.style.display = "none";
-}
-
+function hideTooltip() { tooltipEl.style.display = "none"; }
 function moveTooltip(e) {
     const tooltipSize = 200; 
     const offset = 15; 
     const windowHeight = window.innerHeight;
-    
     let left = e.clientX + offset;
     let top = e.clientY + offset;
-    
-    if (top + tooltipSize > windowHeight) {
-        top = e.clientY - tooltipSize - offset;
-    }
-
+    if (top + tooltipSize > windowHeight) top = e.clientY - tooltipSize - offset;
     tooltipEl.style.left = left + "px";
     tooltipEl.style.top = top + "px";
 }
 
-// --- DATA PARSING ---
-
+// --- HELPERS ---
 function parseImageFormula(formula) {
   if(!formula) return "";
   const match = formula.match(/=IMAGE\("(.+)"\)/);
   return match ? match[1] : formula;
 }
 
-// Clean number helper
 function cleanNumber(val) {
     if (val === null || val === undefined || val === "") return null;
     if (typeof val === 'string') {
@@ -225,10 +200,8 @@ function cleanNumber(val) {
 
 function getGradientColor(value, min, max, lowIsGreen=false){
     if(value === null || value === undefined || value === "" || isNaN(value)) return "";
-    
     const ratio = (value - min)/(max - min);
     const cappedRatio = Math.min(Math.max(ratio,0),1);
-    
     let r,g;
     if(lowIsGreen){
         r = Math.floor(179 * cappedRatio + 46 * (1-cappedRatio)); 
@@ -240,16 +213,98 @@ function getGradientColor(value, min, max, lowIsGreen=false){
     return `rgb(${r},${g},0)`;
 }
 
-// Global variable for the table instance
+// --- STATE MANAGEMENT ---
 let table;
+let currentSorts = []; // Stores objects: { column: "field", dir: "asc" }
+
+// Store original titles so we can strip arrows cleanly
+const colTitles = {
+    rank: "Rank", maker: "Maker", logo: "Logo", makerType: "Maker Type", link: "Link",
+    preview: "Preview", specialty: "Specialty", price: "$ Price", partials: "Partials",
+    fursuits: "Fursuits", portfolio: "Portfolio Size", followers: "Followers",
+    acctAge: "Acct Age", status: "Status", aesthetic: "Aesthetic", timeline: "Timeline",
+    rankScore: "Rank Score", imperfections: "Imperfections"
+};
+
+// Function to update header text with arrows (▲/▼) and priority numbers (1,2,3)
+function updateHeaderVisuals() {
+    // Reset all headers to original text first
+    table.getColumns().forEach(col => {
+        const field = col.getField();
+        if(colTitles[field]) {
+            col.updateDefinition({title: colTitles[field]});
+        }
+    });
+
+    // Apply visuals for active sorts
+    currentSorts.forEach((sort, index) => {
+        const col = table.getColumn(sort.column);
+        if(col) {
+            const originalTitle = colTitles[sort.column];
+            const arrow = sort.dir === "asc" ? "▲" : "▼";
+            // If multiple sorts, show number. If only 1, just show arrow.
+            const number = currentSorts.length > 1 ? `<small>(${index + 1})</small>` : "";
+            
+            // Update the title HTML
+            col.updateDefinition({
+                title: `${originalTitle} ${arrow} ${number}`
+            });
+        }
+    });
+}
+
+// Custom Click Handler
+function handleHeaderClick(e, column) {
+    const field = column.getField();
+    
+    // Ignore columns that shouldn't sort (like Logo/Link)
+    const noSortCols = ['logo','link','preview','makerType','status','aesthetic','timeline','imperfections'];
+    if(noSortCols.includes(field)) return;
+
+    if (e.shiftKey) {
+        // --- DEFERRED SORT MODE (SHIFT HELD) ---
+        
+        // Check if this column is already in the stack
+        const existingIndex = currentSorts.findIndex(s => s.column === field);
+        
+        if (existingIndex > -1) {
+            // Exists: Toggle direction
+            currentSorts[existingIndex].dir = currentSorts[existingIndex].dir === "asc" ? "desc" : "asc";
+        } else {
+            // New: Add to stack
+            currentSorts.push({ column: field, dir: "asc" });
+        }
+        
+        // ONLY update visuals. DO NOT sort table data yet.
+        updateHeaderVisuals();
+        
+    } else {
+        // --- INSTANT SORT MODE (NO SHIFT) ---
+        
+        // Replace entire stack with just this one
+        const existingIndex = currentSorts.findIndex(s => s.column === field);
+        let newDir = "asc";
+        
+        // If clicking the same header, toggle. Otherwise default asc.
+        if(currentSorts.length === 1 && currentSorts[0].column === field) {
+            newDir = currentSorts[0].dir === "asc" ? "desc" : "asc";
+        }
+        
+        currentSorts = [{ column: field, dir: newDir }];
+        
+        updateHeaderVisuals();
+        table.setSort(currentSorts); // Execute immediately
+        
+        // Sync dropdowns
+        document.getElementById("sort-field").value = field;
+        document.getElementById("sort-dir").value = newDir;
+    }
+}
 
 Papa.parse(csvUrl, {
-    download: true,
-    header: true,
-    dynamicTyping: true,
+    download: true, header: true, dynamicTyping: true,
     complete: function(results) {
         const data = results.data.map(row => ({
-            // FIX 1: Apply cleanNumber to Rank to ensure it's a number
             rank: cleanNumber(row['Rank']),
             maker: row['Maker'],
             logo: parseImageFormula(row['Logo']),
@@ -287,7 +342,6 @@ Papa.parse(csvUrl, {
 
         const colMinMax = {};
         const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
-        
         gradientColumns.forEach(col=>{
             const vals = data.map(d=>d[col]).filter(v=>v!==null && v!=="" && !isNaN(v));
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
@@ -300,75 +354,50 @@ Papa.parse(csvUrl, {
             resizableColumns: true,
             placeholder:"No Data Available",
             height:"80vh",
-            initialSort:[
-                {column:"rank", dir:"asc"} 
-            ],
+            
+            // CRITICAL: Disable built-in header sort so we can intercept clicks
+            headerSort: false, 
+            
             columns: [
-                // FIX 2: Added sorter:"number" explicitly
+                // We pass 'headerClick' to every sortable column
+                { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", headerClick:handleHeaderClick },
+                { title:"Maker", field:"maker", headerClick:handleHeaderClick },
                 {
-                    title:"Rank", 
-                    field:"rank", 
-                    width:80, 
-                    hozAlign:"center",
-                    sorter:"number" 
-                },
-                {title:"Maker", field:"maker"},
-                
-                {
-                    title:"Logo", field:"logo", 
+                    title:"Logo", field:"logo", hozAlign:"center",
                     formatter:function(cell){
                         const val = cell.getValue();
-                        if(!val) return "";
-                        return `<span class="hover-preview" style="background-image:url('${val}');"></span>`;
+                        return val ? `<span class="hover-preview" style="background-image:url('${val}');"></span>` : "";
                     }, 
-                    hozAlign:"center",
                     cellMouseEnter:function(e, cell){ showTooltip(e, cell.getValue()); },
                     cellMouseLeave:function(e, cell){ hideTooltip(); },
                     cellMouseMove:function(e, cell){ moveTooltip(e); }
                 },
-                
-                {title:"Maker Type", field:"makerType"},
-                
+                { title:"Maker Type", field:"makerType" },
                 {
-                    title:"Link", 
-                    field:"link", 
-                    formatter:"link", 
-                    formatterParams:{
-                        labelField:"link", 
-                        urlField:"link", 
-                        target:"_blank"
-                    }
+                    title:"Link", field:"link", formatter:"link", 
+                    formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
                 },
-                
                 {
-                    title:"Preview", field:"preview", 
+                    title:"Preview", field:"preview", hozAlign:"center",
                     formatter:function(cell){
                         const val = cell.getValue();
-                        if(!val) return "";
-                        return `<span class="hover-preview" style="background-image:url('${val}');"></span>`;
+                        return val ? `<span class="hover-preview" style="background-image:url('${val}');"></span>` : "";
                     }, 
-                    hozAlign:"center",
                     cellMouseEnter:function(e, cell){ showTooltip(e, cell.getValue()); },
                     cellMouseLeave:function(e, cell){ hideTooltip(); },
                     cellMouseMove:function(e, cell){ moveTooltip(e); }
                 },
-                
                 {
-                    title:"Specialty", 
-                    field:"specialty", 
-                    headerFilter:"input",
-                    headerFilterPlaceholder:"Filter on specialty here..."
+                    title:"Specialty", field:"specialty", headerClick:handleHeaderClick,
+                    headerFilter:"input", headerFilterPlaceholder:"Filter on specialty here..."
                 },
-                
+                // Numeric Columns need custom formatters + headerClick
                 {
-                    title:"$ Price", 
-                    field:"price", 
-                    hozAlign:"right", 
-                    sorter:"number",
+                    title:"$ Price", field:"price", hozAlign:"right", sorter:"number", headerClick:handleHeaderClick,
                     sorterParams:{ alignEmptyValues:"bottom" },
                     formatter:function(cell){
                         const val = cell.getValue();
-                        if(val === null || val==="") return "N/A"; 
+                        if(val === null) return "N/A"; 
                         const c = getGradientColor(val,colMinMax['price'].min,colMinMax['price'].max,true);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
@@ -376,14 +405,11 @@ Papa.parse(csvUrl, {
                     }
                 },
                 {
-                    title:"Partials", 
-                    field:"partials", 
-                    hozAlign:"right",
-                    sorter:"number",
+                    title:"Partials", field:"partials", hozAlign:"right", sorter:"number", headerClick:handleHeaderClick,
                     sorterParams:{ alignEmptyValues:"bottom" },
                     formatter:function(cell){
                         const val = cell.getValue();
-                        if(val === null || val==="") return "";
+                        if(val === null) return "";
                         const c = getGradientColor(val,colMinMax['partials'].min,colMinMax['partials'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
@@ -391,14 +417,11 @@ Papa.parse(csvUrl, {
                     }
                 },
                 {
-                    title:"Fursuits", 
-                    field:"fursuits", 
-                    hozAlign:"right",
-                    sorter:"number",
+                    title:"Fursuits", field:"fursuits", hozAlign:"right", sorter:"number", headerClick:handleHeaderClick,
                     sorterParams:{ alignEmptyValues:"bottom" },
                     formatter:function(cell){
                         const val = cell.getValue();
-                        if(val === null || val==="") return "";
+                        if(val === null) return "";
                         const c = getGradientColor(val,colMinMax['fursuits'].min,colMinMax['fursuits'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
@@ -406,14 +429,11 @@ Papa.parse(csvUrl, {
                     }
                 },
                 {
-                    title:"Portfolio Size", 
-                    field:"portfolio", 
-                    hozAlign:"right", 
-                    sorter:"number",
+                    title:"Portfolio Size", field:"portfolio", hozAlign:"right", sorter:"number", headerClick:handleHeaderClick,
                     sorterParams:{ alignEmptyValues:"bottom" },
                     formatter:function(cell){
                         const val = cell.getValue();
-                        if(val === null || val==="") return "";
+                        if(val === null) return "";
                         const c = getGradientColor(val,colMinMax['portfolio'].min,colMinMax['portfolio'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
@@ -421,14 +441,11 @@ Papa.parse(csvUrl, {
                     }
                 },
                 {
-                    title:"Followers", 
-                    field:"followers", 
-                    hozAlign:"right", 
-                    sorter:"number",
+                    title:"Followers", field:"followers", hozAlign:"right", sorter:"number", headerClick:handleHeaderClick,
                     sorterParams:{ alignEmptyValues:"bottom" },
                     formatter:function(cell){
                         const val = cell.getValue();
-                        if(val === null || val==="") return "";
+                        if(val === null) return "";
                         const displayVal = val.toLocaleString(); 
                         const c = getGradientColor(val,colMinMax['followers'].min,colMinMax['followers'].max,false);
                         cell.getElement().style.backgroundColor = c;
@@ -437,14 +454,11 @@ Papa.parse(csvUrl, {
                     }
                 },
                 {
-                    title:"Acct Age", 
-                    field:"acctAge", 
-                    hozAlign:"right",
-                    sorter:"number",
+                    title:"Acct Age", field:"acctAge", hozAlign:"right", sorter:"number", headerClick:handleHeaderClick,
                     sorterParams:{ alignEmptyValues:"bottom" }, 
                     formatter:function(cell){
                         const val = cell.getValue();
-                        if(val === null || val==="") return "";
+                        if(val === null) return "";
                         const c = getGradientColor(val,colMinMax['acctAge'].min,colMinMax['acctAge'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
@@ -459,44 +473,49 @@ Papa.parse(csvUrl, {
             ],
             rowFormatter:function(row){
                 const el = row.getElement();
-                if(row.getIndex()%2===0){
-                    el.style.backgroundColor="#383838";
-                } else {
-                    el.style.backgroundColor="#2e2e2e";
-                }
+                if(row.getIndex()%2===0) el.style.backgroundColor="#383838";
+                else el.style.backgroundColor="#2e2e2e";
             },
-            reactiveData:true,
-            virtualDom:true,
+            reactiveData:true, virtualDom:true
         });
 
-        // --- SORT EVENT LISTENERS ---
-        
-        // Auto-trigger sort when dropdowns change (New Feature)
+        // Init default Sort (Rank Asc)
+        currentSorts = [{ column: "rank", dir: "asc" }];
+        updateHeaderVisuals();
+        table.setSort(currentSorts);
+
+        // --- EVENT LISTENERS ---
+
+        // BUTTON: Apply Sort
+        document.getElementById("apply-sort").addEventListener("click", function(){
+            table.setSort(currentSorts);
+        });
+
+        // BUTTON: Reset
+        document.getElementById("reset-sort").addEventListener("click", function(){
+            currentSorts = [{ column: "rank", dir: "asc" }];
+            updateHeaderVisuals();
+            table.setSort(currentSorts);
+            table.clearHeaderFilter(); 
+            document.getElementById("sort-field").value = "rank";
+            document.getElementById("sort-dir").value = "asc";
+        });
+
+        // DROPDOWNS: Update table immediately on change
         document.getElementById("sort-field").addEventListener("change", function(){
              const field = this.value;
              const dir = document.getElementById("sort-dir").value;
-             table.setSort(field, dir);
+             currentSorts = [{ column: field, dir: dir }];
+             updateHeaderVisuals();
+             table.setSort(currentSorts);
         });
 
         document.getElementById("sort-dir").addEventListener("change", function(){
              const field = document.getElementById("sort-field").value;
              const dir = this.value;
-             table.setSort(field, dir);
-        });
-
-        // Manual Apply Button
-        document.getElementById("apply-sort").addEventListener("click", function(){
-            const field = document.getElementById("sort-field").value;
-            const dir = document.getElementById("sort-dir").value;
-            table.setSort(field, dir);
-        });
-
-        // Reset Button
-        document.getElementById("reset-sort").addEventListener("click", function(){
-            document.getElementById("sort-field").value = "rank";
-            document.getElementById("sort-dir").value = "asc";
-            table.setSort("rank", "asc");
-            table.clearHeaderFilter(); 
+             currentSorts = [{ column: field, dir: dir }];
+             updateHeaderVisuals();
+             table.setSort(currentSorts);
         });
     }
 });
