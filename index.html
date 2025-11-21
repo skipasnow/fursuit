@@ -6,49 +6,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Tabulator CSS -->
-<link href="https://unpkg.com/tabulator-tables@5.6.0/dist/css/tabulator_midnight.min.css" rel="stylesheet">
+<link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator.min.css" rel="stylesheet">
 
 <style>
   body {
-    background: #2e2e2e;
-    color: #fff;
+    background-color: #2e2e2e;
+    color: #ffffff;
     font-family: sans-serif;
     padding: 20px;
   }
 
-  #creator-table {
-    width: 85%;
-    margin: auto;
-  }
-
   .hover-preview {
-    position: relative;
     display: inline-block;
-  }
-
-  .hover-preview:hover::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 100%;
-    width: 200px;
-    height: 200px;
+    width: 40px;
+    height: 40px;
     background-size: cover;
-    border: 2px solid #fff;
-    z-index: 100;
+    background-position: center;
+    border-radius: 4px;
+    border: 1px solid #555;
   }
 
-  /* Custom header color */
+  /* Dark header row */
   .tabulator .tabulator-header {
-    background-color: #1f1f1f !important;
+    background-color: #1f1f1f;
+    color: #fff;
   }
 
-  /* URL styling */
-  a {
+  /* Orange links */
+  .tabulator a {
     color: darkorange;
     text-decoration: none;
   }
-  a:hover {
+  .tabulator a:visited {
+    color: darkorange;
+  }
+  .tabulator a:hover {
     color: orange;
   }
 </style>
@@ -58,151 +50,124 @@
 <h1>Kemono Fursuit Makers</h1>
 <div id="creator-table"></div>
 
-<!-- Tabulator JS -->
-<script src="https://unpkg.com/tabulator-tables@5.6.0/dist/js/tabulator.min.js"></script>
+<!-- PapaParse CSV parser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<!-- Tabulator JS -->
+<script src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
 
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// Function to parse =IMAGE("URL") from Google Sheets
-function parseImageFormula(formula) {
-  const match = formula.match(/=IMAGE\("(.+)"\)/);
-  return match ? match[1] : formula;
-}
-
-// Gradient helper
-function getGradientColor(value, min, max, reverse=false){
-    const ratio = (value - min) / (max - min);
-    const r = reverse ? Math.floor(255 * (1 - ratio)) : Math.floor(255 * ratio);
-    const g = reverse ? Math.floor(255 * ratio) : Math.floor(255 * (1 - ratio));
-    return `rgb(${r},${g},0)`;
-}
-
 Papa.parse(csvUrl, {
-    download: true,
-    header: true,
-    dynamicTyping: true,
-    complete: function(results) {
-        const data = results.data.map(row => {
-            return {
-                rank: row['Rank'],
-                maker: row['Maker'],
-                logo: parseImageFormula(row['Logo']),
-                makerType: row['Maker Type'],
-                link: row['Link'],
-                preview: row['Preview'],
-                price: row['$ Price'],
-                shipOrFly: row['$ Ship or Fly'],
-                tariff: row['$ Tariff (2025)'],
-                ship: row['$ Ship'],
-                airTravel: row['$ Air Travel'],
-                travelSurplus: row['$ Travel Surplus'],
-                aesthetic: row['Aesthetic'],
-                status: row['Status'],
-                specialty: row['Specialty'],
-                partials: row['Partials'],
-                fursuits: row['Fursuits'],
-                portfolio: row['Portfolio Size'],
-                country: row['Country'],
-                followers: row['Followers'],
-                acctAge: row['Acct Age'],
-                rep: row['Rep'],
-                timeline: row['Timeline'],
-                acctDate: row['Acct Date'],
-                rankScore: row['Rank Score'],
-                imperfections: row['Imperfections'],
-                worksPerYear: row['Works Per Year'],
-                worksRank: row['Works Rank'],
-                followersRank: row['Followers Rank'],
-                acctDateRank: row['Acct Date Rank'],
-                partialsRank: row['Partials Rank'],
-                fursuitsRank: row['Fursuits Rank'],
-                priceRank: row['Price Rank']
-            };
-        });
+  download: true,
+  header: true,
+  dynamicTyping: true,
+  complete: function(results){
+    const data = results.data.map(row => {
+      const newRow = {};
+      Object.keys(row).forEach(key => {
+        let val = row[key];
 
-        // Calculate min/max for gradient columns
-        const numericCols = ['price','partials','fursuits','portfolio','followers','acctAge'];
-        const colMinMax = {};
-        numericCols.forEach(col=>{
-            const values = data.map(d=>d[col]).filter(v=>v!=null && !isNaN(v));
-            colMinMax[col] = {min: Math.min(...values), max: Math.max(...values)};
-        });
+        // Parse =IMAGE("URL") in Logo column
+        if(key === "Logo" && typeof val === "string" && val.startsWith('=IMAGE')) {
+          const match = val.match(/=IMAGE\("(.+)"\)/);
+          val = match ? match[1] : "";
+        }
 
-        // Initialize Tabulator
-        new Tabulator("#creator-table", {
-            data: data,
-            layout: "fitDataTable",
-            movableColumns: true,
-            resizableColumns: true,
-            columns: [
-                {title:"Rank", field:"rank", width:60, hozAlign:"center", headerFilter:false},
-                {title:"Maker", field:"maker", headerFilter:false},
-                {title:"Logo", field:"logo", formatter:"image", formatterParams:{height:30}, headerFilter:false},
-                {title:"Maker Type", field:"makerType", headerFilter:false},
-                {title:"Link", field:"link", formatter:"link", formatterParams:{labelField:"link", urlField:"link"}, headerFilter:false},
-                {title:"Preview", field:"preview", formatter:function(cell){
-                    const val = cell.getValue();
-                    return `<span class="hover-preview" style="background-image:url(${val}); width:30px; height:30px; display:inline-block;"></span>`;
-                }, headerFilter:false, hozAlign:"center"},
-                {title:"Specialty", field:"specialty", headerFilter:"input"},
-                {title:"$ Price", field:"price", hozAlign:"right", formatter:function(cell){
-                    const val = cell.getValue();
-                    const c = getGradientColor(val, colMinMax['price'].min, colMinMax['price'].max);
-                    cell.getElement().style.backgroundColor = c;
-                    return val;
-                }},
-                {title:"Partials", field:"partials", hozAlign:"right", formatter:function(cell){
-                    const val = cell.getValue();
-                    const c = getGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max, true);
-                    cell.getElement().style.backgroundColor = c;
-                    return val;
-                }},
-                {title:"Fursuits", field:"fursuits", hozAlign:"right", formatter:function(cell){
-                    const val = cell.getValue();
-                    const c = getGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, true);
-                    cell.getElement().style.backgroundColor = c;
-                    return val;
-                }},
-                {title:"Portfolio Size", field:"portfolio", hozAlign:"right", formatter:function(cell){
-                    const val = cell.getValue();
-                    const c = getGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, true);
-                    cell.getElement().style.backgroundColor = c;
-                    return val;
-                }},
-                {title:"Followers", field:"followers", hozAlign:"right", formatter:function(cell){
-                    const val = cell.getValue();
-                    const c = getGradientColor(val, colMinMax['followers'].min, colMinMax['followers'].max, true);
-                    cell.getElement().style.backgroundColor = c;
-                    return val;
-                }},
-                {title:"Acct Age", field:"acctAge", hozAlign:"right", formatter:function(cell){
-                    const val = cell.getValue();
-                    const c = getGradientColor(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max);
-                    cell.getElement().style.backgroundColor = c;
-                    return val;
-                }},
-                // Add remaining fields as standard text columns without gradients
-                {title:"Status", field:"status"},
-                {title:"Aesthetic", field:"aesthetic"},
-                {title:"Timeline", field:"timeline"},
-                {title:"Rank Score", field:"rankScore"},
-                {title:"Imperfections", field:"imperfections"}
-            ],
-            rowFormatter:function(row){
-                // Alternate row shading
-                const el = row.getElement();
-                if(row.getIndex() %2 ===0){
-                    el.style.backgroundColor = "#383838";
-                }else{
-                    el.style.backgroundColor = "#2e2e2e";
-                }
+        newRow[key] = val;
+      });
+      return newRow;
+    });
+
+    // Identify numeric columns for gradients
+    const numericGradientCols = {
+      "$ Price": "greenToRed",
+      "Partials": "redToGreen",
+      "Fursuits": "redToGreen",
+      "Portfolio Size": "redToGreen",
+      "Followers": "redToGreen",
+      "Acct Age": "redToGreen"
+    };
+
+    // Create columns dynamically
+    const columns = Object.keys(data[0]).map(col => {
+      if(col === "Logo"){
+        return {
+          title: col,
+          field: col,
+          formatter:"image",
+          formatterParams:{height:30},
+          headerFilter:false,
+        };
+      }
+      else if(col === "Preview"){
+        return {
+          title: col,
+          field: col,
+          formatter: function(cell){
+            const val = cell.getValue();
+            return val ? `<span class="hover-preview" style="background-image:url(${val});"></span>` : "";
+          },
+          headerFilter:false,
+          hozAlign:"center"
+        };
+      }
+      else if(col === "Specialty"){
+        return {title: col, field: col, headerFilter:"input"};
+      }
+      else if(Object.keys(numericGradientCols).includes(col)){
+        return {
+          title: col,
+          field: col,
+          headerFilter:false,
+          formatter:function(cell){
+            const val = cell.getValue();
+            const minMax = cell.getTable().getColumn(col).getDefinition()._minMax || [Infinity, -Infinity];
+            if(val < minMax[0]) minMax[0] = val;
+            if(val > minMax[1]) minMax[1] = val;
+            cell.getColumn().getDefinition()._minMax = minMax;
+
+            const min = minMax[0], max = minMax[1];
+            if(val === null || val === undefined || val === "") return "";
+            let color;
+            if(numericGradientCols[col]==="greenToRed"){
+              const ratio = (val-min)/(max-min);
+              const r = Math.floor(255*ratio);
+              const g = Math.floor(255*(1-ratio));
+              color = `rgb(${r},${g},0)`;
+            } else if(numericGradientCols[col]==="redToGreen"){
+              const ratio = (val-min)/(max-min);
+              const r = Math.floor(255*(1-ratio));
+              const g = Math.floor(255*ratio);
+              color = `rgb(${r},${g},0)`;
             }
-        });
-    }
+            return `<span style="color:${color};font-weight:bold;">${val}</span>`;
+          }
+        };
+      }
+      else {
+        return {title: col, field: col, headerFilter:false};
+      }
+    });
+
+    new Tabulator("#creator-table", {
+      data: data,
+      layout:"fitDataTable",
+      movableColumns:true,
+      resizableColumns:true,
+      columns: columns,
+      rowFormatter:function(row){
+        const el = row.getElement();
+        if(row.getIndex() % 2 === 0){
+          el.style.backgroundColor = "#383838";
+        } else {
+          el.style.backgroundColor = "#2e2e2e";
+        }
+      },
+      height:"85vh", // extend table down the page
+    });
+  }
 });
 </script>
-
 </body>
 </html>
