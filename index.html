@@ -5,7 +5,6 @@
 <title>Kemono Fursuit Makers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Tabulator CSS -->
 <link href="https://unpkg.com/tabulator-tables@5.6.0/dist/css/tabulator_midnight.min.css" rel="stylesheet">
 
 <style>
@@ -20,7 +19,7 @@
   #creator-table {
     width: 95%;
     margin: auto;
-    height: 85vh; /* 85% vertical height */
+    height: 85vh;
   }
 
   /* Logo hover preview */
@@ -29,6 +28,7 @@
     position: relative;
     width: 30px;
     height: 30px;
+    cursor: pointer;
   }
 
   .hover-preview:hover::after {
@@ -47,12 +47,10 @@
     pointer-events: none;
   }
 
-  /* Custom header color */
   .tabulator .tabulator-header {
     background-color: #1f1f1f !important;
   }
 
-  /* URL styling */
   a {
     color: darkorange;
     text-decoration: none;
@@ -61,12 +59,10 @@
     color: orange;
   }
 
-  /* Row borders */
   .tabulator .tabulator-row .tabulator-cell {
     border: 1px solid #fff;
   }
 
-  /* Alternating dark row colors */
   .tabulator .tabulator-row:nth-child(even) {
     background-color: #383838;
   }
@@ -80,28 +76,26 @@
 <h1>Kemono Fursuit Makers</h1>
 <div id="creator-table"></div>
 
-<!-- Tabulator JS -->
 <script src="https://unpkg.com/tabulator-tables@5.6.0/dist/js/tabulator.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// Parse =IMAGE("URL") from Google Sheets
 function parseImageFormula(formula) {
   const match = formula.match(/=IMAGE\("(.+)"\)/);
   return match ? match[1] : formula;
 }
 
-// Independent gradient helper
+// Gradient helper
 function getGradientColor(value, min, max, lowIsGreen=false){
     if(value === null || value === undefined || value === "") return "";
     const ratio = (value - min)/(max - min);
     const cappedRatio = Math.min(Math.max(ratio,0),1);
     let r,g;
     if(lowIsGreen){
-        r = Math.floor(179 * cappedRatio + 46 * (1-cappedRatio)); // red
-        g = Math.floor(27 * cappedRatio + 111 * (1-cappedRatio)); // green
+        r = Math.floor(179 * cappedRatio + 46 * (1-cappedRatio));
+        g = Math.floor(27 * cappedRatio + 111 * (1-cappedRatio));
     } else {
         r = Math.floor(46 * cappedRatio + 179 * (1-cappedRatio));
         g = Math.floor(111 * cappedRatio + 27 * (1-cappedRatio));
@@ -140,20 +134,13 @@ Papa.parse(csvUrl, {
             timeline: row['Timeline'],
             acctDate: row['Acct Date'],
             rankScore: row['Rank Score'],
-            imperfections: row['Imperfections'],
-            worksPerYear: row['Works Per Year'],
-            worksRank: row['Works Rank'],
-            followersRank: row['Followers Rank'],
-            acctDateRank: row['Acct Date Rank'],
-            partialsRank: row['Partials Rank'],
-            fursuitsRank: row['Fursuits Rank'],
-            priceRank: row['Price Rank']
+            imperfections: row['Imperfections']
         }));
 
-        // Calculate min/max per column for independent gradients
+        // Calculate min/max for gradient columns independently
+        const gradientCols = ['price','partials','fursuits','portfolio','acctAge','followers'];
         const colMinMax = {};
-        const gradientColumns = ['price','partials','fursuits','portfolio','acctAge'];
-        gradientColumns.forEach(col=>{
+        gradientCols.forEach(col=>{
             const vals = data.map(d=>d[col]).filter(v=>v!==null && v!=="" && !isNaN(v));
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
@@ -216,6 +203,9 @@ Papa.parse(csvUrl, {
                 {title:"Followers", field:"followers", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
                     if(val === null || val==="") return "";
+                    const c = getGradientColor(val,colMinMax['followers'].min,colMinMax['followers'].max,false);
+                    cell.getElement().style.backgroundColor = c;
+                    cell.getElement().style.color="#fff";
                     return val;
                 }},
                 {title:"Acct Age", field:"acctAge", hozAlign:"right", formatter:function(cell){
@@ -241,7 +231,7 @@ Papa.parse(csvUrl, {
                 }
             },
             reactiveData:true,
-            virtualDom:true,
+            virtualDom:true
         });
     }
 });
