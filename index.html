@@ -5,124 +5,155 @@
 <title>Kemono Fursuit Makers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- Tabulator CSS -->
 <link href="https://unpkg.com/tabulator-tables@5.6.0/dist/css/tabulator_midnight.min.css" rel="stylesheet">
 
 <style>
-body {
+  body {
     background: #2e2e2e;
     color: #fff;
     font-family: sans-serif;
     padding: 20px;
-}
+  }
 
-#creator-table {
+  #creator-table {
     width: 95%;
     margin: auto;
-    height: 85vh;
-}
+    overflow-x: auto;
+  }
 
-#logo-hover {
-    position: absolute;
-    display: none;
-    width: 150px;
-    height: 150px;
-    border: 2px solid #fff;
-    z-index: 9999;
-    pointer-events: none;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-}
+  .hover-preview {
+    position: relative;
+    display: inline-block;
+  }
 
-.tabulator .tabulator-header {
+  .hover-preview img:hover {
+    transform: scale(5);
+    z-index: 1000;
+    position: relative;
+  }
+
+  /* Custom header color */
+  .tabulator .tabulator-header {
     background-color: #1f1f1f !important;
-}
+  }
 
-a {
+  /* URL styling */
+  a {
     color: darkorange;
     text-decoration: none;
-}
-a:hover {
-    color: orange;
-}
+  }
+  a:hover {
+    color: #B35900;
+  }
+
+  /* Tabulator white borders */
+  .tabulator-cell, .tabulator-row {
+    border: 1px solid #fff;
+  }
 </style>
 </head>
 <body>
 
 <h1>Kemono Fursuit Makers</h1>
 <div id="creator-table"></div>
-<div id="logo-hover"></div>
 
+<!-- Tabulator JS -->
 <script src="https://unpkg.com/tabulator-tables@5.6.0/dist/js/tabulator.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// Hover helper
-const hoverDiv = document.getElementById('logo-hover');
-function attachHover(el, url){
-    el.addEventListener('mouseenter', e=>{
-        hoverDiv.style.backgroundImage = `url(${url})`;
-        hoverDiv.style.display = 'block';
-        hoverDiv.style.left = e.pageX + 20 + 'px';
-        hoverDiv.style.top = e.pageY + 20 + 'px';
-    });
-    el.addEventListener('mousemove', e=>{
-        hoverDiv.style.left = e.pageX + 20 + 'px';
-        hoverDiv.style.top = e.pageY + 20 + 'px';
-    });
-    el.addEventListener('mouseleave', e=>{
-        hoverDiv.style.display = 'none';
-    });
-}
-
 // Gradient helper
 function getGradientColor(value, min, max, startColor, endColor){
-    if(value == null || value === "") return null;
+    if(value === null || value === undefined || value === "") return "";
     const ratio = (value - min) / (max - min);
-    const r = Math.round(startColor[0]*(1-ratio) + endColor[0]*ratio);
-    const g = Math.round(startColor[1]*(1-ratio) + endColor[1]*ratio);
-    const b = Math.round(startColor[2]*(1-ratio) + endColor[2]*ratio);
+    const r = Math.round(startColor[0] + (endColor[0]-startColor[0])*ratio);
+    const g = Math.round(startColor[1] + (endColor[1]-startColor[1])*ratio);
+    const b = Math.round(startColor[2] + (endColor[2]-startColor[2])*ratio);
     return `rgb(${r},${g},${b})`;
 }
 
-// Colors: maroon -> forest green
-const maroon = [179, 27, 27];
-const forestGreen = [46, 111, 64];
+// Convert hex to RGB array
+function hexToRgb(hex){
+    const bigint = parseInt(hex.replace("#",""),16);
+    const r = (bigint >>16) & 255;
+    const g = (bigint >>8) & 255;
+    const b = bigint & 255;
+    return [r,g,b];
+}
+
+// Hover attach function
+function attachHover(img,url){
+    img.onmouseenter = () => {
+        img.style.position = 'relative';
+        img.style.zIndex = 1000;
+        img.style.transform = "scale(5)";
+    };
+    img.onmouseleave = () => {
+        img.style.zIndex = 1;
+        img.style.transform = "scale(1)";
+    };
+}
 
 Papa.parse(csvUrl, {
     download: true,
     header: true,
     dynamicTyping: true,
     complete: function(results) {
-        const data = results.data.map(row => ({
-            rank: row['Rank'],
-            maker: row['Maker'],
-            logo: row['Logo'],
-            makerType: row['Maker Type'],
-            link: row['Link'],
-            specialty: row['Specialty'],
-            price: row['$ Price'],
-            partials: row['Partials'],
-            fursuits: row['Fursuits'],
-            portfolio: row['Portfolio Size'],
-            acctAge: row['Acct Age'],
-            status: row['Status'],
-            aesthetic: row['Aesthetic']
-        }));
+        const data = results.data.map(row => {
+            return {
+                rank: row['Rank'],
+                maker: row['Maker'],
+                logo: row['Logo'],
+                makerType: row['Maker Type'],
+                link: row['Link'],
+                preview: row['Preview'],
+                price: row['$ Price'],
+                shipOrFly: row['$ Ship or Fly'],
+                tariff: row['$ Tariff (2025)'],
+                ship: row['$ Ship'],
+                airTravel: row['$ Air Travel'],
+                travelSurplus: row['$ Travel Surplus'],
+                aesthetic: row['Aesthetic'],
+                status: row['Status'],
+                specialty: row['Specialty'],
+                partials: row['Partials'],
+                fursuits: row['Fursuits'],
+                portfolio: row['Portfolio Size'],
+                country: row['Country'],
+                followers: row['Followers'],
+                acctAge: row['Acct Age'],
+                rep: row['Rep'],
+                timeline: row['Timeline'],
+                acctDate: row['Acct Date'],
+                rankScore: row['Rank Score'],
+                imperfections: row['Imperfections'],
+                worksPerYear: row['Works Per Year'],
+                worksRank: row['Works Rank'],
+                followersRank: row['Followers Rank'],
+                acctDateRank: row['Acct Date Rank'],
+                partialsRank: row['Partials Rank'],
+                fursuitsRank: row['Fursuits Rank'],
+                priceRank: row['Price Rank']
+            };
+        });
 
-        // Compute min/max per gradient column
+        // Calculate min/max for gradient columns
         const colMinMax = {};
         const gradientCols = ['price','partials','fursuits','portfolio','acctAge'];
         gradientCols.forEach(col=>{
-            const vals = data.map(d=>d[col]).filter(v=>v!=null && !isNaN(v));
-            colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
+            const values = data.map(d=>d[col]).filter(v=>v!=null && !isNaN(v));
+            colMinMax[col] = {min: Math.min(...values), max: Math.max(...values)};
         });
+
+        const forestGreen = hexToRgb("#2E6F40");
+        const maroon = hexToRgb("#B31B1B");
 
         new Tabulator("#creator-table", {
             data: data,
-            layout: "fitDataTable",
+            layout: "fitData",
             movableColumns: true,
             resizableColumns: true,
             height: "85vh",
@@ -143,8 +174,19 @@ Papa.parse(csvUrl, {
                 }, hozAlign:"center", width:60},
                 {title:"Maker Type", field:"makerType"},
                 {title:"Link", field:"link", formatter:"link", formatterParams:{labelField:"link", urlField:"link"}},
+                {title:"Preview", field:"preview", formatter:function(cell){
+                    const val = cell.getValue();
+                    if(!val) return "";
+                    const img = document.createElement('img');
+                    img.src = val;
+                    img.style.height = '30px';
+                    img.style.width = 'auto';
+                    img.style.display = 'block';
+                    img.style.margin = '0 auto';
+                    attachHover(img,val);
+                    return img;
+                }, hozAlign:"center"},
                 {title:"Specialty", field:"specialty", headerFilter:"input"},
-                // Price column: low=green, high=red
                 {title:"$ Price", field:"price", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
@@ -153,7 +195,6 @@ Papa.parse(csvUrl, {
                     cell.getElement().style.color = "#fff";
                     return val;
                 }},
-                // Partials, Fursuits, Portfolio, Acct Age: low=red, high=green
                 {title:"Partials", field:"partials", hozAlign:"center", formatter:function(cell){
                     const val = cell.getValue();
                     if(val==null || val==="") return "";
@@ -187,7 +228,10 @@ Papa.parse(csvUrl, {
                     return val;
                 }},
                 {title:"Status", field:"status"},
-                {title:"Aesthetic", field:"aesthetic"}
+                {title:"Aesthetic", field:"aesthetic"},
+                {title:"Timeline", field:"timeline"},
+                {title:"Rank Score", field:"rankScore"},
+                {title:"Imperfections", field:"imperfections"}
             ],
             rowFormatter:function(row){
                 const el = row.getElement();
@@ -198,10 +242,13 @@ Papa.parse(csvUrl, {
                 } else {
                     el.style.backgroundColor = "#2e2e2e";
                 }
-            }
+            },
+            // frozen header
+            headerVisible:true
         });
     }
 });
 </script>
+
 </body>
 </html>
