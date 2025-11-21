@@ -17,7 +17,7 @@
   }
 
   #creator-table {
-    width: 85%;
+    width: 90%;
     margin: auto;
   }
 
@@ -46,6 +46,8 @@
   /* Logo hover zoom */
   .logo-cell img {
     transition: transform 0.2s;
+    display:block;
+    margin:auto;
   }
   .logo-cell img:hover {
     transform: scale(2);
@@ -67,6 +69,12 @@
     background-color: #1f1f1f !important;
     color: #fff !important;
   }
+
+  /* Cell borders */
+  .tabulator .tabulator-cell, 
+  .tabulator .tabulator-header .tabulator-col {
+    border: 1px solid #fff !important;
+  }
 </style>
 </head>
 <body>
@@ -81,16 +89,27 @@
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// Gradient helper
+// Gradient helper with forest green (#228B22) and maroon (#800000)
 function getGradientColor(value, min, max, reverse=false){
     if(value == null || isNaN(value)) return "";
     const ratio = (value - min) / (max - min);
-    const r = reverse ? Math.floor(255 * (1 - ratio)) : Math.floor(255 * ratio);
-    const g = reverse ? Math.floor(255 * ratio) : Math.floor(255 * (1 - ratio));
-    return `rgb(${r},${g},0)`;
+    const startColor = reverse ? "#800000" : "#228B22"; // maroon or forest green
+    const endColor = reverse ? "#228B22" : "#800000";
+    
+    // Convert hex to rgb
+    function hexToRgb(hex) {
+      const bigint = parseInt(hex.slice(1),16);
+      return [ (bigint >> 16) & 255, (bigint >>8) & 255, bigint & 255];
+    }
+    const [r1,g1,b1] = hexToRgb(startColor);
+    const [r2,g2,b2] = hexToRgb(endColor);
+    const r = Math.round(r1 + (r2-r1)*ratio);
+    const g = Math.round(g1 + (g2-g1)*ratio);
+    const b = Math.round(b1 + (b2-b1)*ratio);
+    return `rgb(${r},${g},${b})`;
 }
 
-// Dynamic text color for gradient
+// Dynamic text color for gradient cells
 function getTextColor(value, min, max){
     if(value == null || isNaN(value)) return "#fff";
     const ratio = (value - min) / (max - min);
@@ -147,7 +166,7 @@ Papa.parse(csvUrl, {
 
         new Tabulator("#creator-table", {
             data: data,
-            height: "85vh",
+            height: "85vh",        // vertical height 85% viewport
             layout: "fitDataTable",
             movableColumns: true,
             resizableColumns: true,
@@ -155,7 +174,7 @@ Papa.parse(csvUrl, {
             columns: [
                 {title:"Rank", field:"rank", width:60, hozAlign:"center"},
                 {title:"Maker", field:"maker"},
-                {title:"Logo", field:"logo", formatter:"image", formatterParams:{height:30}, cssClass:"logo-cell"},
+                {title:"Logo", field:"logo", formatter:"image", formatterParams:{height:30, width:30}, cssClass:"logo-cell", hozAlign:"center"},
                 {title:"Maker Type", field:"makerType"},
                 {title:"Link", field:"link", formatter:"link", formatterParams:{labelField:"link", urlField:"link"}},
                 {title:"Preview", field:"preview", formatter:function(cell){
