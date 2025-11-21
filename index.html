@@ -21,20 +21,39 @@
     margin: auto;
   }
 
-  /* Hover preview tooltip */
+  /* Logo hover zoom */
   .hover-preview {
     display: inline-block;
     width: 30px;
     height: 30px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+  }
+
+  .hover-preview:hover::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 100%;
+    width: 150px;
+    height: 150px;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    cursor: pointer;
+    border: 2px solid #fff;
+    z-index: 1000;
   }
 
   /* Custom header color */
   .tabulator .tabulator-header {
     background-color: #1f1f1f !important;
+    color: #fff;
+  }
+
+  /* Table borders */
+  .tabulator-cell, .tabulator-row {
+    border: 1px solid #fff !important;
   }
 
   /* URL styling */
@@ -44,12 +63,6 @@
   }
   a:hover {
     color: orange;
-  }
-
-  /* White cell borders */
-  .tabulator .tabulator-cell {
-    border-right: 1px solid #fff;
-    border-bottom: 1px solid #fff;
   }
 </style>
 </head>
@@ -65,26 +78,48 @@
 <script>
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// Gradient helper
-function getGradientColor(value, min, max, reverse=false){
-    if(value == null || isNaN(value)) return "#2e2e2e"; // fallback
+// Function to parse =IMAGE("URL") from Google Sheets
+function parseImageFormula(formula) {
+  const match = formula.match(/=IMAGE\("(.+)"\)/);
+  return match ? match[1] : formula;
+}
+
+// Gradient helper with dark midpoint
+function getCustomGradient(value, min, max, reverse=false){
+    if(value == null || isNaN(value)) return "#2e2e2e";
     const ratio = (value - min) / (max - min);
-    let r = reverse ? Math.floor(179 * (1 - ratio) + 0) : Math.floor(179 * ratio + 46);
-    let g = reverse ? Math.floor(111 * ratio + 111) : Math.floor(111 * (1 - ratio) + 111);
-    let b = 0;
+    const midColor = {r:46, g:46, b:46};     // dark row color
+    const greenColor = {r:46, g:111, b:64};  // #2E6F40
+    const redColor = {r:179, g:27, b:27};    // #B31B1B
+    let r,g,b;
+
+    if(ratio < 0.5){
+        const t = ratio / 0.5;
+        r = Math.round(greenColor.r + (midColor.r - greenColor.r) * t);
+        g = Math.round(greenColor.g + (midColor.g - greenColor.g) * t);
+        b = Math.round(greenColor.b + (midColor.b - greenColor.b) * t);
+    } else {
+        const t = (ratio - 0.5) / 0.5;
+        r = Math.round(midColor.r + (redColor.r - midColor.r) * t);
+        g = Math.round(midColor.g + (redColor.g - midColor.g) * t);
+        b = Math.round(midColor.b + (redColor.b - midColor.b) * t);
+    }
+
+    if(reverse){
+        return `rgb(${redColor.r + greenColor.r - r},${redColor.g + greenColor.g - g},${redColor.b + greenColor.b - b})`;
+    }
     return `rgb(${r},${g},${b})`;
 }
 
-// Parse CSV
 Papa.parse(csvUrl, {
     download: true,
     header: true,
     dynamicTyping: true,
     complete: function(results) {
-        const data = results.data.map((row, index) => ({
+        const data = results.data.map(row => ({
             rank: row['Rank'],
             maker: row['Maker'],
-            logo: row['Logo'],
+            logo: parseImageFormula(row['Logo']),
             makerType: row['Maker Type'],
             link: row['Link'],
             preview: row['Preview'],
@@ -117,104 +152,76 @@ Papa.parse(csvUrl, {
             priceRank: row['Price Rank']
         }));
 
-        // Compute min/max for gradients
+        // Min/Max for gradients
         const numericCols = ['price','partials','fursuits','portfolio','acctAge'];
         const colMinMax = {};
         numericCols.forEach(col=>{
-            const vals = data.map(d=>d[col]).filter(v=>v!=null && !isNaN(v));
-            colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
+            const values = data.map(d=>d[col]).filter(v=>v!=null && !isNaN(v));
+            colMinMax[col] = {min: Math.min(...values), max: Math.max(...values)};
         });
 
         // Initialize Tabulator
         new Tabulator("#creator-table", {
             data: data,
-            layout: "fitData",
+            layout: "fitDataTable",
             movableColumns: true,
             resizableColumns: true,
             height: "85vh",
-            placeholder: "No Data Available",
-            columns: [
-                {title:"Rank", field:"rank", width:60, hozAlign:"center", headerFilter:false},
-                {title:"Maker", field:"maker", headerFilter:false},
-                {title:"Logo", field:"logo", hozAlign:"center", width:50, formatter:function(cell){
+            tooltips:true,
+            columnHeaderVertAlign:"middle",
+            placeholder:"No Data Available",
+            columns:[
+                {title:"Rank", field:"rank", width:60, hozAlign:"center"},
+                {title:"Maker", field:"maker"},
+                {title:"Logo", field:"logo", formatter:function(cell){
                     const val = cell.getValue();
-                    const span = document.createElement("span");
-                    span.className = "hover-preview";
-                    span.style.backgroundImage = `url(${val})`;
-
-                    // Hover tooltip
-                    const previewDiv = document.createElement("div");
-                    previewDiv.style.position = "fixed";
-                    previewDiv.style.width = "150px";
-                    previewDiv.style.height = "150px";
-                    previewDiv.style.backgroundImage = `url(${val})`;
-                    previewDiv.style.backgroundSize = "contain";
-                    previewDiv.style.backgroundRepeat = "no-repeat";
-                    previewDiv.style.backgroundPosition = "center";
-                    previewDiv.style.border = "2px solid white";
-                    previewDiv.style.zIndex = "9999";
-                    previewDiv.style.display = "none";
-                    document.body.appendChild(previewDiv);
-
-                    span.addEventListener("mouseover", e => {
-                        previewDiv.style.display = "block";
-                        previewDiv.style.left = (e.pageX + 10) + "px";
-                        previewDiv.style.top = (e.pageY + 10) + "px";
-                    });
-                    span.addEventListener("mousemove", e => {
-                        previewDiv.style.left = (e.pageX + 10) + "px";
-                        previewDiv.style.top = (e.pageY + 10) + "px";
-                    });
-                    span.addEventListener("mouseout", () => {
-                        previewDiv.style.display = "none";
-                    });
-
-                    return span;
-                }},
-                {title:"Maker Type", field:"makerType", headerFilter:false},
-                {title:"Link", field:"link", formatter:"link", formatterParams:{labelField:"link", urlField:"link"}, headerFilter:false},
+                    if(!val) return "";
+                    return `<span class="hover-preview" style="background-image:url(${val});"></span>`;
+                }, hozAlign:"center", headerFilter:false},
+                {title:"Maker Type", field:"makerType"},
+                {title:"Link", field:"link", formatter:"link", formatterParams:{labelField:"link", urlField:"link"}},
                 {title:"Preview", field:"preview", formatter:function(cell){
                     const val = cell.getValue();
-                    return `<span class="hover-preview" style="background-image:url(${val}); width:30px; height:30px; display:inline-block;"></span>`;
-                }, headerFilter:false, hozAlign:"center"},
+                    if(!val) return "";
+                    return `<span class="hover-preview" style="background-image:url(${val}); width:30px; height:30px;"></span>`;
+                }, hozAlign:"center"},
                 {title:"Specialty", field:"specialty", headerFilter:"input"},
-                // Gradient numeric columns
                 {title:"$ Price", field:"price", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = getGradientColor(val, colMinMax['price'].min, colMinMax['price'].max);
+                    const c = getCustomGradient(val, colMinMax['price'].min, colMinMax['price'].max);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color="#fff";
                     return val;
                 }},
                 {title:"Partials", field:"partials", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = getGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max, true);
+                    const c = getCustomGradient(val, colMinMax['partials'].min, colMinMax['partials'].max, true);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color="#fff";
                     return val;
                 }},
                 {title:"Fursuits", field:"fursuits", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = getGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, true);
+                    const c = getCustomGradient(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, true);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color="#fff";
                     return val;
                 }},
                 {title:"Portfolio Size", field:"portfolio", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = getGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, true);
+                    const c = getCustomGradient(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, true);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color="#fff";
                     return val;
                 }},
                 {title:"Acct Age", field:"acctAge", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    const c = getGradientColor(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max);
+                    const c = getCustomGradient(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color="#fff";
                     return val;
                 }},
-                // Remaining standard text columns
+                // Additional columns
                 {title:"Status", field:"status"},
                 {title:"Aesthetic", field:"aesthetic"},
                 {title:"Timeline", field:"timeline"},
@@ -222,21 +229,12 @@ Papa.parse(csvUrl, {
                 {title:"Imperfections", field:"imperfections"}
             ],
             rowFormatter:function(row){
-                // Alternate row shading
                 const el = row.getElement();
-                if(row.getIndex() %2 ===0){
-                    el.style.backgroundColor = "#383838";
-                }else{
-                    el.style.backgroundColor = "#2e2e2e";
-                }
-            },
-            // Frozen header
-            movableRows: false,
-            headerVisible:true
+                el.style.backgroundColor = (row.getIndex()%2 ===0) ? "#383838" : "#2e2e2e";
+            }
         });
     }
 });
 </script>
-
 </body>
 </html>
