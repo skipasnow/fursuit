@@ -19,18 +19,6 @@
   #creator-table {
     width: 95%;
     margin: auto;
-    overflow-x: auto;
-  }
-
-  .hover-preview {
-    position: relative;
-    display: inline-block;
-  }
-
-  .hover-preview img:hover {
-    transform: scale(5);
-    z-index: 1000;
-    position: relative;
   }
 
   /* Custom header color */
@@ -44,12 +32,24 @@
     text-decoration: none;
   }
   a:hover {
-    color: #B35900;
+    color: orange;
   }
 
-  /* Tabulator white borders */
+  /* Row borders */
   .tabulator-cell, .tabulator-row {
-    border: 1px solid #fff;
+    border: 1px solid white;
+  }
+
+  /* Floating hover image style */
+  .logo-hover {
+    position: absolute;
+    z-index: 9999;
+    border: 2px solid #fff;
+    width: 150px; /* size of hover preview */
+    height: 150px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    pointer-events: none;
   }
 </style>
 </head>
@@ -66,35 +66,13 @@
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
 // Gradient helper
-function getGradientColor(value, min, max, startColor, endColor){
-    if(value === null || value === undefined || value === "") return "";
+function getGradientColor(value, min, max, reverse=false){
+    if(value === null || value === undefined || isNaN(value)) return ""; 
     const ratio = (value - min) / (max - min);
-    const r = Math.round(startColor[0] + (endColor[0]-startColor[0])*ratio);
-    const g = Math.round(startColor[1] + (endColor[1]-startColor[1])*ratio);
-    const b = Math.round(startColor[2] + (endColor[2]-startColor[2])*ratio);
+    const r = reverse ? Math.floor(179 + (46-179) * ratio) : Math.floor(46 + (179-46) * ratio);
+    const g = reverse ? Math.floor(111 + (27-111) * ratio) : Math.floor(111 + (111-111) * ratio); // green channel stays
+    const b = reverse ? Math.floor(64 + (27-64) * ratio) : Math.floor(64 + (27-64) * ratio); 
     return `rgb(${r},${g},${b})`;
-}
-
-// Convert hex to RGB array
-function hexToRgb(hex){
-    const bigint = parseInt(hex.replace("#",""),16);
-    const r = (bigint >>16) & 255;
-    const g = (bigint >>8) & 255;
-    const b = bigint & 255;
-    return [r,g,b];
-}
-
-// Hover attach function
-function attachHover(img,url){
-    img.onmouseenter = () => {
-        img.style.position = 'relative';
-        img.style.zIndex = 1000;
-        img.style.transform = "scale(5)";
-    };
-    img.onmouseleave = () => {
-        img.style.zIndex = 1;
-        img.style.transform = "scale(1)";
-    };
 }
 
 Papa.parse(csvUrl, {
@@ -140,89 +118,68 @@ Papa.parse(csvUrl, {
             };
         });
 
-        // Calculate min/max for gradient columns
-        const colMinMax = {};
-        const gradientCols = ['price','partials','fursuits','portfolio','acctAge'];
-        gradientCols.forEach(col=>{
+        // Calculate min/max for gradient columns individually
+        const gradientColumns = {
+            price: {reverse:false},
+            partials: {reverse:true},
+            fursuits: {reverse:true},
+            portfolio: {reverse:true},
+            acctAge: {reverse:true}
+        };
+
+        Object.keys(gradientColumns).forEach(col=>{
             const values = data.map(d=>d[col]).filter(v=>v!=null && !isNaN(v));
-            colMinMax[col] = {min: Math.min(...values), max: Math.max(...values)};
+            gradientColumns[col].min = Math.min(...values);
+            gradientColumns[col].max = Math.max(...values);
         });
 
-        const forestGreen = hexToRgb("#2E6F40");
-        const maroon = hexToRgb("#B31B1B");
-
-        new Tabulator("#creator-table", {
+        const table = new Tabulator("#creator-table", {
             data: data,
             layout: "fitData",
             movableColumns: true,
             resizableColumns: true,
             height: "85vh",
             columns: [
-                {title:"Rank", field:"rank", width:60, hozAlign:"center"},
-                {title:"Maker", field:"maker"},
-                {title:"Logo", field:"logo", formatter:function(cell){
-                    const val = cell.getValue();
-                    if(!val) return "";
-                    const img = document.createElement('img');
-                    img.src = val;
-                    img.style.height = '30px';
-                    img.style.width = 'auto';
-                    img.style.display = 'block';
-                    img.style.margin = '0 auto';
-                    attachHover(img,val);
-                    return img;
-                }, hozAlign:"center", width:60},
-                {title:"Maker Type", field:"makerType"},
-                {title:"Link", field:"link", formatter:"link", formatterParams:{labelField:"link", urlField:"link"}},
-                {title:"Preview", field:"preview", formatter:function(cell){
-                    const val = cell.getValue();
-                    if(!val) return "";
-                    const img = document.createElement('img');
-                    img.src = val;
-                    img.style.height = '30px';
-                    img.style.width = 'auto';
-                    img.style.display = 'block';
-                    img.style.margin = '0 auto';
-                    attachHover(img,val);
-                    return img;
-                }, hozAlign:"center"},
+                {title:"Rank", field:"rank", width:60, hozAlign:"center", headerFilter:false},
+                {title:"Maker", field:"maker", headerFilter:false},
+                {title:"Logo", field:"logo", formatter:"image", formatterParams:{height:30, width:30}, hozAlign:"center", headerFilter:false, cellClick:function(e, cell){
+                    // optional: could zoom on click if desired
+                }},
+                {title:"Maker Type", field:"makerType", headerFilter:false},
+                {title:"Link", field:"link", formatter:"link", formatterParams:{labelField:"link", urlField:"link"}, headerFilter:false},
+                {title:"Preview", field:"preview", headerFilter:false},
                 {title:"Specialty", field:"specialty", headerFilter:"input"},
-                {title:"$ Price", field:"price", hozAlign:"center", formatter:function(cell){
+                {title:"$ Price", field:"price", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['price'].min, colMinMax['price'].max, forestGreen, maroon);
+                    const c = getGradientColor(val, gradientColumns.price.min, gradientColumns.price.max, gradientColumns.price.reverse);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
                 }},
-                {title:"Partials", field:"partials", hozAlign:"center", formatter:function(cell){
+                {title:"Partials", field:"partials", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max, maroon, forestGreen);
+                    const c = getGradientColor(val, gradientColumns.partials.min, gradientColumns.partials.max, gradientColumns.partials.reverse);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
                 }},
-                {title:"Fursuits", field:"fursuits", hozAlign:"center", formatter:function(cell){
+                {title:"Fursuits", field:"fursuits", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, maroon, forestGreen);
+                    const c = getGradientColor(val, gradientColumns.fursuits.min, gradientColumns.fursuits.max, gradientColumns.fursuits.reverse);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
                 }},
-                {title:"Portfolio Size", field:"portfolio", hozAlign:"center", formatter:function(cell){
+                {title:"Portfolio Size", field:"portfolio", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, maroon, forestGreen);
+                    const c = getGradientColor(val, gradientColumns.portfolio.min, gradientColumns.portfolio.max, gradientColumns.portfolio.reverse);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
                 }},
-                {title:"Acct Age", field:"acctAge", hozAlign:"center", formatter:function(cell){
+                {title:"Acct Age", field:"acctAge", hozAlign:"right", formatter:function(cell){
                     const val = cell.getValue();
-                    if(val==null || val==="") return "";
-                    const c = getGradientColor(val, colMinMax['acctAge'].min, colMinMax['acctAge'].max, maroon, forestGreen);
+                    const c = getGradientColor(val, gradientColumns.acctAge.min, gradientColumns.acctAge.max, gradientColumns.acctAge.reverse);
                     cell.getElement().style.backgroundColor = c;
                     cell.getElement().style.color = "#fff";
                     return val;
@@ -235,20 +192,36 @@ Papa.parse(csvUrl, {
             ],
             rowFormatter:function(row){
                 const el = row.getElement();
-                el.style.borderBottom = "1px solid #fff";
-                el.style.borderRight = "1px solid #fff";
-                if(row.getIndex() %2 ===0){
-                    el.style.backgroundColor = "#383838";
-                } else {
-                    el.style.backgroundColor = "#2e2e2e";
+                el.style.backgroundColor = row.getIndex() %2 ===0 ? "#383838" : "#2e2e2e";
+            }
+        });
+
+        // Floating hover for logos
+        table.on("cellMouseEnter", function(e, cell){
+            if(cell.getColumn().getField() === "logo"){
+                const val = cell.getValue();
+                if(!val) return;
+                const hoverImg = document.createElement("div");
+                hoverImg.className = "logo-hover";
+                hoverImg.style.backgroundImage = `url(${val})`;
+                document.body.appendChild(hoverImg);
+
+                function moveHover(event){
+                    hoverImg.style.left = (event.pageX + 10) + "px";
+                    hoverImg.style.top = (event.pageY + 10) + "px";
                 }
-            },
-            // frozen header
-            headerVisible:true
+
+                moveHover(e);
+
+                cell.getElement().addEventListener("mousemove", moveHover);
+
+                cell.getElement().addEventListener("mouseleave", function(){
+                    hoverImg.remove();
+                }, {once:true});
+            }
         });
     }
 });
 </script>
-
 </body>
 </html>
