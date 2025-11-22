@@ -99,7 +99,6 @@
   #image-tooltip {
     display: none; 
     position: fixed;
-    
     width: 400px;
     height: 400px;
     
@@ -111,38 +110,72 @@
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     z-index: 99999;
     
+    /* Pointer events MUST be enabled for the hover-through logic to work */
     pointer-events: none; 
     
-    /* ANIMATION BASE STYLES */
-    opacity: 0; /* Start hidden */
-    /* Use a cubic-bezier for a nice "snap" into place effect */
+    /* Tooltip Animation Styles */
+    opacity: 0; 
     transition: opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
-  .tabulator .tabulator-header { background-color: #1f1f1f !important; }
-  a { color: darkorange; text-decoration: none; }
-  .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; }
-  .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
-  .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
-  
-/* --- REACTIVE CELL STYLES --- */
+  /* --- REACTIVE CELL STYLES (NEW EFFECTS) --- */
   .tabulator-row .tabulator-cell {
-    /* Smooth transition for the tilt reset */
-    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease;
-    /* maintain z-index context */
+    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, font-size 0.2s ease, color 0.2s ease;
     position: relative; 
-    /* Ensure the background covers the whole tilt area */
     background-clip: padding-box; 
   }
 
-  /* When a cell is active (class added by JS), boost it above others */
+  /* 1. Active Cell Base Style (3D Tilt + Brightness) */
   .tabulator-row .tabulator-cell.active-tilt {
     z-index: 1000 !important;
-    /* A nice glowing shadow */
-    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-    /* Make the borders stand out */
-    border-color: #fff !important; 
+    box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+    border-color: rgba(255,255,255,0.5) !important;
+    filter: brightness(1.2); /* Slightly brighter overall */
   }
+
+  /* 2. Text Cell Effect: Gradient Slide & Enlarge */
+  /* We target cells that DO NOT have images or links for the text effect */
+  .tabulator-row .tabulator-cell.active-tilt:not(:has(.preview-box)):not(:has(.logo-box)):not(:has(a)) {
+    /* Gradient Text Setup */
+    background-image: linear-gradient(to right, #fff 0%, #fff 50%, #ff8c00 100%);
+    background-size: 200% auto;
+    background-position: 0% center;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; 
+    color: transparent; /* Fallback */
+    
+    /* Enlarge Text */
+    font-size: 1.15em; 
+    font-weight: bold;
+    
+    /* Animate the gradient position */
+    animation: gradient-slide 0.4s forwards;
+  }
+
+  @keyframes gradient-slide {
+    to { background-position: 100% center; }
+  }
+
+  /* 3. URL/Link Effect: Glow, Lift, and Enlarge */
+  .tabulator-row .tabulator-cell.active-tilt a {
+    display: inline-block; /* Required for transform */
+    color: #ffd699 !important; /* Lighter orange */
+    
+    /* Hover Out + Enlarge */
+    transform: translateY(-4px) scale(1.2); 
+    
+    /* Glow Effect */
+    text-shadow: 0 0 8px rgba(255, 140, 0, 0.8), 0 0 15px rgba(255, 140, 0, 0.6);
+    
+    /* Smooth Transition */
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .tabulator .tabulator-header { background-color: #1f1f1f !important; }
+  a { color: darkorange; text-decoration: none; transition: all 0.2s; }
+  .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; }
+  .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
+  .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
 </style>
 </head>
 <body>
@@ -193,7 +226,7 @@ let currentPreviewImages = [];
 let currentImageIndex = 0;
 let slideshowInterval;
 let hideTimeout; 
-let isTooltipCentered = false; // Track state for animation
+let isTooltipCentered = false; 
 
 function displayImageInTooltip(imageUrl) {
     if (!imageUrl) {
@@ -201,32 +234,21 @@ function displayImageInTooltip(imageUrl) {
         return;
     }
 
-    // 1. ANIMATION RESET: Prepare for the incoming image
-    // Determine baseline transform based on whether we are centered or not
     const baseTransform = isTooltipCentered ? "translate(-50%, -50%)" : "";
-    // Random start angle: -5 or 5 degrees
     const startAngle = Math.random() < 0.5 ? -5 : 5;
 
-    // DISABLE transitions instantly to reset the element without user seeing it snap back
     tooltipEl.style.transition = 'none';
     tooltipEl.style.opacity = '0';
-    // Apply the "Twist" and slightly scale down for impact
     tooltipEl.style.transform = `${baseTransform} rotate(${startAngle}deg) scale(0.95)`;
 
     const img = new Image();
     img.onload = () => {
-        // Ensure tooltip is still meant to be visible
         if (tooltipEl.style.display !== 'none') {
             tooltipEl.style.backgroundImage = `url('${imageUrl}')`;
             
-            // 2. TRIGGER ANIMATION:
-            // Force a browser "Reflow" so it acknowledges the reset state above before animating
-            void tooltipEl.offsetWidth; 
+            void tooltipEl.offsetWidth; // Force Reflow
 
-            // Re-enable transitions for the smooth effect
             tooltipEl.style.transition = 'opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-            
-            // Set Final State: Fully visible, no rotation, full scale
             tooltipEl.style.opacity = '1';
             tooltipEl.style.transform = `${baseTransform} rotate(0deg) scale(1)`;
         }
@@ -251,17 +273,15 @@ function hideTooltip() {
     clearInterval(slideshowInterval);
 
     hideTimeout = setTimeout(() => {
-        // On hide, we also fade out
         tooltipEl.style.opacity = '0';
         setTimeout(() => {
-             // Wait for fade out before actually hiding display
              if(tooltipEl.style.opacity === '0') {
                  tooltipEl.style.display = "none";
                  tooltipEl.style.backgroundImage = 'none';
                  currentPreviewImages = [];
                  currentImageIndex = 0;
              }
-        }, 200); // Match the transition duration
+        }, 200);
     }, 50);
 }
 
@@ -279,13 +299,10 @@ function startSlideshow() {
 
 function centerTooltip() {
     isTooltipCentered = true;
-    // Base CSS handles the top/left 50%, but we set size here
     tooltipEl.style.top = "50%";
     tooltipEl.style.left = "50%";
     tooltipEl.style.width = "80vh"; 
     tooltipEl.style.height = "80vh";
-    
-    // Note: Transform is handled by the animation logic using isTooltipCentered
 }
 
 function moveTooltip(e) {
@@ -306,8 +323,6 @@ function moveTooltip(e) {
 
     tooltipEl.style.left = left + "px";
     tooltipEl.style.top = top + "px";
-    
-    // Note: Transform rotation is handled by animation logic
 }
 
 // --- HELPERS ---
@@ -569,7 +584,7 @@ Papa.parse(csvUrl, {
 });
 
 // --- GLOBAL HOVER TRACKING & REACTIVE TILT LOGIC ---
-let lastTiltCell = null; // Track the last cell we tilted to reset it
+let lastTiltCell = null; 
 
 document.addEventListener('mousemove', (e) => {
     const target = e.target;
@@ -580,10 +595,8 @@ document.addEventListener('mousemove', (e) => {
     // --- PART 1: REACTIVE CELL TILT ---
     const cell = target.closest('.tabulator-cell');
 
-    // If we moved to a new cell (or out of cells completely), reset the old one
     if (lastTiltCell && lastTiltCell !== cell) {
         lastTiltCell.style.transform = 'none';
-        lastTiltCell.style.filter = 'none';
         lastTiltCell.classList.remove('active-tilt');
         lastTiltCell = null;
     }
@@ -592,34 +605,23 @@ document.addEventListener('mousemove', (e) => {
         lastTiltCell = cell;
         cell.classList.add('active-tilt');
 
-        // 1. Calculate dimensions
         const rect = cell.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
 
-        // 2. Calculate mouse offset from center
         const mouseX = e.clientX - centerX;
         const mouseY = e.clientY - centerY;
 
-        // 3. Calculate rotation (Max 10 degrees tilt)
-        // Note: Rotating X-axis is based on Y-position, and vice versa
         const rotateX = -1 * (mouseY / (rect.height / 2)) * 10; 
         const rotateY = (mouseX / (rect.width / 2)) * 10;
 
-        // 4. Apply 3D Transform
-        // perspective(500px) creates the 3D depth. 
-        // scale(1.05) pops it slightly toward the user.
         cell.style.transform = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
-        
-        // 5. Apply "Light Up" (Brightness)
-        cell.style.filter = "brightness(1.3)";
     }
 
-    // --- PART 2: TOOLTIP & SLIDESHOW LOGIC (Existing) ---
+    // --- PART 2: TOOLTIP & SLIDESHOW LOGIC ---
     const sourceBox = isOverPreview || isOverLogo;
 
     if (sourceBox) {
-        // Cancel any pending hide actions immediately
         clearTimeout(hideTimeout);
 
         const rowEl = target.closest('.tabulator-row');
@@ -669,7 +671,6 @@ document.addEventListener('mousemove', (e) => {
         hideTooltip();
     }
 });
-// --- END GLOBAL LOGIC ---
 </script>
 
 </body>
