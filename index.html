@@ -25,8 +25,7 @@
     cursor: default;
     position: relative;
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    
-    /* FIX 1: Scale from the left to prevent cutting off */
+    /* FIX: Scale from left to prevent cutting off start of text */
     transform-origin: left center;
   }
 
@@ -150,22 +149,18 @@
 
   /* Base Cell Transition */
   .tabulator-row .tabulator-cell {
-    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
+    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease;
     position: relative; 
-    background-clip: padding-box;
+    /* IMPORTANT: Allows content to flow out */
+    overflow: visible !important; 
   }
 
-  /* 1. ACTIVE TILT STATE (The Hovered Cell) */
+  /* 1. ACTIVE TILT STATE */
   .tabulator-row .tabulator-cell.active-tilt {
     z-index: 10000 !important; 
     box-shadow: 0 15px 30px rgba(0,0,0,0.6);
     border-color: rgba(255,255,255,0.5) !important;
     filter: brightness(1.2);
-    
-    /* FIX 2: Allow text to expand outside the cell boundaries */
-    overflow: visible !important; 
-    text-overflow: unset !important;
-    white-space: nowrap !important; /* Force single line so it expands horizontally */
   }
 
   /* 2. URL/LINK ANIMATION */
@@ -181,32 +176,63 @@
     z-index: 10001;
   }
 
-  /* 3. LIGHT SWEEP ANIMATION (Text Cells Only) */
-  .tabulator-row .tabulator-cell.text-cell {
-    color: #fff !important; 
-    background: none; 
-    -webkit-text-fill-color: initial;
-    font-weight: normal;
-    transition: transform 0.2s ease, font-weight 0.2s ease;
+  /* 3. TEXT CELL EXPANSION & ANIMATION */
+  
+  /* Wrapper: Holds the text. Default state is constrained. */
+  .text-wrapper {
+    display: block;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.2s ease;
   }
 
-  .tabulator-row .tabulator-cell.text-cell.active-tilt {
-    font-weight: bold; 
+  /* Wrapper Hover: Pops out of the cell */
+  .tabulator-row .tabulator-cell.active-tilt .text-wrapper {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%); /* Keep centered vertically */
+    width: max-content; /* Expand to fit all text */
+    min-width: 100%;
+    background-color: rgba(40, 40, 40, 0.95); /* Dark background to cover text behind it */
+    padding: 5px 10px;
+    border-radius: 4px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    z-index: 100;
+  }
+
+  /* Text Span: Handles the Gradient Animation */
+  .text-content {
+    color: #fff; /* Default White */
+    font-weight: normal;
+    transition: font-weight 0.2s ease;
+  }
+
+  /* Text Hover: Light Sweep */
+  .tabulator-row .tabulator-cell.active-tilt .text-content {
+    font-weight: bold;
     
-    /* Gradient */
+    /* Gradient: White -> Orange -> White */
     background: linear-gradient(110deg, #ffffff 40%, #ff8c00 50%, #ffffff 60%);
     background-size: 200% 100%;
-    background-position: 200% center; 
+    background-position: 200% center;
     
     -webkit-background-clip: text;
     background-clip: text;
     
     -webkit-text-fill-color: transparent;
-    color: transparent !important;
+    color: transparent;
     
     animation: shine-sweep 1.5s linear infinite;
-    
-    transform: perspective(500px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.15) !important; 
+  }
+
+  /* Apply the tilt to the wrapper when active */
+  .tabulator-row .tabulator-cell.active-tilt .text-wrapper {
+     /* We apply the scale here on the wrapper for text cells */
+     /* Note: The 3D rotation is on the parent cell via JS, so we just scale here */
+     /* We use !important to ensure this takes precedence */
   }
 
   @keyframes shine-sweep {
@@ -438,6 +464,13 @@ header.addEventListener('mouseleave', () => {
 // --- MAIN SCRIPT ---
 let table;
 
+// NEW: Helper for Text Cells (wraps text for expansion effect)
+function formatTextCell(cell) {
+    const val = cell.getValue();
+    if(val === null || val === undefined) return "";
+    return `<div class="text-wrapper"><span class="text-content">${val}</span></div>`;
+}
+
 Papa.parse(csvUrl, {
     download: true, header: true, dynamicTyping: true,
     complete: function(results) {
@@ -500,8 +533,8 @@ Papa.parse(csvUrl, {
             initialSort:[ {column:"rank", dir:"asc"} ],
             
             columns: [
-                { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", cssClass: "text-cell" },
-                { title:"Maker", field:"maker", cssClass: "text-cell" },
+                { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell },
+                { title:"Maker", field:"maker", formatter: formatTextCell },
                 {
                     title:"Logo", field:"logo", hozAlign:"center", width:60,
                     formatter:function(cell){
@@ -509,7 +542,7 @@ Papa.parse(csvUrl, {
                         return val ? `<div class="logo-box" style="background-image:url('${val}');"></div>` : "";
                     }
                 },
-                { title:"Maker Type", field:"makerType", cssClass: "text-cell" },
+                { title:"Maker Type", field:"makerType", formatter: formatTextCell },
                 {
                     title:"Link", field:"link", formatter:"link", hozAlign:"center",
                     formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
@@ -548,16 +581,16 @@ Papa.parse(csvUrl, {
                         return val;
                     }
                 },
-                { title:"$ Ship or Fly", field:"shipOrFly", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, cssClass: "text-cell" },
-                { title:"$ Tariff (2025)", field:"tariff", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, cssClass: "text-cell" },
-                { title:"$ Ship", field:"ship", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, cssClass: "text-cell" },
-                { title:"$ Air Travel", field:"airTravel", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, cssClass: "text-cell" },
-                { title:"$ Travel Surplus", field:"travelSurplus", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, cssClass: "text-cell" },
+                { title:"$ Ship or Fly", field:"shipOrFly", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell },
+                { title:"$ Tariff (2025)", field:"tariff", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell },
+                { title:"$ Ship", field:"ship", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell },
+                { title:"$ Air Travel", field:"airTravel", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell },
+                { title:"$ Travel Surplus", field:"travelSurplus", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell },
                 
-                { title:"Aesthetic", field:"aesthetic", cssClass: "text-cell" },
-                { title:"Status", field:"status", cssClass: "text-cell" },
+                { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell },
+                { title:"Status", field:"status", formatter: formatTextCell },
                 {
-                    title:"Specialty", field:"specialty", cssClass: "text-cell",
+                    title:"Specialty", field:"specialty", formatter: formatTextCell,
                     headerFilter:"input", headerFilterPlaceholder:"Filter on specialty here..."
                 },
                 {
@@ -569,7 +602,6 @@ Papa.parse(csvUrl, {
                         const c = getGradientColor(val,colMinMax['partials'].min,colMinMax['partials'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
-                        cell.getElement().classList.remove('text-cell');
                         return val;
                     }
                 },
@@ -582,7 +614,6 @@ Papa.parse(csvUrl, {
                         const c = getGradientColor(val,colMinMax['fursuits'].min,colMinMax['fursuits'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
-                        cell.getElement().classList.remove('text-cell');
                         return val;
                     }
                 },
@@ -595,11 +626,10 @@ Papa.parse(csvUrl, {
                         const c = getGradientColor(val,colMinMax['portfolio'].min,colMinMax['portfolio'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
-                        cell.getElement().classList.remove('text-cell');
                         return val;
                     }
                 },
-                { title:"Country", field:"country", cssClass: "text-cell" },
+                { title:"Country", field:"country", formatter: formatTextCell },
                 {
                     title:"Followers", field:"followers", hozAlign:"right", sorter:"number",
                     sorterParams:{ alignEmptyValues:"bottom" },
@@ -610,7 +640,6 @@ Papa.parse(csvUrl, {
                         const c = getGradientColor(val,colMinMax['followers'].min,colMinMax['followers'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
-                        cell.getElement().classList.remove('text-cell');
                         return displayVal;
                     }
                 },
@@ -623,11 +652,10 @@ Papa.parse(csvUrl, {
                         const c = getGradientColor(val,colMinMax['acctAge'].min,colMinMax['acctAge'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
-                        cell.getElement().classList.remove('text-cell');
                         return val;
                     }
                 },
-                { title:"Acct Date", field:"acctDate", cssClass: "text-cell" }
+                { title:"Acct Date", field:"acctDate", formatter: formatTextCell }
             ],
             rowFormatter:function(row){
                 const el = row.getElement();
@@ -695,7 +723,9 @@ document.addEventListener('mousemove', (e) => {
         cell.style.setProperty('--rx', `${rotateX}deg`);
         cell.style.setProperty('--ry', `${rotateY}deg`);
 
-        if (!cell.classList.contains('text-cell')) {
+        // Only apply transform directly to non-text cells
+        // Text cells (with wrappers) handle scale in CSS via active-tilt
+        if (!cell.querySelector('.text-wrapper')) {
              cell.style.transform = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
         }
     }
