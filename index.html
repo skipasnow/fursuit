@@ -107,19 +107,13 @@
     white-space: normal !important; /* Allow wrapping */
   }
   
-  /* Allow individual columns to grow height */
-  .tabulator .tabulator-header .tabulator-col {
-    height: auto !important;
-  }
-  
-  /* Allow content inside header to wrap */
+  .tabulator .tabulator-header .tabulator-col,
   .tabulator .tabulator-header .tabulator-col-content {
     height: auto !important;
-    white-space: normal !important;
-    padding-bottom: 5px;
+    min-height: 40px; 
   }
   
-  /* Allow filter area to expand */
+  /* Fix Filter Area Expansion */
   .tabulator .tabulator-header .tabulator-header-filter {
     height: auto !important;
     overflow: visible !important;
@@ -187,7 +181,7 @@
   }
   .specialty-tag:hover { background-color: darkorange; border-color: #fff; transform: scale(1.1); }
 
-  /* --- HEADER FILTER (ACTIVE TAGS) STYLES --- */
+  /* --- HEADER FILTER STYLES --- */
   .filter-container {
     display: flex; 
     flex-wrap: wrap; 
@@ -195,10 +189,10 @@
     padding: 6px;
     background: #222; 
     border-radius: 4px; 
-    align-items: flex-start; /* Align to top so it grows down */
+    align-items: flex-start; 
     width: 100%; 
     box-sizing: border-box;
-    /* FIX: Set Minimum Height to accommodate buttons by default */
+    /* FIX: Default height to show controls nicely */
     min-height: 65px; 
   }
   
@@ -360,16 +354,13 @@ function moveTooltip(e) {
 }
 
 // --- SPECIALTY FILTER LOGIC ---
-// pendingTags: What the user sees in the UI (Not applied yet)
-// appliedTags: What the table is actually filtering by
 let pendingSpecialtyFilters = new Set();
-let appliedSpecialtyFilters = new Set();
 
 window.addSpecialtyFilter = function(tag) {
     if(!tag) return;
     pendingSpecialtyFilters.add(tag.trim());
     updateFilterHeader();
-    // Does NOT recalc here. User must click Apply.
+    // No recalc here, waits for Apply button
 }
 
 window.removeSpecialtyFilter = function(tag) {
@@ -379,15 +370,15 @@ window.removeSpecialtyFilter = function(tag) {
 
 window.clearSpecialtyFilters = function() {
     pendingSpecialtyFilters.clear();
-    appliedSpecialtyFilters.clear(); // Clear active logic
     updateFilterHeader();
-    table.refreshFilter(); // FIX: refreshFilter forces re-evaluation
+    // Clear the actual filter on the table
+    table.setHeaderFilterValue("specialty", []); 
 }
 
 window.applySpecialtyFilters = function() {
-    // Move Pending -> Applied
-    appliedSpecialtyFilters = new Set(pendingSpecialtyFilters);
-    table.refreshFilter(); // FIX: Forces the headerFilterFunc to run again
+    // FIX: Use setHeaderFilterValue to trigger Tabulator's internal filter refresh
+    // This passes the array of tags to headerFilterFunc as 'headerValue'
+    table.setHeaderFilterValue("specialty", Array.from(pendingSpecialtyFilters));
 }
 
 function updateFilterHeader() {
@@ -395,8 +386,8 @@ function updateFilterHeader() {
     if(!container) return;
     
     let tagsArea = container.querySelector('.tags-area');
-    // If re-rendered, rebuild structure
     if (!tagsArea) {
+        // Rebuild if lost
         container.innerHTML = '';
         const input = document.createElement("input");
         input.type = "text";
@@ -433,7 +424,6 @@ function updateFilterHeader() {
         container.appendChild(actionsDiv);
     } 
 
-    // Update Tags Visuals
     tagsArea.innerHTML = '';
     if (pendingSpecialtyFilters.size > 0) {
         pendingSpecialtyFilters.forEach(tag => {
@@ -619,11 +609,11 @@ Papa.parse(csvUrl, {
                 { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
                 
-                // --- SPECIALTY FILTER ---
+                // --- SPECIALTY FILTER (FIXED) ---
                 {
                     title:"Specialty", 
                     field:"specialty", 
-                    width: 250, // FIX: Width increased for filter UI
+                    width: 250, // Ensure width for UI
                     headerFilter: function(cell, onRendered, success, cancel, editorParams){
                         const container = document.createElement("div");
                         container.id = "specialty-filter-container";
@@ -631,14 +621,16 @@ Papa.parse(csvUrl, {
                         setTimeout(updateFilterHeader, 100); 
                         return container;
                     },
+                    // The Function called by table.refreshFilter() or internal updates
                     headerFilterFunc: function(headerValue, rowValue, rowData, filterParams){
-                        if (appliedSpecialtyFilters.size === 0) return true;
+                        // headerValue here comes from setHeaderFilterValue
+                        if (!headerValue || headerValue.length === 0) return true;
                         if (!rowValue) return false;
                         
                         const rowTags = rowValue.split(',').map(t => t.trim());
                         let match = false;
-                        // OR Logic
-                        appliedSpecialtyFilters.forEach(filterTag => {
+                        // Check if row matches ANY active tag (OR logic)
+                        headerValue.forEach(filterTag => {
                             if (rowTags.includes(filterTag)) match = true;
                         });
                         return match;
