@@ -196,8 +196,8 @@
     display: flex; flex-direction: column; gap: 6px; padding: 8px;
     background: #222; border-radius: 4px; width: 100%; box-sizing: border-box; 
     min-height: 85px; 
-    /* FIX: Increased padding bottom to prevent text cutoff */
-    padding-bottom: 12px; 
+    /* FIX: Increased padding bottom significantly */
+    padding-bottom: 14px; 
   }
   .filter-input {
     background: #333; color: #fff; border: 1px solid #555;
@@ -216,15 +216,17 @@
   .filter-actions {
       margin-top: auto; width: 100%; display: flex; justify-content: space-between; align-items: center; 
       border-top: 1px solid #444; 
-      /* FIX: Added top/bottom padding to lift buttons off the edge */
-      padding-top: 6px; padding-bottom: 2px; 
+      /* FIX: Added extra vertical padding and line-height */
+      padding-top: 8px; padding-bottom: 4px;
   }
   .filter-clear-all {
     font-size: 0.85em; color: #ff6b6b; cursor: pointer; text-decoration: underline; white-space: nowrap;
+    line-height: 1.5;
   }
   .filter-clear-all:hover { color: #ff4040; }
   .filter-apply-btn {
     font-size: 0.85em; color: #4caf50; cursor: pointer; text-decoration: underline; white-space: nowrap; font-weight: bold;
+    line-height: 1.5;
   }
   .filter-apply-btn:hover { color: #66bb6a; }
   .tags-area { display: flex; flex-wrap: wrap; gap: 3px; width: 100%; margin-bottom: 4px; }
