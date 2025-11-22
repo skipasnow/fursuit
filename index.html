@@ -96,7 +96,8 @@
 
   /* --- THE FLOATING TOOLTIP --- */
   #image-tooltip {
-    display: none !important; 
+    /* FIX 1: Removed !important so JS can toggle display */
+    display: none; 
     
     position: fixed;
     width: 400px;
@@ -110,7 +111,8 @@
     border: 2px solid #fff;
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     z-index: 99999;
-    /* REMOVE THIS LINE: pointer-events: none; */
+    
+    /* Keep pointer events enabled so mouse can move over tooltip without closing it */
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -278,7 +280,6 @@ let table;
 Papa.parse(csvUrl, {
     download: true, header: true, dynamicTyping: true,
     complete: function(results) {
-        
         const data = results.data.map(row => ({
             rank: cleanNumber(row['Rank']),
             maker: row['Maker'],
@@ -369,11 +370,9 @@ Papa.parse(csvUrl, {
                             previewBox.className = 'preview-box';
                             previewBox.style.backgroundImage = `url('${url}')`;
                             previewBox.setAttribute('data-image-index', index);
-                            // No internal event listeners needed here anymore. 
-                            // The global tracker handles it all.
+                            // Internal listeners removed to prevent conflict with global tracker
                             container.appendChild(previewBox);
                         });
-                        
                         return container;
                     },
                 },
@@ -500,23 +499,19 @@ Papa.parse(csvUrl, {
 document.addEventListener('mousemove', (e) => {
     const target = e.target;
     const isOverPreview = target.closest('.preview-box');
-    const isOverLogo = target.closest('.logo-box'); // Check for logo too
+    const isOverLogo = target.closest('.logo-box'); 
     const isOverTooltip = target.closest('#image-tooltip');
 
-    // Detect if mouse is over EITHER a preview box OR a logo box
     const sourceBox = isOverPreview || isOverLogo;
 
     if (sourceBox) {
-        // Find the closest Tabulator row element
         const rowEl = target.closest('.tabulator-row');
         
-        // Use Tabulator's public API to reliably get the row data
         if (rowEl && table) {
             const row = table.getRow(rowEl);
             if (row) {
                 const rowData = row.getData();
                 
-                // Determine which images to show based on what we are hovering
                 let imageUrls = [];
                 let index = 0;
                 let shouldSlide = false;
@@ -531,12 +526,10 @@ document.addEventListener('mousemove', (e) => {
                     shouldSlide = false;
                 }
 
-                // Only update if we have images
                 if (imageUrls && imageUrls.length > 0) {
                     clearTimeout(hideTimeout);
                     
-                    // Only refresh the tooltip if we are hovering a NEW element or a different image index
-                    // This prevents the tooltip from flickering or resetting constantly while moving inside the box
+                    // FIX 2: Check if index changed to allow moving between boxes in same row
                     if (tooltipEl.style.display === 'none' || currentPreviewImages !== imageUrls || currentImageIndex !== index) {
                         clearInterval(slideshowInterval);
                         showTooltip(imageUrls, index);
@@ -546,7 +539,6 @@ document.addEventListener('mousemove', (e) => {
             }
         }
     } 
-    // Case 2: Mouse is NOT over any box AND NOT over the tooltip.
     else if (!isOverTooltip && tooltipEl.style.display !== 'none') {
         hideTooltip();
     }
