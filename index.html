@@ -10,8 +10,9 @@
 <style>
   /* --- CUSTOM CURSOR LOGIC --- */
 
-  /* NOTE: Browsers strictly limit cursors to 32x32 pixels. 
-     These SVGs are drawn specifically to match your White Paw design within that limit.
+  /* NOTE: These use URL-encoded SVGs. 
+     Design: White Fur, Pink Pads, Dark Outline.
+     Filters (Shadows) have been removed to ensure browser compatibility.
   */
 
   /* 1. DEFAULT POINTER (Open White Paw) */
@@ -19,13 +20,13 @@
   .tabulator, .tabulator-row, .tabulator-cell, 
   .preview-box, .logo-box, .filter-input,
   .tabulator-header, .tabulator-col, .tabulator-col-content, .tabulator-sortable {
-    cursor: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJzIj48ZmVEcm9wU2hhZG93IGR4PSIxIiBkeT0iMSIHN0ZERldmlhdGlvbj0iMSIgZmxvb2Qtb3BhY2l0eT0iMC4zIi8+PC9maWx0ZXI+PGcgZmlsdGVyPSJ1cmwoI3MpIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLDIpIj48IS0tIE1haW4gUGF3IFNoYXBlIC0tPjxwYXRoIGQ9Ik04LDI0IFE0LDE2IDYsMTAgUTksMiAxNiwyIFEyMyw0IDI2LDEwIFEyOCwxNiAyMiwyNCBaIiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMS41Ii8+PCEtLSBHcmV5IFNoYWRpbmcgLS0+PHBhdGggZD0iTTgsMTggUTE2LDIyIDIyLDE4IEwyMiwyNCBRMTYsMjYgOCwyNCBaIiBmaWxsPSIjQ0NDQ0NDIi8+PCEtLSBUb2UgUGFkcyAtLT48Y2lyY2xlIGN4PSIxMCIgY3k9IjEwIiByPSIyLjUiIGZpbGw9IiNGRjk5Q0MiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjciIHI9IjMiIGZpbGw9IiNGRjk5Q0MiLz48Y2lyY2xlIGN4PSIyMiIgY3k9IjEwIiByPSIyLjUiIGZpbGw9IiNGRjk5Q0MiLz48IS0tIE1haW4gUGFkIC0tPjxlbGxpcHNlIGN4PSIxNiIgY3k9IjE4IiByeD0iNSIgcnk9IjQiIGZpbGw9IiNGRjk5Q0MiLz48IS0tIENsYXcgVGlwIC0tPjxwYXRoIGQ9Ik0xLDEgTDUsMyBMMiw1IFoiIGZpbGw9IiNGRkYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9nPjwvc3ZnPg==') 2 2, auto !important;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M9,26 C5,22 5,14 8,10 C11,5 17,3 23,6 C29,9 29,18 23,26 C18,30 13,30 9,26 Z' fill='%23FFFFFF' stroke='%23444444' stroke-width='2'/%3E%3Ccircle cx='11' cy='13' r='3' fill='%23FFC0CB'/%3E%3Ccircle cx='16' cy='9' r='3.5' fill='%23FFC0CB'/%3E%3Ccircle cx='21' cy='13' r='3' fill='%23FFC0CB'/%3E%3Cpath d='M12,20 Q16,24 20,20' stroke='%23FFC0CB' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") 2 2, auto !important;
   }
 
   /* 2. CLICK/ACTIVE CURSOR (Closed White Paw/Fist) */
   html:active, body:active, *:active, 
   .tabulator-col:active, .tabulator-sortable:active {
-    cursor: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJzIj48ZmVEcm9wU2hhZG93IGR4PSIxIiBkeT0iMSIHN0ZERldmlhdGlvbj0iMSIgZmxvb2Qtb3BhY2l0eT0iMC4zIi8+PC9maWx0ZXI+PGcgZmlsdGVyPSJ1cmwoI3MpIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxLDIpIj48IS0tIENsb3NlZCBQYXcgU2hhcGUgLS0+PHJlY3QgeD0iNCIgeT0iOCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjE4IiByeD0iOCIgcnk9IjgiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48IS0tIEdyZXkgU2hhZGluZyAtLT48cGF0aCBkPSJNNiwxOCBRMTUsMjIgMjQsMTggTDI0LDIwIFExNSwyNiA2LDIwIFoiIGZpbGw9IiNDQ0NDQ0MiLz48IS0tIE1haW4gUGFkIChTcXVlZXplZCkgLS0+PGVsbGlXBzZSBjeD0iMTUiIGN5PSIxNSIgcng9IjYiIHJ5PSI0IiBmaWxsPSIjRkY5OUNDIi8+PCEtLSBUb2UgTGluZXMgLS0+PHBhdGggZD0iTTEwLDggTDEwLDEyIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsPSJub25lIi8+PHBhdGggZD0iMjAsOCBMMjAsMTIiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiLz48IS0tIENsYXcgVGlwIC0tPjxwYXRoIGQ9Ik0wLDAgTDQsMiBMMSw0IFoiIGZpbGw9IiNGRkYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9nPjwvc3ZnPg==') 8 8, auto !important;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='%23FFFFFF' stroke='%23444444' stroke-width='2'/%3E%3Cpath d='M10,12 Q13,16 16,12' stroke='%23444444' stroke-width='1.5' fill='none'/%3E%3Cpath d='M16,12 Q19,16 22,12' stroke='%23444444' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='16' cy='20' r='4' fill='%23FFC0CB'/%3E%3C/svg%3E") 16 16, auto !important;
   }
 
   /* --- LAYOUT FIX: SAFE VIEWPORT --- */
@@ -140,7 +141,7 @@
     background-color: #1f1f1f !important; 
     font-weight: bold !important;
     overflow: hidden !important;
-    cursor: inherit; /* Custom cursor on headers */
+    cursor: inherit; /* Use custom cursor */
   }
   .tabulator .tabulator-header .tabulator-col-content {
     white-space: normal !important; padding: 8px 4px;
