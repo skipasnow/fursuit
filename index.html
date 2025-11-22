@@ -110,7 +110,7 @@
     border: 2px solid #fff;
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     z-index: 99999;
-    pointer-events: none;
+    /* REMOVE THIS LINE: pointer-events: none; */
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -210,13 +210,21 @@ function showTooltip(imageUrls, startIndex = 0) {
     displayImageInTooltip(currentPreviewImages[currentImageIndex]);
 }
 
+let hideTimeout; // Define a global variable to hold the timeout
+
 function hideTooltip() {
-    tooltipEl.style.display = "none";
-    tooltipEl.style.backgroundImage = 'none';
-    tooltipEl.textContent = 'Loading Content...';
-    currentPreviewImages = [];
-    currentImageIndex = 0;
+    // Clear any pending hide timeout
+    clearTimeout(hideTimeout);
     clearInterval(slideshowInterval);
+
+    // Set a small delay before hiding to prevent flicker
+    hideTimeout = setTimeout(() => {
+        tooltipEl.style.display = "none";
+        tooltipEl.style.backgroundImage = 'none';
+        tooltipEl.textContent = 'Loading Content...';
+        currentPreviewImages = [];
+        currentImageIndex = 0;
+    }, 100); // 100 milliseconds delay
 }
 
 function startSlideshow() {
@@ -388,7 +396,7 @@ Papa.parse(csvUrl, {
 								showTooltip(imageUrls, index);
 							});
 
-							// 2. Mouse leaves a specific box: Start slideshow, do NOT hide tooltip
+							// 2. Mouse leaves a specific box: Start slideshow (keep tooltip visible)
 							previewBox.addEventListener('mouseleave', (e) => {
 								startSlideshow(); // Starts the 2-second cycle
 							});
@@ -396,30 +404,25 @@ Papa.parse(csvUrl, {
 							container.appendChild(previewBox);
 						});
 						
-						// 3. Mouse leaves the ENTIRE CELL AREA: Hide tooltip and clear slideshow
-						// This listener is attached to the Tabulator cell's main element.
-						cell.getElement().addEventListener('mouseleave', (e) => {
-							 // Check if the related target (where the mouse moved to) is outside the preview boxes
-							if (!e.relatedTarget || !e.relatedTarget.closest('.preview-container')) {
-								hideTooltip();
-							}
-						});
-
+						// --- 3. Mouse leaves the ENTIRE CELL AREA: Hide tooltip ---
+						// Attaching the listener to the cell element, but only once using a check
+						// to prevent double-attachment if Tabulator re-runs the formatter.
+						let cellElement = cell.getElement();
+						if (!cellElement.hasAttribute('data-mouseleave-attached')) {
+							cellElement.setAttribute('data-mouseleave-attached', 'true');
+							
+							cellElement.addEventListener('mouseleave', (e) => {
+								// Check if the mouse is moving to the large floating tooltip
+								if (!e.relatedTarget || e.relatedTarget.id !== 'image-tooltip') {
+									// Also check if the mouse is not moving to another preview box (shouldn't be needed, but safe)
+									if (!e.relatedTarget || !e.relatedTarget.closest('.preview-box')) {
+										hideTooltip();
+									}
+								}
+							});
+						}
+						
 						return container;
-					},
-					// *** NOTE: The original "cellMouseLeave:function(e, cell){ hideTooltip(); }" is intentionally missing here. ***
-				},
-                {
-                    title:"$ Price", field:"price", hozAlign:"right", sorter:"number",
-                    sorterParams:{ alignEmptyValues:"bottom" },
-                    formatter:function(cell){
-                        const val = cell.getValue();
-                        if(val === null) return "N/A"; 
-                        const c = getGradientColor(val,colMinMax['price'].min,colMinMax['price'].max,true);
-                        cell.getElement().style.backgroundColor = c;
-                        cell.getElement().style.color="#fff";
-                        return val;
-                    }
                 },
                 { title:"$ Ship or Fly", field:"shipOrFly", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
                 { title:"$ Tariff (2025)", field:"tariff", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
