@@ -14,22 +14,21 @@
     font-family: sans-serif;
     margin: 0;
     padding: 20px;
-    /* Use hidden for Y to let the table handle scrolling internally */
+    /* Prevent Body scroll, let Table scroll */
     overflow: hidden; 
-    height: 100vh; /* Lock body height */
-    display: flex;
-    flex-direction: column;
+    height: 100vh; 
+    box-sizing: border-box;
   }
 
   /* --- HEADER ANIMATION --- */
   h1 { 
-    margin: 0 0 10px 0; /* Tighten margin */
+    margin: 0 0 15px 0; 
     display: inline-block; 
     cursor: default;
     position: relative;
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transform-origin: left center;
-    flex-shrink: 0; /* Prevent shrinking in flex layout */
+    white-space: nowrap;
   }
 
   h1:hover {
@@ -65,7 +64,6 @@
   .controls-container {
     background: #1f1f1f; padding: 15px; border-radius: 8px; margin-bottom: 15px;
     display: flex; gap: 15px; align-items: center; flex-wrap: wrap; border: 1px solid #444;
-    flex-shrink: 0; /* Prevent shrinking */
   }
   .control-group { display: flex; align-items: center; gap: 10px; }
   select, button {
@@ -80,11 +78,9 @@
   /* --- TABLE CONTAINER --- */
   #creator-table {
     width: 100%;
-    /* FIX: Fill remaining height so scrollbar is always at bottom of screen */
-    flex-grow: 1; 
+    /* FIX: Strict height calculation ensures scrollbar stays on screen */
+    height: calc(100vh - 180px); 
     border: 1px solid #444;
-    /* Ensure Tabulator handles the scrollbar */
-    overflow: hidden; 
   }
 
   /* --- PREVIEW & LOGO BOXES --- */
@@ -107,6 +103,7 @@
 
   /* --- TABULATOR STYLES & OVERRIDES --- */
   
+  /* FIX: Force Headers to Expand */
   .tabulator .tabulator-header { 
     height: auto !important; 
     background-color: #1f1f1f !important; 
@@ -135,7 +132,6 @@
     transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
     position: relative; 
     background-clip: padding-box;
-    /* FIX 1: Removed 'overflow: visible' from here to fix header sync */
   }
 
   /* 1. ACTIVE TILT STATE */
@@ -144,7 +140,7 @@
     box-shadow: 0 15px 30px rgba(0,0,0,0.6);
     border-color: rgba(255,255,255,0.5) !important; 
     filter: brightness(1.2);
-    /* FIX 1: Only allow overflow when actively hovering */
+    /* FIX: Only allow overflow when actively hovering to keep headers aligned */
     overflow: visible !important; 
   }
 
@@ -192,30 +188,26 @@
   }
   .specialty-tag:hover { background-color: darkorange; border-color: #fff; transform: scale(1.1); }
 
-  /* --- HEADER FILTER (ACTIVE TAGS) STYLES --- */
+  /* --- HEADER FILTER STYLES --- */
   .filter-container {
     display: flex; flex-wrap: wrap; gap: 4px; padding: 6px;
     background: #222; border-radius: 4px; align-items: flex-start; 
     width: 100%; box-sizing: border-box; min-height: 65px; 
   }
-  
   .filter-input {
     background: #333; color: #fff; border: 1px solid #555;
     padding: 4px 6px; border-radius: 3px; font-size: 0.85em;
     width: 100%; outline: none; margin-bottom: 4px;
   }
   .filter-input:focus { border-color: darkorange; }
-  
   .filter-tag {
     background-color: darkorange; color: #fff; padding: 2px 6px;
     border-radius: 4px; font-size: 0.8em; display: flex; align-items: center; gap: 4px;
     animation: popIn 0.2s ease-out; margin-bottom: 2px;
   }
   @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
-  
   .filter-remove { cursor: pointer; font-weight: bold; color: #000; font-size: 10px; }
   .filter-remove:hover { color: #fff; }
-  
   .filter-actions {
       margin-top: 4px; width: 100%; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #444; padding-top: 4px;
   }
@@ -359,23 +351,31 @@ window.addSpecialtyFilter = function(tag) {
     if(!tag) return;
     pendingSpecialtyFilters.add(tag.trim());
     updateFilterHeader();
+    triggerHeaderResize(); // Force resize
 }
 
 window.removeSpecialtyFilter = function(tag) {
     pendingSpecialtyFilters.delete(tag);
     updateFilterHeader();
+    triggerHeaderResize(); // Force resize
 }
 
 window.clearSpecialtyFilters = function() {
     pendingSpecialtyFilters.clear();
     appliedSpecialtyFilters.clear(); 
     updateFilterHeader();
+    triggerHeaderResize();
     table.setHeaderFilterValue("specialty", []); 
 }
 
 window.applySpecialtyFilters = function() {
     appliedSpecialtyFilters = new Set(pendingSpecialtyFilters);
     table.setHeaderFilterValue("specialty", Array.from(appliedSpecialtyFilters));
+}
+
+// Helper to force Tabulator to redraw headers when content grows
+function triggerHeaderResize() {
+    if(table) table.columnManager.renderer.renderColumns();
 }
 
 function updateFilterHeader() {
@@ -548,15 +548,14 @@ Papa.parse(csvUrl, {
             movableColumns: true,
             resizableColumns: true,
             placeholder:"No Data Available",
-            // FIX 2: Use 100% height relative to the container flex growth
-            height: "100%", 
+            height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Maker", field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
                 {
-                    title:"Logo", field:"logo", hozAlign:"center", width:80, // FIX 3: Increased width
+                    title:"Logo", field:"logo", hozAlign:"center", width:80,
                     formatter:function(cell){
                         const val = cell.getValue();
                         return val ? `<div class="logo-box" style="background-image:url('${val}');"></div>` : "";
@@ -605,6 +604,7 @@ Papa.parse(csvUrl, {
                 { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
                 
+                // --- SPECIALTY FILTER ---
                 {
                     title:"Specialty", 
                     field:"specialty", 
@@ -617,11 +617,11 @@ Papa.parse(csvUrl, {
                         return container;
                     },
                     headerFilterFunc: function(headerValue, rowValue, rowData, filterParams){
-                        if (appliedSpecialtyFilters.size === 0) return true;
+                        if (!headerValue || headerValue.length === 0) return true;
                         if (!rowValue) return false;
                         const rowTags = rowValue.split(',').map(t => t.trim());
                         let match = false;
-                        appliedSpecialtyFilters.forEach(filterTag => {
+                        headerValue.forEach(filterTag => {
                             if (rowTags.includes(filterTag)) match = true;
                         });
                         return match;
@@ -632,6 +632,7 @@ Papa.parse(csvUrl, {
                         const tags = val.split(',').map(t => t.trim()).filter(t => t);
                         const wrapper = document.createElement('div');
                         wrapper.className = 'tag-wrapper';
+                        
                         tags.forEach(tag => {
                             const span = document.createElement('span');
                             span.className = 'specialty-tag';
@@ -742,6 +743,7 @@ document.addEventListener('mousemove', (e) => {
     const isOverLogo = target.closest('.logo-box'); 
     const isOverTooltip = target.closest('#image-tooltip');
     
+    // PART 1: REACTIVE TILT
     const cell = target.closest('.tabulator-cell');
     if (lastTiltCell && lastTiltCell !== cell) {
         const oldWrapper = lastTiltCell.querySelector('.text-wrapper');
@@ -762,12 +764,14 @@ document.addEventListener('mousemove', (e) => {
         const rotateY = (mouseX / (rect.width / 2)) * 10;
         const wrapper = cell.querySelector('.text-wrapper');
         const transformString = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.15)`;
+        
         if (wrapper) { wrapper.style.transform = `translateY(-50%) ${transformString}`; } 
         else if (!cell.querySelector('a') && !cell.querySelector('.tag-wrapper')) { 
              cell.style.transform = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
         }
     }
 
+    // PART 2: TOOLTIP
     const sourceBox = isOverPreview || isOverLogo;
     if (sourceBox) {
         clearTimeout(hideTimeout);
