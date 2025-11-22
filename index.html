@@ -114,31 +114,17 @@
   }
 
   /* --- TABULATOR STYLES & OVERRIDES --- */
-  
   .tabulator .tabulator-header { 
     background-color: #1f1f1f !important; 
     font-weight: bold !important;
-    /* Overflow hidden required for scrolling sync */
     overflow: hidden !important;
   }
-  
-  /* Ensure columns expand height to fit content */
-  .tabulator .tabulator-header .tabulator-col,
-  .tabulator .tabulator-header .tabulator-col-content {
-    height: auto !important;
-  }
-
   .tabulator .tabulator-header .tabulator-col-content {
     white-space: normal !important; padding: 8px 4px;
   }
-  
-  /* Allow filter area to expand */
   .tabulator .tabulator-header .tabulator-header-filter {
-    height: auto !important;
-    overflow: visible !important;
-    margin-top: 5px;
+    height: auto !important; overflow: visible !important; margin-top: 5px;
   }
-
   .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; }
   .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
   .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
@@ -210,8 +196,8 @@
     display: flex; flex-direction: column; gap: 6px; padding: 8px;
     background: #222; border-radius: 4px; width: 100%; box-sizing: border-box; 
     min-height: 85px; 
-    /* FIX: Add padding bottom to prevent cutoff */
-    padding-bottom: 10px; 
+    /* FIX: Increased padding bottom to prevent text cutoff */
+    padding-bottom: 12px; 
   }
   .filter-input {
     background: #333; color: #fff; border: 1px solid #555;
@@ -229,7 +215,9 @@
   .filter-remove:hover { color: #fff; }
   .filter-actions {
       margin-top: auto; width: 100%; display: flex; justify-content: space-between; align-items: center; 
-      border-top: 1px solid #444; padding-top: 6px;
+      border-top: 1px solid #444; 
+      /* FIX: Added top/bottom padding to lift buttons off the edge */
+      padding-top: 6px; padding-bottom: 2px; 
   }
   .filter-clear-all {
     font-size: 0.85em; color: #ff6b6b; cursor: pointer; text-decoration: underline; white-space: nowrap;
@@ -394,7 +382,7 @@ window.applySpecialtyFilters = function() {
     triggerHeaderResize();
 }
 
-// FIX: Resize Trigger using setTimeout to allow DOM to paint first
+// Helper to force Tabulator to redraw headers (Fixes sizing issue)
 function triggerHeaderResize() {
     if(table) {
         setTimeout(() => {
@@ -630,6 +618,7 @@ Papa.parse(csvUrl, {
                 { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
                 
+                // --- SPECIALTY FILTER ---
                 {
                     title:"Specialty", 
                     field:"specialty", 
