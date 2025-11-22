@@ -392,7 +392,10 @@ Papa.parse(csvUrl, {
 							
 							// 1. Mouse enters a specific box: Show image, stop slideshow
 							previewBox.addEventListener('mouseenter', (e) => {
+								// Clear the running slideshow (if any)
 								clearInterval(slideshowInterval);
+								// Clear any pending hide operation
+								clearTimeout(hideTimeout); 
 								showTooltip(imageUrls, index);
 							});
 
@@ -404,26 +407,25 @@ Papa.parse(csvUrl, {
 							container.appendChild(previewBox);
 						});
 						
-						// --- 3. Mouse leaves the ENTIRE CELL AREA: Hide tooltip ---
-						// Attaching the listener to the cell element, but only once using a check
-						let cellElement = cell.getElement();
-						if (!cellElement.hasAttribute('data-mouseleave-attached')) {
-							cellElement.setAttribute('data-mouseleave-attached', 'true');
+						// --- 3. Attach Master HIDE/CLEANUP Listener to the Cell's Container ---
+						// This is necessary because Tabulator's built-in mouseleave may interfere.
+						// We clear the slideshow and hide the tooltip when the mouse leaves the container.
+						// The delayed hideTooltip (from the previous step) manages the transition to the floating tooltip.
+						container.addEventListener('mouseleave', (e) => {
+							// Check if the mouse is moving to the floating tooltip (by ID)
+							if (e.relatedTarget && e.relatedTarget.id === 'image-tooltip') {
+								 // Do nothing, the mouse is entering the tooltip itself
+								 return;
+							}
 							
-							cellElement.addEventListener('mouseleave', (e) => {
-								// Check if the mouse is moving to the large floating tooltip
-								if (!e.relatedTarget || e.relatedTarget.id !== 'image-tooltip') {
-									// Check if the mouse is not moving to another preview box
-									if (!e.relatedTarget || !e.relatedTarget.closest('.preview-box')) {
-										hideTooltip();
-									}
-								}
-							});
-						}
+							// Otherwise, hide the tooltip with a short delay
+							hideTooltip();
+						});
 						
 						return container;
-					}, // <-- COMMA ADDED HERE TO SEPARATE formatter FROM THE NEXT COLUMN
-				}, // <-- This comma is needed because the next column follows
+					},
+					// IMPORTANT: The original cellMouseLeave property MUST remain omitted.
+				},
                 { title:"$ Ship or Fly", field:"shipOrFly", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
                 { title:"$ Tariff (2025)", field:"tariff", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
                 { title:"$ Ship", field:"ship", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
