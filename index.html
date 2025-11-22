@@ -114,17 +114,31 @@
   }
 
   /* --- TABULATOR STYLES & OVERRIDES --- */
+  
   .tabulator .tabulator-header { 
     background-color: #1f1f1f !important; 
     font-weight: bold !important;
+    /* Overflow hidden required for scrolling sync */
     overflow: hidden !important;
   }
+  
+  /* Ensure columns expand height to fit content */
+  .tabulator .tabulator-header .tabulator-col,
+  .tabulator .tabulator-header .tabulator-col-content {
+    height: auto !important;
+  }
+
   .tabulator .tabulator-header .tabulator-col-content {
     white-space: normal !important; padding: 8px 4px;
   }
+  
+  /* Allow filter area to expand */
   .tabulator .tabulator-header .tabulator-header-filter {
-    height: auto !important; overflow: visible !important; margin-top: 5px;
+    height: auto !important;
+    overflow: visible !important;
+    margin-top: 5px;
   }
+
   .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; }
   .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
   .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
@@ -154,7 +168,7 @@
     position: relative; z-index: 10001;
   }
 
-  /* 3. TEXT WRAPPER STYLING (Updated for larger box) */
+  /* 3. TEXT WRAPPER STYLING */
   .text-wrapper {
     display: block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     transition: all 0.2s ease; transform-origin: center center;
@@ -162,21 +176,10 @@
   }
   .tabulator-row .tabulator-cell.active-tilt .text-wrapper {
     position: absolute; left: 0; top: 50%;
-    min-width: 100%; 
-    width: max-content; 
-    
+    min-width: 100%; width: max-content; 
     background-color: rgba(40, 40, 40, 0.95);
-    
-    /* FIX: Increased padding for a taller, larger box */
-    padding: 12px 20px;
-    
-    /* FIX: Ensure minimum height for presence */
-    min-height: 45px;
-    display: flex;
-    align-items: center;
-    
-    border-radius: 4px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.7); 
+    padding: 12px 20px; min-height: 45px; display: flex; align-items: center;
+    border-radius: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.7); 
     z-index: 100; pointer-events: auto;
     border: 1px solid #ffffff;
   }
@@ -202,20 +205,13 @@
   }
   .specialty-tag:hover { background-color: darkorange; border-color: #fff; transform: scale(1.1); }
 
-  /* --- HEADER FILTER STYLES (FIXED LAYOUT) --- */
+  /* --- HEADER FILTER STYLES --- */
   .filter-container {
-    /* FIX: Stack elements vertically */
-    display: flex; 
-    flex-direction: column;
-    gap: 6px; 
-    padding: 8px;
-    background: #222; 
-    border-radius: 4px; 
-    width: 100%; 
-    box-sizing: border-box; 
-    
-    /* FIX: Ensure enough height for buttons */
+    display: flex; flex-direction: column; gap: 6px; padding: 8px;
+    background: #222; border-radius: 4px; width: 100%; box-sizing: border-box; 
     min-height: 85px; 
+    /* FIX: Add padding bottom to prevent cutoff */
+    padding-bottom: 10px; 
   }
   .filter-input {
     background: #333; color: #fff; border: 1px solid #555;
@@ -232,9 +228,7 @@
   .filter-remove { cursor: pointer; font-weight: bold; color: #000; font-size: 10px; }
   .filter-remove:hover { color: #fff; }
   .filter-actions {
-      /* FIX: Stick to bottom */
-      margin-top: auto; 
-      width: 100%; display: flex; justify-content: space-between; align-items: center; 
+      margin-top: auto; width: 100%; display: flex; justify-content: space-between; align-items: center; 
       border-top: 1px solid #444; padding-top: 6px;
   }
   .filter-clear-all {
@@ -400,10 +394,13 @@ window.applySpecialtyFilters = function() {
     triggerHeaderResize();
 }
 
-// Helper to force Tabulator to redraw headers (Fixes sizing issue)
+// FIX: Resize Trigger using setTimeout to allow DOM to paint first
 function triggerHeaderResize() {
     if(table) {
-        table.redraw(true); 
+        setTimeout(() => {
+             table.columnManager.renderer.renderColumns();
+             table.redraw(true);
+        }, 50);
     }
 }
 
@@ -508,10 +505,7 @@ function createStar() {
     const star = document.createElement('div');
     star.className = 'star-particle';
     star.textContent = '★';
-    
-    // FIX: Use window width for full screen rain
     const startX = Math.random() * window.innerWidth;
-    
     const headerRect = headerText.getBoundingClientRect();
     const startY = headerRect.bottom - 10; 
     star.style.left = startX + 'px'; star.style.top = startY + 'px';
@@ -636,11 +630,10 @@ Papa.parse(csvUrl, {
                 { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
                 
-                // --- SPECIALTY FILTER ---
                 {
                     title:"Specialty", 
                     field:"specialty", 
-                    width: 300, // FIX: Increased width for buttons
+                    width: 300,
                     headerFilter: function(cell, onRendered, success, cancel, editorParams){
                         const container = document.createElement("div");
                         container.id = "specialty-filter-container";
