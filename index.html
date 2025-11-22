@@ -8,16 +8,25 @@
 <link href="https://unpkg.com/tabulator-tables@5.6.0/dist/css/tabulator_midnight.min.css" rel="stylesheet">
 
 <style>
-  /* --- CUSTOM CURSOR (Paw Images from User) --- */
-  
-  /* Default Pointer (Open Paw) */
-  html, body, a, button, select, .tabulator, .tabulator-row, .tabulator-cell, .preview-box, .logo-box, .filter-input {
-    cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAKdQTFRF////760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760hz72dAAAAQHRSTlMABgcICQ4PEBESExQVFhcYGRocHR8gISIkJScoKSoqLC0uLzAxMjM0NTc5Ojs8Pj9AQUJDREZHSUpLTU5PUFFSVFZYWVpdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/Z6j39QAAAAFiS0dECI468LMAAAAJcEhZcwAAAGAAAABgAPBr6lQAAAGXSURBVDjLY2AYRMB4wMTAxs4BIlxc3Dw8PLy8fPwCAsIiIqKiYgxS0jKycvIKikpKDAqqqmrqGppa2jrajHZ6+gaGRsYmpmYMPGbmpuZmFpZW1ja2dpwOjs52zs6u7h5O7p5efA7ePr6O/gE+gUEhQaFh4RFR0TExeAkYm5iamFlZWVtaWdqgS7A4OTs7u7i5uXl4enlzE2VwdHFxc3Pz8PTy9vH143VgZGRmZmVlZWNjY2Nn5yDM4Oru7uHh6enp5eXt48uQkJCQkJCQmJiYlJSUnJyCIsEAFBAQEBQUFBQSEhIRERETkxCDKg0DoqKioqJiYmJi4uLiEopKMA1Q1dDU0tbR1dPXM9AzMDQyNgEbrG1s7ewdHJ2cnF1c3d09PL0QWv0DgkLCImK4eHh5eXkR8gkIihG2hI+fH15LOIGB19IOr9X89u5Q2OALo+PjExLiE0CAnp4e3gQGoODi4oT3hA8eXF5eHl57d4I0wI389u6gYJDAa7dveG9B/m947/b29gYHB6gKDAAAzW+OqLz0s3oAAAAASUVORK5CYII=') 4 0, auto !important;
+  /* --- CUSTOM CURSOR LOGIC (Embedded SVGs) --- */
+
+  /* 1. DEFAULT POINTER (Open Paw) 
+     Applied to: Body, Links, Buttons, and Tabulator Headers (Idle state)
+  */
+  html, body, a, button, select, input,
+  .tabulator, .tabulator-row, .tabulator-cell, 
+  .preview-box, .logo-box, .filter-input,
+  /* FIX: Explicitly target Tabulator Headers to override default arrow */
+  .tabulator-header, .tabulator-col, .tabulator-col-content, .tabulator-sortable {
+    cursor: url('data:image/svg+xml;utf8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><filter id="s"><feDropShadow dx="1" dy="1" stdDeviation="1" flood-opacity="0.5"/></filter><g filter="url(%23s)" transform="translate(0,0)"><path d="M8,22 Q2,15 5,8 Q8,2 16,5 Q24,2 27,8 Q30,15 24,22 Q16,28 8,22 Z" fill="%23FFA500" stroke="%235A2D0C" stroke-width="1.5"/><circle cx="10" cy="12" r="3" fill="%23FFC0CB"/><circle cx="16" cy="9" r="3" fill="%23FFC0CB"/><circle cx="22" cy="12" r="3" fill="%23FFC0CB"/><path d="M12,18 Q16,24 20,18 Q16,14 12,18" fill="%23FFC0CB"/><path d="M2,2 L6,4 L4,6 Z" fill="%23FFF" stroke="%23000" stroke-width="1"/></g></svg>') 2 2, auto !important;
   }
 
-  /* Click/Hold Pointer (Closed Paw) */
-  html:active, body:active, a:active, button:active, select:active, .tabulator-row:active, .tabulator-cell:active, .preview-box:active, .logo-box:active, .filter-input:active {
-    cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAKdQTFRF////760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760h760hz72dAAAAQHRSTlMABgcICQ4PEBESExQVFhcYGRocHR8gISIkJScoKSoqLC0uLzAxMjM0NTc5Ojs8Pj9AQUJDREZHSUpLTU5PUFFSVFZYWVpdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/Z6j39QAAAAFiS0dECI468LMAAAAJcEhZcwAAAGAAAABgAPBr6lQAAAGcSURBVDjLY2AYRMB4wMTAxs4BIlxc3Dw8PLy8fPwCAsIiIqKiYgxS0jKycvIKikpKDAqqqmrqGppa2jrajHZ6+gaGRsYmpmYMPGbmpuZmFpZW1ja2dpwOjs52zs6u7h5O7p5efA7ePr6O/gE+gUEhQaFh4RFR0TExeAkYm5iamFlZWVtaWdqgS7A4OTs7u7i5uXl4enlzE2VwdHFxc3Pz8PTy9vH143VgZGRmZmVlZWNjY2Nn5yDM4Oru7uHh6enp5eXt48uQkJCQkJCQmJiYlJSUnJyCIsEAFBAQEBQUFBQSEhIRERETkxCDKg0DoqKioqJiYmJi4uLiEopKMA1Q1dDU0tbR1dPXM9AzMDQyNgEbrG1s7ewdHJ2cnF1c3d09PL0QWv0DgkLCImK4eHh5eXkR8gkIihG2hI+fH15LOIGB19IOr9X89u5Q2OALo+PjExLiE0CAnp4e3gQGoODi4oT3hA8eXF5eHl57d4I0wI389u6gYJDAa7dveG9B/m947/b29gYHB6gKDAAAzW+OqLz0s3oAAAAASUVORK5CYII=') 16 4, auto !important;
+  /* 2. CLICKING/ACTIVE CURSOR (Closed Paw/Fist) 
+     Applied when clicking ANY element
+  */
+  html:active, body:active, *:active, 
+  .tabulator-col:active, .tabulator-sortable:active {
+    cursor: url('data:image/svg+xml;utf8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><filter id="s"><feDropShadow dx="1" dy="1" stdDeviation="1" flood-opacity="0.5"/></filter><g filter="url(%23s)" transform="translate(2,2)"><circle cx="14" cy="14" r="12" fill="%23FFA500" stroke="%235A2D0C" stroke-width="1.5"/><path d="M8,10 Q11,15 14,10" stroke="%235A2D0C" stroke-width="1.5" fill="none"/><path d="M14,10 Q17,15 20,10" stroke="%235A2D0C" stroke-width="1.5" fill="none"/><ellipse cx="14" cy="18" rx="6" ry="4" fill="%23FFC0CB"/><path d="M2,5 L7,7 L5,9 Z" fill="%23FFF" stroke="%23000" stroke-width="1"/></g></svg>') 2 2, auto !important;
   }
 
   /* --- LAYOUT FIX: SAFE VIEWPORT --- */
@@ -51,6 +60,8 @@
     position: relative;
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transform-origin: left center;
+    /* Ensure header text also uses the paw cursor */
+    cursor: inherit; 
   }
 
   #header-text:hover {
@@ -92,7 +103,6 @@
   select, button {
     padding: 8px 12px; border-radius: 4px; border: 1px solid #555;
     background: #333; color: #fff; cursor: pointer; font-size: 14px;
-    cursor: inherit; /* Force custom cursor on inputs */
   }
   select:hover, button:hover { background: #444; border-color: darkorange; }
   button.reset-btn { background: #c62828; border-color: #e53935; }
@@ -113,7 +123,6 @@
     display: inline-block; width: 30px; height: 30px;
     background-size: cover; background-position: center;
     border-radius: 4px; cursor: pointer; border: 1px solid #555; box-sizing: border-box;
-    cursor: inherit; /* Force custom cursor */
   }
   .preview-box:hover, .logo-box:hover { border-color: darkorange; box-shadow: 0 0 5px rgba(255,140,0,0.5); }
 
@@ -146,7 +155,6 @@
   .tabulator-row .tabulator-cell {
     transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
     position: relative; background-clip: padding-box; overflow: hidden; 
-    cursor: inherit; /* Force custom cursor */
   }
 
   /* 1. ACTIVE TILT STATE */
@@ -159,7 +167,7 @@
   }
 
   /* 2. URL/LINK ANIMATION */
-  a { color: darkorange !important; text-decoration: none; transition: all 0.2s; cursor: inherit; }
+  a { color: darkorange !important; text-decoration: none; transition: all 0.2s; }
   .tabulator-row .tabulator-cell.active-tilt a {
     display: inline-block; color: #ffd699 !important;
     transform: translateY(-4px) scale(1.2);
@@ -215,7 +223,6 @@
     background: #333; color: #fff; border: 1px solid #555;
     padding: 5px 8px; border-radius: 3px; font-size: 0.9em;
     width: 100%; outline: none; box-sizing: border-box; 
-    cursor: inherit !important; /* Keep custom cursor for input */
   }
   .filter-input:focus { border-color: darkorange; }
   .filter-tag {
