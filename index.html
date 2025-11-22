@@ -93,8 +93,6 @@
   }
 
   /* --- TABULATOR STYLES & OVERRIDES --- */
-  
-  /* FIX: Force Headers to Expand Vertically */
   .tabulator .tabulator-header { 
     height: auto !important; 
     background-color: #1f1f1f !important; 
@@ -103,9 +101,8 @@
   .tabulator .tabulator-header .tabulator-col,
   .tabulator .tabulator-header .tabulator-col-content {
     height: auto !important;
-    min-height: 40px; /* Ensure minimal height */
+    min-height: 40px; 
   }
-  /* Ensure the filter area inside header can grow */
   .tabulator .tabulator-header .tabulator-header-filter {
     height: auto !important;
     overflow: visible !important;
@@ -119,7 +116,6 @@
   .tabulator-row .tabulator-cell {
     transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
     position: relative; background-clip: padding-box;
-    /* Allow text wrapper to break out */
     overflow: visible !important;
   }
 
@@ -174,7 +170,6 @@
   .specialty-tag:hover { background-color: darkorange; border-color: #fff; transform: scale(1.1); }
 
   /* --- HEADER FILTER (ACTIVE TAGS) STYLES --- */
-  /* FIX: Ensure container expands height */
   .filter-container {
     display: flex; flex-wrap: wrap; gap: 4px; padding: 4px;
     background: #222; border-radius: 4px; align-items: center;
@@ -192,13 +187,26 @@
     animation: popIn 0.2s ease-out;
   }
   @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+  
   .filter-remove { cursor: pointer; font-weight: bold; color: #000; font-size: 10px; }
   .filter-remove:hover { color: #fff; }
+  
+  /* Buttons: Clear and Apply */
+  .filter-actions {
+      margin-left: auto; display: flex; gap: 8px; align-items: center;
+  }
   .filter-clear-all {
     font-size: 0.75em; color: #ff6b6b; cursor: pointer;
-    text-decoration: underline; margin-left: auto; align-self: center; white-space: nowrap;
+    text-decoration: underline; white-space: nowrap;
   }
   .filter-clear-all:hover { color: #ff4040; }
+  
+  /* New Apply Button Style */
+  .filter-apply-btn {
+    font-size: 0.75em; color: #4caf50; cursor: pointer;
+    text-decoration: underline; white-space: nowrap; font-weight: bold;
+  }
+  .filter-apply-btn:hover { color: #66bb6a; }
 </style>
 </head>
 <body>
@@ -323,25 +331,34 @@ function moveTooltip(e) {
 }
 
 // --- SPECIALTY FILTER LOGIC ---
-let activeSpecialtyFilters = new Set();
+// pendingTags: What the user sees in the UI (Not applied yet)
+// appliedTags: What the table is actually filtering by
+let pendingSpecialtyFilters = new Set();
+let appliedSpecialtyFilters = new Set();
 
 window.addSpecialtyFilter = function(tag) {
     if(!tag) return;
-    activeSpecialtyFilters.add(tag.trim());
+    pendingSpecialtyFilters.add(tag.trim());
     updateFilterHeader();
-    table.recalc(); 
+    // Note: We do NOT call table.recalc() here anymore.
 }
 
 window.removeSpecialtyFilter = function(tag) {
-    activeSpecialtyFilters.delete(tag);
+    pendingSpecialtyFilters.delete(tag);
     updateFilterHeader();
-    table.recalc();
 }
 
 window.clearSpecialtyFilters = function() {
-    activeSpecialtyFilters.clear();
+    pendingSpecialtyFilters.clear();
+    appliedSpecialtyFilters.clear(); // Clear active logic too
     updateFilterHeader();
-    table.recalc();
+    table.recalc(); // Reset table immediately
+}
+
+window.applySpecialtyFilters = function() {
+    // Move Pending -> Applied
+    appliedSpecialtyFilters = new Set(pendingSpecialtyFilters);
+    table.recalc(); // Trigger filter
 }
 
 function updateFilterHeader() {
@@ -351,7 +368,6 @@ function updateFilterHeader() {
     // Find or create tags area
     let tagsArea = container.querySelector('.tags-area');
     if (!tagsArea) {
-        // Reset if completely missing
         container.innerHTML = '';
         const input = document.createElement("input");
         input.type = "text";
@@ -374,22 +390,35 @@ function updateFilterHeader() {
         tagsArea.style.marginTop = "4px";
         container.appendChild(tagsArea);
     } else {
-        tagsArea.innerHTML = ''; // Clear existing pills to rebuild
+        tagsArea.innerHTML = ''; 
     }
 
-    if (activeSpecialtyFilters.size > 0) {
-        activeSpecialtyFilters.forEach(tag => {
+    // Draw Tags (from Pending list)
+    if (pendingSpecialtyFilters.size > 0) {
+        pendingSpecialtyFilters.forEach(tag => {
             const pill = document.createElement('span');
             pill.className = 'filter-tag';
             pill.innerHTML = `${tag} <span class="filter-remove" onclick="removeSpecialtyFilter('${tag}')">✕</span>`;
             tagsArea.appendChild(pill);
         });
 
+        // Action Buttons Container
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'filter-actions';
+        
+        const applyBtn = document.createElement('span');
+        applyBtn.className = 'filter-apply-btn';
+        applyBtn.innerText = 'Apply';
+        applyBtn.onclick = window.applySpecialtyFilters;
+        actionsDiv.appendChild(applyBtn);
+
         const clearBtn = document.createElement('span');
         clearBtn.className = 'filter-clear-all';
         clearBtn.innerText = 'Clear';
         clearBtn.onclick = window.clearSpecialtyFilters;
-        tagsArea.appendChild(clearBtn);
+        actionsDiv.appendChild(clearBtn);
+        
+        tagsArea.appendChild(actionsDiv);
     }
 }
 
@@ -565,6 +594,7 @@ Papa.parse(csvUrl, {
                 { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
                 
+                // --- SPECIALTY FILTER ---
                 {
                     title:"Specialty", 
                     field:"specialty", 
@@ -576,11 +606,14 @@ Papa.parse(csvUrl, {
                         return container;
                     },
                     headerFilterFunc: function(headerValue, rowValue, rowData, filterParams){
-                        if (activeSpecialtyFilters.size === 0) return true;
+                        // Use appliedSpecialtyFilters for logic
+                        if (appliedSpecialtyFilters.size === 0) return true;
                         if (!rowValue) return false;
+                        
+                        // OR Logic: Row matches if it contains ANY of the selected tags
                         const rowTags = rowValue.split(',').map(t => t.trim());
                         let match = false;
-                        activeSpecialtyFilters.forEach(filterTag => {
+                        appliedSpecialtyFilters.forEach(filterTag => {
                             if (rowTags.includes(filterTag)) match = true;
                         });
                         return match;
@@ -591,6 +624,7 @@ Papa.parse(csvUrl, {
                         const tags = val.split(',').map(t => t.trim()).filter(t => t);
                         const wrapper = document.createElement('div');
                         wrapper.className = 'tag-wrapper';
+                        
                         tags.forEach(tag => {
                             const span = document.createElement('span');
                             span.className = 'specialty-tag';
