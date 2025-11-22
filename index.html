@@ -96,7 +96,6 @@
 
   /* --- THE FLOATING TOOLTIP --- */
   #image-tooltip {
-    /* CRITICAL FIX: Hide the tooltip by default */
     display: none !important; 
     
     position: fixed;
@@ -170,9 +169,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <script>
-const csvUrl = "https://docs.google.com/sheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
+const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// --- TOOLTIP LOGIC ---
+// --- TOOLTIP LOGIC (UNCHANGED) ---
 const tooltipEl = document.getElementById("image-tooltip");
 let currentPreviewImages = [];
 let currentImageIndex = 0;
@@ -231,21 +230,17 @@ function startSlideshow() {
 }
 
 
-// --- HELPERS ---
+// --- HELPERS (UNCHANGED) ---
 function parseImageFormula(formula) {
   if(!formula) return "";
   const match = formula.match(/=IMAGE\("(.+)"\)/);
   return match ? match[1] : formula;
 }
 
-/**
- * Function to parse multiple preview image URLs using a single space as the delimiter.
- */
 function parsePreviewImages(urlsString) {
     if (!urlsString || typeof urlsString !== 'string') return [];
     return urlsString.split(' ').map(url => url.trim()).filter(url => url !== '');
 }
-
 
 function cleanNumber(val) {
     if (val === null || val === undefined || val === "") return null;
@@ -279,7 +274,16 @@ let table;
 Papa.parse(csvUrl, {
     download: true, header: true, dynamicTyping: true,
     complete: function(results) {
-        // Mapped all 26 columns based on the structure provided by the user.
+        // --- DEBUGGING STEP ---
+        console.log("PapaParse Results:", results);
+
+        if (results.errors.length > 0) {
+            console.error("PapaParse encountered errors:", results.errors);
+            alert("Data loading failed! Check the console for parsing errors.");
+            return;
+        }
+
+        // Map all 26 columns 
         const data = results.data.map(row => ({
             rank: cleanNumber(row['Rank']),
             maker: row['Maker'],
@@ -307,7 +311,7 @@ Papa.parse(csvUrl, {
             acctAge: cleanNumber(row['Acct Age']),
             acctDate: row['Acct Date'],
             
-            // NEW COLUMNS MAPPED TO ENSURE DATA INTEGRITY (but not necessarily displayed)
+            // Other data fields necessary for complete parsing
             rep: row['Rep'],
             timeline: row['Timeline'],
             rankScore: cleanNumber(row['Rank Score']),
@@ -319,8 +323,16 @@ Papa.parse(csvUrl, {
             partialsRank: cleanNumber(row['Partials Rank']),
             fursuitsRank: cleanNumber(row['Fursuits Rank']),
             priceRank: cleanNumber(row['Price Rank']),
-        }));
+        })).filter(row => row.maker); // Filter out any empty rows
 
+        console.log("Mapped and Filtered Data for Tabulator:", data);
+        
+        if (data.length === 0) {
+            console.warn("Data array is empty after mapping. Check CSV headers and data content.");
+            return;
+        }
+
+        // --- TABULATOR INITIALIZATION (UNCHANGED) ---
         const colMinMax = {};
         const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
         gradientColumns.forEach(col=>{
@@ -337,7 +349,6 @@ Papa.parse(csvUrl, {
             height:"75vh", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
-            // Column definitions remain the same as the desired display list
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number" },
                 { title:"Maker", field:"maker" },
@@ -368,7 +379,6 @@ Papa.parse(csvUrl, {
                             previewBox.style.backgroundImage = `url('${url}')`;
                             previewBox.setAttribute('data-image-index', index);
                             
-                            // Mouse events for each individual preview box
                             previewBox.addEventListener('mouseenter', (e) => {
                                 showTooltip(imageUrls, index);
                                 clearInterval(slideshowInterval);
@@ -479,7 +489,7 @@ Papa.parse(csvUrl, {
             reactiveData:true, virtualDom:true
         });
 
-        // --- EVENT LISTENERS ---
+        // --- EVENT LISTENERS (UNCHANGED) ---
         document.getElementById("reset-sort").addEventListener("click", function(){
             table.clearSort();
             table.setSort("rank", "asc");
