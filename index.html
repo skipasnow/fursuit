@@ -565,7 +565,15 @@ function parseImageFormula(formula) {
 }
 function parsePreviewImages(urlsString) {
     if (!urlsString || typeof urlsString !== 'string') return [];
-    return urlsString.split(' ').map(url => url.trim()).filter(url => url !== '');
+
+    // 1. Split by Comma (,) OR Whitespace (\s)
+    //    This handles "url1,url2" AND "url1, url2" (comma+space) automatically.
+    return urlsString.split(/[\s,]+/)
+        .map(url => url.trim())
+        // 2. The filter ensures we only keep valid links.
+        //    Since you removed the trailing comma, this just ensures 
+        //    we don't pick up accidental spaces at the end.
+        .filter(url => url.length > 0 && url.toLowerCase().startsWith('http'));
 }
 function cleanNumber(val) {
     if (val === null || val === undefined || val === "") return null;
