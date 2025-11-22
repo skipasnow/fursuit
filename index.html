@@ -15,9 +15,69 @@
     margin: 0;
     padding: 20px;
     overflow-y: scroll;
+    overflow-x: hidden; /* Prevent horizontal scrollbar from falling stars */
   }
 
-  h1 { margin-bottom: 10px; }
+  /* --- HEADER ANIMATION STYLES --- */
+  h1 { 
+    margin-bottom: 10px; 
+    display: inline-block; /* Allows transform to work properly */
+    cursor: default;
+    position: relative;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Smooth scale */
+  }
+
+  /* Hover State: Scale Up + Rainbow Animation */
+  h1:hover {
+    transform: scale(1.15); /* Make larger */
+    
+    /* Rainbow Gradient */
+    background-image: linear-gradient(
+      to right, 
+      #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, 
+      #ff0000, #ff7f00, #ffff00 /* Repeat colors for smooth loop */
+    );
+    background-size: 200% auto;
+    
+    /* Clip background to text */
+    -webkit-background-clip: text;
+    background-clip: text;
+    
+    /* Transparent text */
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    
+    /* Animate the background moving */
+    animation: rainbow-move 2s linear infinite;
+  }
+
+  @keyframes rainbow-move {
+    to { background-position: 200% center; }
+  }
+
+  /* --- STAR PARTICLES --- */
+  .star-particle {
+    position: fixed;
+    top: 0;
+    color: gold;
+    font-size: 1.2em;
+    pointer-events: none; /* Mouse passes through */
+    z-index: 99999;
+    user-select: none;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.8);
+    animation: fall 1.5s linear forwards;
+  }
+
+  @keyframes fall {
+    0% {
+      transform: translateY(0) rotate(0deg) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(300px) rotate(180deg) scale(0.5); /* Fall down 300px */
+      opacity: 0;
+    }
+  }
 
   /* --- CONTROLS --- */
   .controls-container {
@@ -104,7 +164,7 @@
 
   /* Base Cell Transition */
   .tabulator-row .tabulator-cell {
-    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, background-position 0.4s ease, font-size 0.2s ease;
     position: relative; 
     background-clip: padding-box;
   }
@@ -130,56 +190,37 @@
   }
   a { color: darkorange; text-decoration: none; transition: all 0.2s; }
 
-  /* 3. CONTINUOUS LIGHT SWEEP ANIMATION (The GIF Effect) */
-  /* Applies to cells tagged with 'text-cell' in JS */
-  .tabulator-row .tabulator-cell.text-cell {
-    font-weight: bold;
-    /* Smoothly transition the scale when hover ends */
-    transition: transform 0.2s ease; 
-  }
-
-  /* On Hover: Apply the Shimmer Animation */
-  .tabulator-row .tabulator-cell.text-cell.active-tilt {
-    /* The Gradient: Orange base with a bright White beam in the middle */
-    background: linear-gradient(
-      110deg, 
-      #ff8c00 35%, 
-      #ffffff 50%, 
-      #ff8c00 65%
-    );
+  /* 3. TEXT GRADIENT SWEEP & SCALE */
+  .tabulator-row .tabulator-cell:not(:has(.preview-container)):not(:has(.logo-box)):not(:has(a)) {
+    background-image: linear-gradient(to right, #ffffff 50%, #ff8c00 50%, #ff8c00 100%);
+    background-size: 200% 100%;
+    background-position: 0% center; 
     
-    /* Make background huge so we can slide it */
-    background-size: 200% auto;
-    
-    /* Clip to text */
     -webkit-background-clip: text;
     background-clip: text;
     
-    /* Make text transparent */
     -webkit-text-fill-color: transparent;
-    color: transparent;
+    color: transparent !important;
     
-    /* The Loop: Move background endlessly */
-    animation: shine-sweep 1.5s linear infinite;
+    font-weight: bold;
     
-    /* Scale up */
-    transform: perspective(500px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.15) !important; 
+    transition: background-position 0.4s ease-out, transform 0.2s ease;
+    
+    display: flex;
+    align-items: center;
+    justify-content: inherit; 
   }
 
-  /* The Keyframes to move the light beam */
-  @keyframes shine-sweep {
-    0% {
-      background-position: 200% center;
-    }
-    100% {
-      background-position: -200% center;
-    }
+  /* On Hover: Slide background */
+  .tabulator-row .tabulator-cell.active-tilt:not(:has(.preview-container)):not(:has(.logo-box)):not(:has(a)) {
+    background-position: 100% center; 
+    transform: perspective(500px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.15) !important; 
   }
 </style>
 </head>
 <body>
 
-<h1>Kemono Fursuit Makers</h1>
+<h1 id="page-header">Kemono Fursuit Makers</h1>
 
 <div class="controls-container">
   <div class="control-group">
@@ -362,6 +403,45 @@ function getGradientColor(value, min, max, lowIsGreen=false){
     return `rgb(${r},${g},0)`;
 }
 
+// --- HEADER ANIMATION LOGIC (NEW) ---
+const header = document.getElementById('page-header');
+let starInterval;
+
+function createStar() {
+    const star = document.createElement('div');
+    star.className = 'star-particle';
+    star.textContent = '★';
+    
+    // Random start position based on Header width
+    const headerRect = header.getBoundingClientRect();
+    const startX = headerRect.left + (Math.random() * headerRect.width);
+    const startY = headerRect.bottom - 10; // Start just below header text
+    
+    star.style.left = startX + 'px';
+    star.style.top = startY + 'px';
+    
+    // Randomize size slightly
+    const size = 0.8 + Math.random() * 0.8;
+    star.style.fontSize = size + 'em';
+    
+    document.body.appendChild(star);
+    
+    // Remove after animation ends to prevent DOM clutter
+    setTimeout(() => {
+        star.remove();
+    }, 1500);
+}
+
+header.addEventListener('mouseenter', () => {
+    // Create a star every 50ms
+    starInterval = setInterval(createStar, 50);
+});
+
+header.addEventListener('mouseleave', () => {
+    clearInterval(starInterval);
+});
+
+
 // --- MAIN SCRIPT ---
 let table;
 
@@ -427,7 +507,6 @@ Papa.parse(csvUrl, {
             initialSort:[ {column:"rank", dir:"asc"} ],
             
             columns: [
-                // NOTE: cssClass: "text-cell" is applied to text columns for the sweep animation
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number" },
                 { title:"Maker", field:"maker", cssClass: "text-cell" },
                 {
