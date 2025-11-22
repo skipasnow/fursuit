@@ -8,22 +8,25 @@
 <link href="https://unpkg.com/tabulator-tables@5.6.0/dist/css/tabulator_midnight.min.css" rel="stylesheet">
 
 <style>
-  /* --- LAYOUT FIX: FLEXBOX COLUMN --- */
-  html, body {
+  /* --- LAYOUT FIX: SAFE VIEWPORT --- */
+  html {
     height: 100%;
     margin: 0;
     padding: 0;
     background: #2e2e2e;
     color: #fff;
     font-family: sans-serif;
-    overflow: hidden; /* Stop body scroll, force internal scroll */
   }
 
   body {
-    display: flex;
-    flex-direction: column;
+    height: 100%;
+    margin: 0;
     padding: 20px;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    /* Allow browser to handle overflow if zoom is extreme */
+    overflow: auto; 
   }
 
   /* --- HEADER ANIMATION --- */
@@ -35,7 +38,7 @@
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transform-origin: left center;
     white-space: nowrap;
-    flex-shrink: 0; /* Don't shrink */
+    flex-shrink: 0; 
   }
 
   h1:hover {
@@ -71,7 +74,7 @@
   .controls-container {
     background: #1f1f1f; padding: 15px; border-radius: 8px; margin-bottom: 15px;
     display: flex; gap: 15px; align-items: center; flex-wrap: wrap; border: 1px solid #444;
-    flex-shrink: 0; /* Don't shrink */
+    flex-shrink: 0; 
   }
   .control-group { display: flex; align-items: center; gap: 10px; }
   select, button {
@@ -86,9 +89,11 @@
   /* --- TABLE CONTAINER --- */
   #creator-table {
     width: 100%;
-    flex-grow: 1; /* Fill all remaining vertical space */
+    /* Max width prevents pushing off screen right */
+    max-width: 100%; 
+    /* Fill remaining vertical space */
+    flex-grow: 1; 
     border: 1px solid #444;
-    overflow: hidden; /* Let Tabulator manage scroll */
   }
 
   /* --- PREVIEW & LOGO BOXES --- */
@@ -111,21 +116,20 @@
 
   /* --- TABULATOR STYLES & OVERRIDES --- */
   
-  /* FIX: Force Headers to Expand */
+  /* Headers: Must be stable for scrolling to sync */
   .tabulator .tabulator-header { 
-    height: auto !important; 
     background-color: #1f1f1f !important; 
     font-weight: bold !important;
-    white-space: normal !important; 
+    /* Ensure headers don't overflow unexpectedly */
+    overflow: hidden !important;
   }
   
-  .tabulator .tabulator-header .tabulator-col,
   .tabulator .tabulator-header .tabulator-col-content {
-    height: auto !important;
-    min-height: 40px; 
+    white-space: normal !important; /* Allow wrapping text in headers */
+    padding: 8px 4px;
   }
   
-  /* Allow filter area to expand */
+  /* Filter area expansion */
   .tabulator .tabulator-header .tabulator-header-filter {
     height: auto !important;
     overflow: visible !important;
@@ -141,7 +145,7 @@
     transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
     position: relative; 
     background-clip: padding-box;
-    /* FIX: Default hidden overflow keeps headers synced */
+    /* FIX: Keep default overflow hidden to maintain scroll sync */
     overflow: hidden; 
   }
 
@@ -151,7 +155,7 @@
     box-shadow: 0 15px 30px rgba(0,0,0,0.6);
     border-color: rgba(255,255,255,0.5) !important; 
     filter: brightness(1.2);
-    /* FIX: Allow overflow ONLY when hovering */
+    /* FIX: Only allow overflow when actively hovering */
     overflow: visible !important; 
   }
 
@@ -562,15 +566,15 @@ Papa.parse(csvUrl, {
             movableColumns: true,
             resizableColumns: true,
             placeholder:"No Data Available",
-            // FIX: Use 100% height to fill the flex container
-            height: "100%", 
+            // FIX: Use 100% to fill flex container
+            height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Maker", field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
                 {
-                    title:"Logo", field:"logo", hozAlign:"center", width:80,
+                    title:"Logo", field:"logo", hozAlign:"center", width:90, // Slightly wider for safety
                     formatter:function(cell){
                         const val = cell.getValue();
                         return val ? `<div class="logo-box" style="background-image:url('${val}');"></div>` : "";
@@ -619,6 +623,7 @@ Papa.parse(csvUrl, {
                 { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
                 
+                // --- SPECIALTY FILTER ---
                 {
                     title:"Specialty", 
                     field:"specialty", 
@@ -646,6 +651,7 @@ Papa.parse(csvUrl, {
                         const tags = val.split(',').map(t => t.trim()).filter(t => t);
                         const wrapper = document.createElement('div');
                         wrapper.className = 'tag-wrapper';
+                        
                         tags.forEach(tag => {
                             const span = document.createElement('span');
                             span.className = 'specialty-tag';
