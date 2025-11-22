@@ -14,6 +14,7 @@
     font-family: sans-serif;
     margin: 0;
     padding: 20px;
+    overflow-y: scroll; /* Always show scrollbar to prevent layout shifts */
   }
 
   h1 { margin-bottom: 10px; }
@@ -66,27 +67,41 @@
   #creator-table {
     width: 100%;
     margin: auto;
-    /* Adjusted height to ensure horizontal scrollbar is visible on most screens */
     height: 75vh; 
     border: 1px solid #444;
   }
 
-  .hover-preview {
+  /* --- CUSTOM PREVIEW BOXES --- */
+  .preview-container {
+    display: flex;
+    gap: 2px; /* Small space between multiple preview boxes */
+    flex-wrap: wrap; /* Allow wrapping if too many */
+  }
+
+  .preview-box, .logo-box {
     display: inline-block;
-    width: 30px;
+    width: 30px; /* Same size as logo */
     height: 30px;
     background-size: cover;
     background-position: center;
     border-radius: 4px;
     cursor: pointer;
+    border: 1px solid #555; /* Add a subtle border */
+    box-sizing: border-box; /* Include padding/border in size */
+  }
+  .preview-box:hover, .logo-box:hover {
+      border-color: darkorange; /* Highlight on hover */
+      box-shadow: 0 0 5px rgba(255,140,0,0.5);
   }
 
-  /* THE FLOATING TOOLTIP */
+  /* --- THE FLOATING TOOLTIP --- */
   #image-tooltip {
     display: none; 
     position: fixed;
-    width: 200px;
-    height: 200px;
+    width: 400px; /* Larger size for full view */
+    height: 400px;
+    max-width: 90vw; /* Responsive scaling */
+    max-height: 90vh;
     background-color: #222;
     background-size: contain;
     background-repeat: no-repeat;
@@ -95,7 +110,19 @@
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     z-index: 99999;
     border-radius: 8px;
-    pointer-events: none; 
+    pointer-events: none; /* Allows clicks to pass through to elements behind */
+    
+    /* Centering styles */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    display: flex; /* For loading message */
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2em;
+    color: #ccc;
+    text-align: center;
   }
 
   .tabulator .tabulator-header { background-color: #1f1f1f !important; }
@@ -139,41 +166,85 @@
   </div>
 </div>
 
-<div id="image-tooltip"></div>
+<div id="image-tooltip">Loading Content...</div>
 <div id="creator-table"></div>
 
 <script src="https://unpkg.com/tabulator-tables@5.6.0/dist/js/tabulator.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <script>
-const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
+const csvUrl = "https://docs.google.com/sheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// --- TOOLTIP LOGIC ---
+// --- TOOLTIP LOGIC (ENHANCED) ---
 const tooltipEl = document.getElementById("image-tooltip");
+let currentPreviewImages = []; // Array of image URLs for the current hovered row
+let currentImageIndex = 0;   // Index of the image currently shown in the tooltip
+let slideshowInterval;       // Timer for cycling images
 
-function showTooltip(e, url) {
-    if(!url) return;
-    tooltipEl.style.backgroundImage = `url('${url}')`;
-    tooltipEl.style.display = "block";
-    moveTooltip(e); 
+function displayImageInTooltip(imageUrl) {
+    if (!imageUrl) {
+        tooltipEl.style.backgroundImage = 'none';
+        tooltipEl.textContent = 'No Image Available';
+        return;
+    }
+    
+    tooltipEl.style.backgroundImage = 'none'; // Clear previous image
+    tooltipEl.textContent = 'Loading Content...'; // Show loading message
+
+    const img = new Image();
+    img.onload = () => {
+        tooltipEl.style.backgroundImage = `url('${imageUrl}')`;
+        tooltipEl.textContent = ''; // Clear loading message
+    };
+    img.onerror = () => {
+        tooltipEl.style.backgroundImage = 'none';
+        tooltipEl.textContent = 'Failed to load image.';
+    };
+    img.src = imageUrl;
 }
-function hideTooltip() { tooltipEl.style.display = "none"; }
-function moveTooltip(e) {
-    const tooltipSize = 200; 
-    const offset = 15; 
-    const windowHeight = window.innerHeight;
-    let left = e.clientX + offset;
-    let top = e.clientY + offset;
-    if (top + tooltipSize > windowHeight) top = e.clientY - tooltipSize - offset;
-    tooltipEl.style.left = left + "px";
-    tooltipEl.style.top = top + "px";
+
+function showTooltip(imageUrls, startIndex = 0) {
+    if (!imageUrls || imageUrls.length === 0) {
+        hideTooltip();
+        return;
+    }
+    currentPreviewImages = imageUrls;
+    currentImageIndex = startIndex;
+    tooltipEl.style.display = "flex"; // Use flex to center loading text
+    displayImageInTooltip(currentPreviewImages[currentImageIndex]);
 }
+
+function hideTooltip() {
+    tooltipEl.style.display = "none";
+    tooltipEl.style.backgroundImage = 'none';
+    tooltipEl.textContent = 'Loading Content...';
+    currentPreviewImages = [];
+    currentImageIndex = 0;
+    clearInterval(slideshowInterval); // Stop any active slideshow
+}
+
+function startSlideshow() {
+    clearInterval(slideshowInterval); // Clear any existing interval
+    if (currentPreviewImages.length > 1) {
+        slideshowInterval = setInterval(() => {
+            currentImageIndex = (currentImageIndex + 1) % currentPreviewImages.length;
+            displayImageInTooltip(currentPreviewImages[currentImageIndex]);
+        }, 2000); // Cycle every 2 seconds
+    }
+}
+
 
 // --- HELPERS ---
 function parseImageFormula(formula) {
   if(!formula) return "";
   const match = formula.match(/=IMAGE\("(.+)"\)/);
   return match ? match[1] : formula;
+}
+
+// NEW: Function to parse multiple preview image URLs
+function parsePreviewImages(urlsString) {
+    if (!urlsString) return [];
+    return urlsString.split(',').map(url => url.trim()).filter(url => url !== '');
 }
 
 function cleanNumber(val) {
@@ -215,10 +286,11 @@ Papa.parse(csvUrl, {
             logo: parseImageFormula(row['Logo']),
             makerType: row['Maker Type'],
             link: row['Link'],
-            preview: row['Preview'],
-            price: cleanNumber(row['$ Price']),
             
-            // NEW COLUMNS MAPPED HERE
+            // NEW: Parse multiple preview URLs into an array
+            previewImages: parsePreviewImages(row['Preview']), 
+            
+            price: cleanNumber(row['$ Price']),
             shipOrFly: cleanNumber(row['$ Ship or Fly']),
             tariff: cleanNumber(row['$ Tariff (2025)']),
             ship: cleanNumber(row['$ Ship']),
@@ -234,7 +306,7 @@ Papa.parse(csvUrl, {
             country: row['Country'],
             followers: cleanNumber(row['Followers']), 
             acctAge: cleanNumber(row['Acct Age']),
-            acctDate: row['Acct Date'], // Keep as string for display
+            acctDate: row['Acct Date'], 
         }));
 
         const colMinMax = {};
@@ -250,36 +322,56 @@ Papa.parse(csvUrl, {
             movableColumns: true,
             resizableColumns: true,
             placeholder:"No Data Available",
-            height:"75vh", // Ensuring scrollbar visibility
+            height:"75vh", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number" },
                 { title:"Maker", field:"maker" },
                 {
-                    title:"Logo", field:"logo", hozAlign:"center",
+                    title:"Logo", field:"logo", hozAlign:"center", width:60,
                     formatter:function(cell){
                         const val = cell.getValue();
-                        return val ? `<span class="hover-preview" style="background-image:url('${val}');"></span>` : "";
-                    }, 
-                    cellMouseEnter:function(e, cell){ showTooltip(e, cell.getValue()); },
-                    cellMouseLeave:function(e, cell){ hideTooltip(); },
-                    cellMouseMove:function(e, cell){ moveTooltip(e); }
+                        // This uses 'logo-box' class for consistency
+                        return val ? `<div class="logo-box" style="background-image:url('${val}');"></div>` : "";
+                    }
                 },
                 { title:"Maker Type", field:"makerType" },
                 {
                     title:"Link", field:"link", formatter:"link", 
                     formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
                 },
+                // NEW: Custom formatter for multiple preview images
                 {
-                    title:"Preview", field:"preview", hozAlign:"center",
+                    title:"Preview", field:"previewImages", hozAlign:"center", width:200, // Adjusted width
                     formatter:function(cell){
-                        const val = cell.getValue();
-                        return val ? `<span class="hover-preview" style="background-image:url('${val}');"></span>` : "";
-                    }, 
-                    cellMouseEnter:function(e, cell){ showTooltip(e, cell.getValue()); },
-                    cellMouseLeave:function(e, cell){ hideTooltip(); },
-                    cellMouseMove:function(e, cell){ moveTooltip(e); }
+                        const imageUrls = cell.getValue(); // This will be the array from data mapping
+                        if (!imageUrls || imageUrls.length === 0) return "";
+                        
+                        const container = document.createElement('div');
+                        container.className = 'preview-container';
+
+                        imageUrls.forEach((url, index) => {
+                            const previewBox = document.createElement('div');
+                            previewBox.className = 'preview-box';
+                            previewBox.style.backgroundImage = `url('${url}')`;
+                            previewBox.setAttribute('data-image-index', index); // Store index
+                            
+                            // Mouse events for each individual preview box
+                            previewBox.addEventListener('mouseenter', (e) => {
+                                showTooltip(imageUrls, index); // Show specific image
+                                clearInterval(slideshowInterval); // Stop any existing slideshow
+                            });
+                            previewBox.addEventListener('mouseleave', (e) => {
+                                startSlideshow(); // Start slideshow when mouse leaves a box
+                            });
+
+                            container.appendChild(previewBox);
+                        });
+                        return container;
+                    },
+                    // Attach hide tooltip to the cell's mouseleave, but individual boxes handle mouseenter/mouseleave
+                    cellMouseLeave:function(e, cell){ hideTooltip(); } 
                 },
                 {
                     title:"$ Price", field:"price", hozAlign:"right", sorter:"number",
@@ -293,7 +385,6 @@ Papa.parse(csvUrl, {
                         return val;
                     }
                 },
-                // NEW COLUMNS
                 { title:"$ Ship or Fly", field:"shipOrFly", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
                 { title:"$ Tariff (2025)", field:"tariff", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
                 { title:"$ Ship", field:"ship", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
