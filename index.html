@@ -8,15 +8,21 @@
 <link href="https://unpkg.com/tabulator-tables@5.6.0/dist/css/tabulator_midnight.min.css" rel="stylesheet">
 
 <style>
-  body {
+  /* --- LAYOUT FIX: FLEXBOX COLUMN --- */
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
     background: #2e2e2e;
     color: #fff;
     font-family: sans-serif;
-    margin: 0;
+    overflow: hidden; /* Stop body scroll, force internal scroll */
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
     padding: 20px;
-    /* Prevent Body scroll, let Table scroll */
-    overflow: hidden; 
-    height: 100vh; 
     box-sizing: border-box;
   }
 
@@ -29,6 +35,7 @@
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transform-origin: left center;
     white-space: nowrap;
+    flex-shrink: 0; /* Don't shrink */
   }
 
   h1:hover {
@@ -64,6 +71,7 @@
   .controls-container {
     background: #1f1f1f; padding: 15px; border-radius: 8px; margin-bottom: 15px;
     display: flex; gap: 15px; align-items: center; flex-wrap: wrap; border: 1px solid #444;
+    flex-shrink: 0; /* Don't shrink */
   }
   .control-group { display: flex; align-items: center; gap: 10px; }
   select, button {
@@ -78,9 +86,9 @@
   /* --- TABLE CONTAINER --- */
   #creator-table {
     width: 100%;
-    /* FIX: Strict height calculation ensures scrollbar stays on screen */
-    height: calc(100vh - 180px); 
+    flex-grow: 1; /* Fill all remaining vertical space */
     border: 1px solid #444;
+    overflow: hidden; /* Let Tabulator manage scroll */
   }
 
   /* --- PREVIEW & LOGO BOXES --- */
@@ -117,6 +125,7 @@
     min-height: 40px; 
   }
   
+  /* Allow filter area to expand */
   .tabulator .tabulator-header .tabulator-header-filter {
     height: auto !important;
     overflow: visible !important;
@@ -132,6 +141,8 @@
     transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
     position: relative; 
     background-clip: padding-box;
+    /* FIX: Default hidden overflow keeps headers synced */
+    overflow: hidden; 
   }
 
   /* 1. ACTIVE TILT STATE */
@@ -140,7 +151,7 @@
     box-shadow: 0 15px 30px rgba(0,0,0,0.6);
     border-color: rgba(255,255,255,0.5) !important; 
     filter: brightness(1.2);
-    /* FIX: Only allow overflow when actively hovering to keep headers aligned */
+    /* FIX: Allow overflow ONLY when hovering */
     overflow: visible !important; 
   }
 
@@ -351,13 +362,13 @@ window.addSpecialtyFilter = function(tag) {
     if(!tag) return;
     pendingSpecialtyFilters.add(tag.trim());
     updateFilterHeader();
-    triggerHeaderResize(); // Force resize
+    triggerHeaderResize(); 
 }
 
 window.removeSpecialtyFilter = function(tag) {
     pendingSpecialtyFilters.delete(tag);
     updateFilterHeader();
-    triggerHeaderResize(); // Force resize
+    triggerHeaderResize(); 
 }
 
 window.clearSpecialtyFilters = function() {
@@ -371,11 +382,14 @@ window.clearSpecialtyFilters = function() {
 window.applySpecialtyFilters = function() {
     appliedSpecialtyFilters = new Set(pendingSpecialtyFilters);
     table.setHeaderFilterValue("specialty", Array.from(appliedSpecialtyFilters));
+    triggerHeaderResize();
 }
 
-// Helper to force Tabulator to redraw headers when content grows
+// Helper to force Tabulator to redraw headers (Fixes sizing issue)
 function triggerHeaderResize() {
-    if(table) table.columnManager.renderer.renderColumns();
+    if(table) {
+        table.redraw(true); // Forces full redraw including headers
+    }
 }
 
 function updateFilterHeader() {
@@ -548,7 +562,8 @@ Papa.parse(csvUrl, {
             movableColumns: true,
             resizableColumns: true,
             placeholder:"No Data Available",
-            height:"100%", 
+            // FIX: Use 100% height to fill the flex container
+            height: "100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
             columns: [
@@ -604,7 +619,6 @@ Papa.parse(csvUrl, {
                 { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
                 
-                // --- SPECIALTY FILTER ---
                 {
                     title:"Specialty", 
                     field:"specialty", 
@@ -632,7 +646,6 @@ Papa.parse(csvUrl, {
                         const tags = val.split(',').map(t => t.trim()).filter(t => t);
                         const wrapper = document.createElement('div');
                         wrapper.className = 'tag-wrapper';
-                        
                         tags.forEach(tag => {
                             const span = document.createElement('span');
                             span.className = 'specialty-tag';
