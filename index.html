@@ -14,7 +14,7 @@
     font-family: sans-serif;
     margin: 0;
     padding: 20px;
-    overflow-y: scroll; /* Always show scrollbar to prevent layout shifts */
+    overflow-y: scroll;
   }
 
   h1 { margin-bottom: 10px; }
@@ -74,23 +74,23 @@
   /* --- CUSTOM PREVIEW BOXES --- */
   .preview-container {
     display: flex;
-    gap: 2px; /* Small space between multiple preview boxes */
-    flex-wrap: wrap; /* Allow wrapping if too many */
+    gap: 2px;
+    flex-wrap: wrap;
   }
 
   .preview-box, .logo-box {
     display: inline-block;
-    width: 30px; /* Same size as logo */
+    width: 30px;
     height: 30px;
     background-size: cover;
     background-position: center;
     border-radius: 4px;
     cursor: pointer;
-    border: 1px solid #555; /* Add a subtle border */
-    box-sizing: border-box; /* Include padding/border in size */
+    border: 1px solid #555;
+    box-sizing: border-box;
   }
   .preview-box:hover, .logo-box:hover {
-      border-color: darkorange; /* Highlight on hover */
+      border-color: darkorange;
       box-shadow: 0 0 5px rgba(255,140,0,0.5);
   }
 
@@ -98,9 +98,9 @@
   #image-tooltip {
     display: none; 
     position: fixed;
-    width: 400px; /* Larger size for full view */
+    width: 400px;
     height: 400px;
-    max-width: 90vw; /* Responsive scaling */
+    max-width: 90vw;
     max-height: 90vh;
     background-color: #222;
     background-size: contain;
@@ -109,15 +109,12 @@
     border: 2px solid #fff;
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     z-index: 99999;
-    border-radius: 8px;
-    pointer-events: none; /* Allows clicks to pass through to elements behind */
-    
-    /* Centering styles */
+    pointer-events: none;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     
-    display: flex; /* For loading message */
+    display: flex;
     justify-content: center;
     align-items: center;
     font-size: 1.2em;
@@ -177,9 +174,9 @@ const csvUrl = "https://docs.google.com/sheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCv
 
 // --- TOOLTIP LOGIC (ENHANCED) ---
 const tooltipEl = document.getElementById("image-tooltip");
-let currentPreviewImages = []; // Array of image URLs for the current hovered row
-let currentImageIndex = 0;   // Index of the image currently shown in the tooltip
-let slideshowInterval;       // Timer for cycling images
+let currentPreviewImages = [];
+let currentImageIndex = 0;
+let slideshowInterval;
 
 function displayImageInTooltip(imageUrl) {
     if (!imageUrl) {
@@ -188,13 +185,13 @@ function displayImageInTooltip(imageUrl) {
         return;
     }
     
-    tooltipEl.style.backgroundImage = 'none'; // Clear previous image
-    tooltipEl.textContent = 'Loading Content...'; // Show loading message
+    tooltipEl.style.backgroundImage = 'none';
+    tooltipEl.textContent = 'Loading Content...';
 
     const img = new Image();
     img.onload = () => {
         tooltipEl.style.backgroundImage = `url('${imageUrl}')`;
-        tooltipEl.textContent = ''; // Clear loading message
+        tooltipEl.textContent = '';
     };
     img.onerror = () => {
         tooltipEl.style.backgroundImage = 'none';
@@ -210,7 +207,7 @@ function showTooltip(imageUrls, startIndex = 0) {
     }
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
-    tooltipEl.style.display = "flex"; // Use flex to center loading text
+    tooltipEl.style.display = "flex";
     displayImageInTooltip(currentPreviewImages[currentImageIndex]);
 }
 
@@ -220,11 +217,11 @@ function hideTooltip() {
     tooltipEl.textContent = 'Loading Content...';
     currentPreviewImages = [];
     currentImageIndex = 0;
-    clearInterval(slideshowInterval); // Stop any active slideshow
+    clearInterval(slideshowInterval);
 }
 
 function startSlideshow() {
-    clearInterval(slideshowInterval); // Clear any existing interval
+    clearInterval(slideshowInterval);
     if (currentPreviewImages.length > 1) {
         slideshowInterval = setInterval(() => {
             currentImageIndex = (currentImageIndex + 1) % currentPreviewImages.length;
@@ -241,11 +238,16 @@ function parseImageFormula(formula) {
   return match ? match[1] : formula;
 }
 
-// NEW: Function to parse multiple preview image URLs
+/**
+ * UPDATED: Function to parse multiple preview image URLs using a single space as the delimiter.
+ */
 function parsePreviewImages(urlsString) {
-    if (!urlsString) return [];
-    return urlsString.split(',').map(url => url.trim()).filter(url => url !== '');
+    if (!urlsString || typeof urlsString !== 'string') return [];
+    
+    // Split the string by a single space, then filter out empty strings
+    return urlsString.split(' ').map(url => url.trim()).filter(url => url !== '');
 }
+
 
 function cleanNumber(val) {
     if (val === null || val === undefined || val === "") return null;
@@ -287,7 +289,7 @@ Papa.parse(csvUrl, {
             makerType: row['Maker Type'],
             link: row['Link'],
             
-            // NEW: Parse multiple preview URLs into an array
+            // NEW: Parse multiple preview URLs using the space delimiter
             previewImages: parsePreviewImages(row['Preview']), 
             
             price: cleanNumber(row['$ Price']),
@@ -332,7 +334,6 @@ Papa.parse(csvUrl, {
                     title:"Logo", field:"logo", hozAlign:"center", width:60,
                     formatter:function(cell){
                         const val = cell.getValue();
-                        // This uses 'logo-box' class for consistency
                         return val ? `<div class="logo-box" style="background-image:url('${val}');"></div>` : "";
                     }
                 },
@@ -341,11 +342,11 @@ Papa.parse(csvUrl, {
                     title:"Link", field:"link", formatter:"link", 
                     formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
                 },
-                // NEW: Custom formatter for multiple preview images
+                // Custom formatter for multiple preview images
                 {
-                    title:"Preview", field:"previewImages", hozAlign:"center", width:200, // Adjusted width
+                    title:"Preview", field:"previewImages", hozAlign:"center", width:200,
                     formatter:function(cell){
-                        const imageUrls = cell.getValue(); // This will be the array from data mapping
+                        const imageUrls = cell.getValue();
                         if (!imageUrls || imageUrls.length === 0) return "";
                         
                         const container = document.createElement('div');
@@ -355,22 +356,22 @@ Papa.parse(csvUrl, {
                             const previewBox = document.createElement('div');
                             previewBox.className = 'preview-box';
                             previewBox.style.backgroundImage = `url('${url}')`;
-                            previewBox.setAttribute('data-image-index', index); // Store index
+                            previewBox.setAttribute('data-image-index', index);
                             
                             // Mouse events for each individual preview box
                             previewBox.addEventListener('mouseenter', (e) => {
-                                showTooltip(imageUrls, index); // Show specific image
-                                clearInterval(slideshowInterval); // Stop any existing slideshow
+                                showTooltip(imageUrls, index);
+                                clearInterval(slideshowInterval);
                             });
                             previewBox.addEventListener('mouseleave', (e) => {
-                                startSlideshow(); // Start slideshow when mouse leaves a box
+                                startSlideshow();
                             });
 
                             container.appendChild(previewBox);
                         });
                         return container;
                     },
-                    // Attach hide tooltip to the cell's mouseleave, but individual boxes handle mouseenter/mouseleave
+                    // Attach hide tooltip to the cell's mouseleave
                     cellMouseLeave:function(e, cell){ hideTooltip(); } 
                 },
                 {
