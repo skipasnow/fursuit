@@ -25,23 +25,26 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    /* Allow browser to handle overflow if zoom is extreme */
     overflow: auto; 
   }
 
   /* --- HEADER ANIMATION --- */
-  h1 { 
-    margin: 0 0 15px 0; 
-    display: inline-block; 
+  h1 {
+    margin: 0 0 15px 0;
     cursor: default;
+    flex-shrink: 0;
+    /* H1 acts as a container now */
+  }
+
+  /* The Text Span handles the animation trigger */
+  #header-text {
+    display: inline-block;
     position: relative;
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transform-origin: left center;
-    white-space: nowrap;
-    flex-shrink: 0; 
   }
 
-  h1:hover {
+  #header-text:hover {
     transform: scale(1.15);
     background-image: linear-gradient(
       to right, 
@@ -89,9 +92,7 @@
   /* --- TABLE CONTAINER --- */
   #creator-table {
     width: 100%;
-    /* Max width prevents pushing off screen right */
     max-width: 100%; 
-    /* Fill remaining vertical space */
     flex-grow: 1; 
     border: 1px solid #444;
   }
@@ -115,27 +116,17 @@
   }
 
   /* --- TABULATOR STYLES & OVERRIDES --- */
-  
-  /* Headers: Must be stable for scrolling to sync */
   .tabulator .tabulator-header { 
     background-color: #1f1f1f !important; 
     font-weight: bold !important;
-    /* Ensure headers don't overflow unexpectedly */
     overflow: hidden !important;
   }
-  
   .tabulator .tabulator-header .tabulator-col-content {
-    white-space: normal !important; /* Allow wrapping text in headers */
-    padding: 8px 4px;
+    white-space: normal !important; padding: 8px 4px;
   }
-  
-  /* Filter area expansion */
   .tabulator .tabulator-header .tabulator-header-filter {
-    height: auto !important;
-    overflow: visible !important;
-    margin-top: 5px;
+    height: auto !important; overflow: visible !important; margin-top: 5px;
   }
-
   .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; }
   .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
   .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
@@ -143,10 +134,7 @@
   /* Base Cell Transition */
   .tabulator-row .tabulator-cell {
     transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
-    position: relative; 
-    background-clip: padding-box;
-    /* FIX: Keep default overflow hidden to maintain scroll sync */
-    overflow: hidden; 
+    position: relative; background-clip: padding-box; overflow: hidden; 
   }
 
   /* 1. ACTIVE TILT STATE */
@@ -155,7 +143,6 @@
     box-shadow: 0 15px 30px rgba(0,0,0,0.6);
     border-color: rgba(255,255,255,0.5) !important; 
     filter: brightness(1.2);
-    /* FIX: Only allow overflow when actively hovering */
     overflow: visible !important; 
   }
 
@@ -239,7 +226,7 @@
 </head>
 <body>
 
-<h1 id="page-header">Kemono Fursuit Makers</h1>
+<h1><span id="header-text">Kemono Fursuit Makers</span></h1>
 
 <div class="controls-container">
   <div class="control-group">
@@ -392,7 +379,7 @@ window.applySpecialtyFilters = function() {
 // Helper to force Tabulator to redraw headers (Fixes sizing issue)
 function triggerHeaderResize() {
     if(table) {
-        table.redraw(true); // Forces full redraw including headers
+        table.redraw(true); 
     }
 }
 
@@ -491,13 +478,15 @@ function formatTextCell(cell) {
 }
 
 // --- HEADER ANIMATION ---
-const header = document.getElementById('page-header');
+// UPDATED: Target the SPAN inside the H1
+const headerText = document.getElementById('header-text');
 let starInterval;
 function createStar() {
     const star = document.createElement('div');
     star.className = 'star-particle';
     star.textContent = '★';
-    const headerRect = header.getBoundingClientRect();
+    // Get rect of the SPAN (text), not the H1 container
+    const headerRect = headerText.getBoundingClientRect();
     const startX = headerRect.left + (Math.random() * headerRect.width);
     const startY = headerRect.bottom - 10; 
     star.style.left = startX + 'px'; star.style.top = startY + 'px';
@@ -506,8 +495,9 @@ function createStar() {
     document.body.appendChild(star);
     setTimeout(() => { star.remove(); }, 1500);
 }
-header.addEventListener('mouseenter', () => { starInterval = setInterval(createStar, 50); });
-header.addEventListener('mouseleave', () => { clearInterval(starInterval); });
+// Listeners attached to the text span only
+headerText.addEventListener('mouseenter', () => { starInterval = setInterval(createStar, 50); });
+headerText.addEventListener('mouseleave', () => { clearInterval(starInterval); });
 
 // --- MAIN SCRIPT ---
 let table;
@@ -566,7 +556,7 @@ Papa.parse(csvUrl, {
             movableColumns: true,
             resizableColumns: true,
             placeholder:"No Data Available",
-            // FIX: Use 100% to fill flex container
+            // FIX: Use 100% height to fill flex container, ensures scrollbar is at bottom
             height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
@@ -574,7 +564,7 @@ Papa.parse(csvUrl, {
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Maker", field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
                 {
-                    title:"Logo", field:"logo", hozAlign:"center", width:90, // Slightly wider for safety
+                    title:"Logo", field:"logo", hozAlign:"center", width:90, 
                     formatter:function(cell){
                         const val = cell.getValue();
                         return val ? `<div class="logo-box" style="background-image:url('${val}');"></div>` : "";
