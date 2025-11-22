@@ -100,11 +100,9 @@
     display: none; 
     position: fixed;
     
-    /* Dimensions: handled by JS mostly, but defaults here */
     width: 400px;
     height: 400px;
     
-    /* Appearance */
     background-color: #222;
     background-size: contain;
     background-repeat: no-repeat;
@@ -113,15 +111,12 @@
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     z-index: 99999;
     
-    /* FIX 2: Pointer events NONE so mouse passes through to boxes underneath */
     pointer-events: none; 
     
-    /* Layout for Text (though we removed text, good to keep just in case) */
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2em;
-    color: #ccc;
-    text-align: center;
+    /* ANIMATION BASE STYLES */
+    opacity: 0; /* Start hidden */
+    /* Use a cubic-bezier for a nice "snap" into place effect */
+    transition: opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   .tabulator .tabulator-header { background-color: #1f1f1f !important; }
@@ -179,25 +174,44 @@ let currentPreviewImages = [];
 let currentImageIndex = 0;
 let slideshowInterval;
 let hideTimeout; 
+let isTooltipCentered = false; // Track state for animation
 
 function displayImageInTooltip(imageUrl) {
-    // FIX 1: Removed textContent setting so no "Loading..." message appears
     if (!imageUrl) {
         tooltipEl.style.backgroundImage = 'none';
         return;
     }
-    
-    // We simply set the new URL. The browser handles the swap.
-    // If you want to clear the previous image immediately while loading:
-    // tooltipEl.style.backgroundImage = 'none'; 
-    
+
+    // 1. ANIMATION RESET: Prepare for the incoming image
+    // Determine baseline transform based on whether we are centered or not
+    const baseTransform = isTooltipCentered ? "translate(-50%, -50%)" : "";
+    // Random start angle: -5 or 5 degrees
+    const startAngle = Math.random() < 0.5 ? -5 : 5;
+
+    // DISABLE transitions instantly to reset the element without user seeing it snap back
+    tooltipEl.style.transition = 'none';
+    tooltipEl.style.opacity = '0';
+    // Apply the "Twist" and slightly scale down for impact
+    tooltipEl.style.transform = `${baseTransform} rotate(${startAngle}deg) scale(0.95)`;
+
     const img = new Image();
     img.onload = () => {
+        // Ensure tooltip is still meant to be visible
         if (tooltipEl.style.display !== 'none') {
             tooltipEl.style.backgroundImage = `url('${imageUrl}')`;
+            
+            // 2. TRIGGER ANIMATION:
+            // Force a browser "Reflow" so it acknowledges the reset state above before animating
+            void tooltipEl.offsetWidth; 
+
+            // Re-enable transitions for the smooth effect
+            tooltipEl.style.transition = 'opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            
+            // Set Final State: Fully visible, no rotation, full scale
+            tooltipEl.style.opacity = '1';
+            tooltipEl.style.transform = `${baseTransform} rotate(0deg) scale(1)`;
         }
     };
-    // Start load
     img.src = imageUrl;
 }
 
@@ -218,11 +232,17 @@ function hideTooltip() {
     clearInterval(slideshowInterval);
 
     hideTimeout = setTimeout(() => {
-        tooltipEl.style.display = "none";
-        tooltipEl.style.backgroundImage = 'none';
-        tooltipEl.textContent = ''; 
-        currentPreviewImages = [];
-        currentImageIndex = 0;
+        // On hide, we also fade out
+        tooltipEl.style.opacity = '0';
+        setTimeout(() => {
+             // Wait for fade out before actually hiding display
+             if(tooltipEl.style.opacity === '0') {
+                 tooltipEl.style.display = "none";
+                 tooltipEl.style.backgroundImage = 'none';
+                 currentPreviewImages = [];
+                 currentImageIndex = 0;
+             }
+        }, 200); // Match the transition duration
     }, 50);
 }
 
@@ -238,24 +258,23 @@ function startSlideshow() {
 
 // --- POSITIONING LOGIC ---
 
-// 1. For Previews: Center Screen, Large Size
 function centerTooltip() {
+    isTooltipCentered = true;
+    // Base CSS handles the top/left 50%, but we set size here
     tooltipEl.style.top = "50%";
     tooltipEl.style.left = "50%";
-    tooltipEl.style.transform = "translate(-50%, -50%)";
-    
-    // FIX 3: Set size to 80% of vertical height
     tooltipEl.style.width = "80vh"; 
     tooltipEl.style.height = "80vh";
+    
+    // Note: Transform is handled by the animation logic using isTooltipCentered
 }
 
-// 2. For Logos: Follow Cursor
 function moveTooltip(e) {
+    isTooltipCentered = false;
     const tooltipSize = 200; 
     const offset = 15; 
     const windowHeight = window.innerHeight;
     
-    tooltipEl.style.transform = "none"; 
     tooltipEl.style.width = tooltipSize + "px";
     tooltipEl.style.height = tooltipSize + "px";
 
@@ -268,6 +287,8 @@ function moveTooltip(e) {
 
     tooltipEl.style.left = left + "px";
     tooltipEl.style.top = top + "px";
+    
+    // Note: Transform rotation is handled by animation logic
 }
 
 // --- HELPERS ---
@@ -505,7 +526,7 @@ Papa.parse(csvUrl, {
             reactiveData:true, virtualDom:true
         });
 
-        // --- EVENT LISTENERS (UNCHANGED) ---
+        // --- EVENT LISTENERS ---
         document.getElementById("reset-sort").addEventListener("click", function(){
             table.clearSort();
             table.setSort("rank", "asc");
@@ -528,7 +549,7 @@ Papa.parse(csvUrl, {
     }
 });
 
-// --- FIXED GLOBAL HOVER TRACKING LOGIC ---
+// --- GLOBAL HOVER TRACKING LOGIC ---
 document.addEventListener('mousemove', (e) => {
     const target = e.target;
     const isOverPreview = target.closest('.preview-box');
@@ -538,7 +559,6 @@ document.addEventListener('mousemove', (e) => {
     const sourceBox = isOverPreview || isOverLogo;
 
     if (sourceBox) {
-        // Cancel any pending hide actions immediately
         clearTimeout(hideTimeout);
 
         const rowEl = target.closest('.tabulator-row');
@@ -563,31 +583,21 @@ document.addEventListener('mousemove', (e) => {
                 }
 
                 if (imageUrls && imageUrls.length > 0) {
-                    // Check if content changed OR if we just need to update position (Logo)
-                    if (tooltipEl.style.display === 'none' || currentPreviewImages !== imageUrls || currentImageIndex !== index || isLogo) {
-                        
-                        if (isLogo) {
-                            // Logo: Always update position, don't slide
-                            clearInterval(slideshowInterval);
-                            moveTooltip(e);
-                            // Only update content if changed
-                            if (currentPreviewImages !== imageUrls) {
-                                showTooltip(imageUrls, index);
-                            } else {
-                                tooltipEl.style.display = "flex"; // Ensure visible
-                            }
-                        } else {
-                            // Preview: Center, lock image
-                            clearInterval(slideshowInterval);
-                            centerTooltip();
-                            
-                            // Only update content if changed (moving between boxes)
-                            if (currentPreviewImages !== imageUrls || currentImageIndex !== index) {
-                                showTooltip(imageUrls, index);
-                            } else {
-                                tooltipEl.style.display = "flex";
-                            }
+                    // If hovering the logo, force position update even if content is same
+                    if (isLogo) {
+                        clearInterval(slideshowInterval);
+                        moveTooltip(e); // Move logic for Logo
+                        if (tooltipEl.style.display === 'none' || currentPreviewImages !== imageUrls) {
+                            showTooltip(imageUrls, index);
                         }
+                    } 
+                    // If hovering preview, only update on content change
+                    else if (tooltipEl.style.display === 'none' || currentPreviewImages !== imageUrls || currentImageIndex !== index) {
+                        clearInterval(slideshowInterval);
+                        centerTooltip(); // Center logic for Preview
+                        showTooltip(imageUrls, index);
+                        // Only slide if not logo
+                        if (!isLogo) startSlideshow(); 
                     }
                 }
             }
