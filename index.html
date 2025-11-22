@@ -372,6 +372,7 @@ Papa.parse(csvUrl, {
                     title:"Link", field:"link", formatter:"link", 
                     formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
                 },
+				// --- NEW PREVIEW COLUMN DEFINITION ---
 				{
 					title: "Preview",
 					field: "previewImages",
@@ -392,40 +393,24 @@ Papa.parse(csvUrl, {
 							
 							// 1. Mouse enters a specific box: Show image, stop slideshow
 							previewBox.addEventListener('mouseenter', (e) => {
-								// Clear the running slideshow (if any)
-								clearInterval(slideshowInterval);
 								// Clear any pending hide operation
 								clearTimeout(hideTimeout); 
+								clearInterval(slideshowInterval);
 								showTooltip(imageUrls, index);
+								startSlideshow(); // Start the slideshow right away
 							});
 
-							// 2. Mouse leaves a specific box: Start slideshow (keep tooltip visible)
-							previewBox.addEventListener('mouseleave', (e) => {
-								startSlideshow(); // Starts the 2-second cycle
-							});
+							// We are explicitly NOT attaching a mouseleave here.
 
 							container.appendChild(previewBox);
 						});
 						
-						// --- 3. Attach Master HIDE/CLEANUP Listener to the Cell's Container ---
-						// This is necessary because Tabulator's built-in mouseleave may interfere.
-						// We clear the slideshow and hide the tooltip when the mouse leaves the container.
-						// The delayed hideTooltip (from the previous step) manages the transition to the floating tooltip.
-						container.addEventListener('mouseleave', (e) => {
-							// Check if the mouse is moving to the floating tooltip (by ID)
-							if (e.relatedTarget && e.relatedTarget.id === 'image-tooltip') {
-								 // Do nothing, the mouse is entering the tooltip itself
-								 return;
-							}
-							
-							// Otherwise, hide the tooltip with a short delay
-							hideTooltip();
-						});
+						// No mouseleave listeners attached to the container or cell.
 						
 						return container;
 					},
-					// IMPORTANT: The original cellMouseLeave property MUST remain omitted.
 				},
+				// --- END OF NEW PREVIEW COLUMN DEFINITION ---
                 { title:"$ Ship or Fly", field:"shipOrFly", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
                 { title:"$ Tariff (2025)", field:"tariff", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
                 { title:"$ Ship", field:"ship", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
@@ -532,6 +517,44 @@ Papa.parse(csvUrl, {
         });
     }
 });
+
+// --- GLOBAL HOVER TRACKING LOGIC ---
+document.addEventListener('mousemove', (e) => {
+    const target = e.target;
+    const isOverPreview = target.closest('.preview-box');
+    const isOverTooltip = target.closest('#image-tooltip');
+
+    // Case 1: Mouse is over a preview box
+    if (isOverPreview) {
+        // Find the closest Tabulator cell element
+        const cell = target.closest('.tabulator-cell');
+        if (cell) {
+            // Find the data row for this cell
+            const rowEl = target.closest('.tabulator-row');
+            if (rowEl && rowEl._row && rowEl._row.data) {
+                const rowData = rowEl._row.data;
+                const imageUrls = rowData.previewImages;
+
+                // Only show the tooltip if it's not already showing the correct data
+                if (currentPreviewImages !== imageUrls) {
+                    // This logic triggers showTooltip on hover and starts the slideshow
+                    clearTimeout(hideTimeout);
+                    clearInterval(slideshowInterval);
+                    
+                    const index = parseInt(isOverPreview.getAttribute('data-image-index'), 10);
+                    showTooltip(imageUrls, index);
+                    startSlideshow(); 
+                }
+            }
+        }
+    } 
+    // Case 2: Mouse is NOT over a preview box OR the tooltip.
+    else if (!isOverTooltip && tooltipEl.style.display !== 'none') {
+        // If the tooltip is visible AND the mouse is not over it, hide it.
+        hideTooltip();
+    }
+});
+// --- END GLOBAL HOVER TRACKING LOGIC ---
 </script>
 
 </body>
