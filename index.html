@@ -33,7 +33,6 @@
     margin: 0 0 15px 0;
     cursor: default;
     flex-shrink: 0;
-    /* H1 acts as a container now */
   }
 
   /* The Text Span handles the animation trigger */
@@ -156,17 +155,27 @@
     position: relative; z-index: 10001;
   }
 
-  /* 3. TEXT WRAPPER STYLING */
+  /* 3. TEXT WRAPPER STYLING (Fixed Width/Border) */
   .text-wrapper {
     display: block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     transition: all 0.2s ease; transform-origin: center center;
+    box-sizing: border-box;
   }
   .tabulator-row .tabulator-cell.active-tilt .text-wrapper {
     position: absolute; left: 0; top: 50%;
-    width: max-content; min-width: 100%;
+    
+    /* Width logic: At least the cell size, but grow if needed */
+    min-width: 100%; 
+    width: max-content; 
+    
     background-color: rgba(40, 40, 40, 0.95);
-    padding: 5px 10px; border-radius: 4px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.7); z-index: 100; pointer-events: auto;
+    padding: 5px 10px; 
+    border-radius: 4px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.7); 
+    z-index: 100; pointer-events: auto;
+    
+    /* FIX 3: White Outline */
+    border: 1px solid #ffffff;
   }
 
   /* 4. LIGHT SWEEP ANIMATION */
@@ -478,16 +487,17 @@ function formatTextCell(cell) {
 }
 
 // --- HEADER ANIMATION ---
-// UPDATED: Target the SPAN inside the H1
 const headerText = document.getElementById('header-text');
 let starInterval;
 function createStar() {
     const star = document.createElement('div');
     star.className = 'star-particle';
     star.textContent = '★';
-    // Get rect of the SPAN (text), not the H1 container
+    
+    // FIX 1: Use window width for random X position to cover whole screen
+    const startX = Math.random() * window.innerWidth;
+    
     const headerRect = headerText.getBoundingClientRect();
-    const startX = headerRect.left + (Math.random() * headerRect.width);
     const startY = headerRect.bottom - 10; 
     star.style.left = startX + 'px'; star.style.top = startY + 'px';
     const size = 0.8 + Math.random() * 0.8;
@@ -495,7 +505,6 @@ function createStar() {
     document.body.appendChild(star);
     setTimeout(() => { star.remove(); }, 1500);
 }
-// Listeners attached to the text span only
 headerText.addEventListener('mouseenter', () => { starInterval = setInterval(createStar, 50); });
 headerText.addEventListener('mouseleave', () => { clearInterval(starInterval); });
 
@@ -556,7 +565,6 @@ Papa.parse(csvUrl, {
             movableColumns: true,
             resizableColumns: true,
             placeholder:"No Data Available",
-            // FIX: Use 100% height to fill flex container, ensures scrollbar is at bottom
             height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
@@ -617,7 +625,7 @@ Papa.parse(csvUrl, {
                 {
                     title:"Specialty", 
                     field:"specialty", 
-                    width: 250,
+                    width: 280, // FIX 2: Increased width
                     headerFilter: function(cell, onRendered, success, cancel, editorParams){
                         const container = document.createElement("div");
                         container.id = "specialty-filter-container";
