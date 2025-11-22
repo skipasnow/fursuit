@@ -30,11 +30,7 @@
 
   h1:hover {
     transform: scale(1.15);
-    background-image: linear-gradient(
-      to right, 
-      #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, 
-      #ff0000, #ff7f00, #ffff00
-    );
+    background-image: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000);
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -46,13 +42,8 @@
   @keyframes rainbow-move { to { background-position: 200% center; } }
 
   .star-particle {
-    position: fixed;
-    top: 0;
-    color: gold;
-    font-size: 1.2em;
-    pointer-events: none;
-    z-index: 99999;
-    user-select: none;
+    position: fixed; top: 0; color: gold; font-size: 1.2em;
+    pointer-events: none; z-index: 99999; user-select: none;
     text-shadow: 0 0 5px rgba(255, 215, 0, 0.8);
     animation: fall 1.5s linear forwards;
   }
@@ -64,173 +55,142 @@
 
   /* --- CONTROLS --- */
   .controls-container {
-    background: #1f1f1f;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    flex-wrap: wrap;
-    border: 1px solid #444;
+    background: #1f1f1f; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+    display: flex; gap: 15px; align-items: center; flex-wrap: wrap; border: 1px solid #444;
   }
-
   .control-group { display: flex; align-items: center; gap: 10px; }
-
   select, button {
-    padding: 8px 12px;
-    border-radius: 4px;
-    border: 1px solid #555;
-    background: #333;
-    color: #fff;
-    cursor: pointer;
-    font-size: 14px;
+    padding: 8px 12px; border-radius: 4px; border: 1px solid #555;
+    background: #333; color: #fff; cursor: pointer; font-size: 14px;
   }
-
   select:hover, button:hover { background: #444; border-color: darkorange; }
-
   button.reset-btn { background: #c62828; border-color: #e53935; }
   button.reset-btn:hover { background: #d32f2f; }
-
   label { font-weight: bold; color: #ccc; }
 
-  #creator-table {
-    width: 100%;
-    margin: auto;
-    height: 75vh; 
-    border: 1px solid #444;
-  }
+  #creator-table { width: 100%; margin: auto; height: 75vh; border: 1px solid #444; }
 
   /* --- PREVIEW & LOGO BOXES --- */
   .preview-container { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
-
   .preview-box, .logo-box {
-    display: inline-block;
-    width: 30px;
-    height: 30px;
-    background-size: cover;
-    background-position: center;
-    border-radius: 4px;
-    cursor: pointer;
-    border: 1px solid #555;
-    box-sizing: border-box;
+    display: inline-block; width: 30px; height: 30px;
+    background-size: cover; background-position: center;
+    border-radius: 4px; cursor: pointer; border: 1px solid #555; box-sizing: border-box;
   }
-  .preview-box:hover, .logo-box:hover {
-      border-color: darkorange;
-      box-shadow: 0 0 5px rgba(255,140,0,0.5);
-  }
+  .preview-box:hover, .logo-box:hover { border-color: darkorange; box-shadow: 0 0 5px rgba(255,140,0,0.5); }
 
   /* --- FLOATING TOOLTIP --- */
   #image-tooltip {
-    display: none; 
-    position: fixed;
-    width: 400px; height: 400px;
-    background-color: #222;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    border: 2px solid #fff;
-    box-shadow: 0 0 20px rgba(0,0,0,0.7);
-    z-index: 99999;
-    pointer-events: none; 
-    opacity: 0; 
-    transition: opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: none; position: fixed; width: 400px; height: 400px;
+    background-color: #222; background-size: contain; background-repeat: no-repeat;
+    background-position: center; border: 2px solid #fff;
+    box-shadow: 0 0 20px rgba(0,0,0,0.7); z-index: 99999; pointer-events: none;
+    opacity: 0; transition: opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   /* --- TABULATOR STYLES --- */
-  .tabulator .tabulator-header { 
-    background-color: #1f1f1f !important; 
-    font-weight: bold !important;
-  }
+  .tabulator .tabulator-header { background-color: #1f1f1f !important; font-weight: bold !important; }
   .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; }
   .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
   .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
 
-  /* Base Cell Transition */
   .tabulator-row .tabulator-cell {
     transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease;
-    position: relative; 
-    background-clip: padding-box;
-    /* Allow text wrapper to break out */
-    overflow: visible !important;
+    position: relative; background-clip: padding-box; overflow: visible !important;
   }
 
-  /* 1. ACTIVE TILT STATE (Base) */
   .tabulator-row .tabulator-cell.active-tilt {
-    z-index: 10000 !important; 
-    box-shadow: 0 15px 30px rgba(0,0,0,0.6);
-    border-color: rgba(255,255,255,0.5) !important;
-    filter: brightness(1.2);
+    z-index: 10000 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+    border-color: rgba(255,255,255,0.5) !important; filter: brightness(1.2);
   }
 
-  /* 2. URL/LINK ANIMATION */
   a { color: darkorange !important; text-decoration: none; transition: all 0.2s; }
-  
   .tabulator-row .tabulator-cell.active-tilt a {
-    display: inline-block; 
-    color: #ffd699 !important; 
+    display: inline-block; color: #ffd699 !important;
     transform: translateY(-4px) scale(1.2);
-    text-shadow: 0 0 8px rgba(255, 140, 0, 0.8), 0 0 15px rgba(255, 140, 0, 0.6);
+    text-shadow: 0 0 8px rgba(255, 140, 0, 0.8);
     transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative;
-    z-index: 10001;
+    position: relative; z-index: 10001;
   }
 
-  /* 3. TEXT WRAPPER STYLING (Handles Expansion & 3D) */
-  .text-wrapper {
-    display: block;
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: all 0.2s ease; /* Smooth reset */
-    transform-origin: center center; /* Rotate from center */
+  /* --- SPECIALTY TAG STYLES --- */
+  .tag-wrapper {
+    display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
   }
-
-  /* When Hovered: Wrapper pops out */
-  .tabulator-row .tabulator-cell.active-tilt .text-wrapper {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    /* NOTE: We remove the static transform here because JS handles the 3D rotation + translateY */
-    width: max-content;
-    min-width: 100%;
-    background-color: rgba(40, 40, 40, 0.95);
-    padding: 5px 10px;
+  
+  .specialty-tag {
+    background-color: #444;
+    color: #fff;
+    padding: 2px 6px;
     border-radius: 4px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-    z-index: 100;
-    /* Explicitly reset pointer events so you can select text if needed */
-    pointer-events: auto;
-  }
-
-  /* 4. TEXT CONTENT ANIMATION (Light Sweep) */
-  .text-content {
-    color: #fff; 
+    font-size: 0.85em;
+    cursor: pointer;
+    border: 1px solid #555;
+    transition: all 0.2s ease;
     font-weight: normal;
-    transition: font-weight 0.2s ease;
+  }
+  
+  .specialty-tag:hover {
+    background-color: darkorange;
+    border-color: #fff;
+    transform: scale(1.1);
   }
 
+  /* --- HEADER FILTER (ACTIVE TAGS) STYLES --- */
+  .filter-container {
+    display: flex; flex-wrap: wrap; gap: 4px; padding: 2px; min-height: 25px;
+  }
+  
+  .filter-tag {
+    background-color: darkorange;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .filter-remove {
+    cursor: pointer;
+    font-weight: bold;
+    color: #000;
+  }
+  .filter-remove:hover { color: #fff; }
+
+  .filter-clear-all {
+    font-size: 0.75em;
+    color: #aaa;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-left: auto;
+    align-self: center;
+  }
+  .filter-clear-all:hover { color: #fff; }
+
+  /* --- TEXT CELL ANIMATION --- */
+  .text-wrapper {
+    display: block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: all 0.2s ease; transform-origin: center center;
+  }
+  .tabulator-row .tabulator-cell.active-tilt .text-wrapper {
+    position: absolute; left: 0; top: 50%; 
+    width: max-content; min-width: 100%;
+    background-color: rgba(40, 40, 40, 0.95);
+    padding: 5px 10px; border-radius: 4px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.7); z-index: 100; pointer-events: auto;
+  }
+  .text-content { color: #fff; font-weight: normal; transition: font-weight 0.2s ease; }
   .tabulator-row .tabulator-cell.active-tilt .text-content {
     font-weight: bold;
-    
     background: linear-gradient(110deg, #ffffff 40%, #ff8c00 50%, #ffffff 60%);
-    background-size: 200% 100%;
-    background-position: 200% center; 
-    
-    -webkit-background-clip: text;
-    background-clip: text;
-    
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    
+    background-size: 200% 100%; background-position: 200% center;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
     animation: shine-sweep 1.5s linear infinite;
   }
-
-  @keyframes shine-sweep {
-    0% { background-position: 200% center; }
-    100% { background-position: -200% center; }
-  }
+  @keyframes shine-sweep { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
 </style>
 </head>
 <body>
@@ -250,7 +210,6 @@
       <option value="fursuits">Fursuits Count</option>
     </select>
   </div>
-
   <div class="control-group">
     <label>Order:</label>
     <select id="sort-dir">
@@ -258,9 +217,7 @@
       <option value="desc">High to Low (Desc)</option>
     </select>
   </div>
-
   <button id="reset-sort" class="reset-btn">Reset Sort</button>
-  
   <div style="margin-left: auto; font-size: 0.9em; color: #aaa; width: 100%; margin-top:10px;">
     *Hold <b>Shift</b> and click column headers to sort by multiple columns at once.
   </div>
@@ -284,20 +241,14 @@ let hideTimeout;
 let isTooltipCentered = false; 
 
 function displayImageInTooltip(imageUrl, forceAnimation = false) {
-    if (!imageUrl) {
-        tooltipEl.style.backgroundImage = 'none';
-        return;
-    }
-
+    if (!imageUrl) { tooltipEl.style.backgroundImage = 'none'; return; }
     const baseTransform = isTooltipCentered ? "translate(-50%, -50%)" : "";
-    
     if (tooltipEl.style.opacity === '0' || forceAnimation) {
         const startAngle = Math.random() < 0.5 ? -5 : 5;
         tooltipEl.style.transition = 'none';
         tooltipEl.style.opacity = '0';
         tooltipEl.style.transform = `${baseTransform} rotate(${startAngle}deg) scale(0.95)`;
     }
-
     const img = new Image();
     img.onload = () => {
         if (tooltipEl.style.display !== 'none') {
@@ -312,13 +263,9 @@ function displayImageInTooltip(imageUrl, forceAnimation = false) {
 }
 
 function showTooltip(imageUrls, startIndex = 0, forceAnimation = false) {
-    if (!imageUrls || imageUrls.length === 0) {
-        hideTooltip();
-        return;
-    }
+    if (!imageUrls || imageUrls.length === 0) { hideTooltip(); return; }
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
-    
     tooltipEl.style.display = "flex"; 
     displayImageInTooltip(currentPreviewImages[currentImageIndex], forceAnimation);
 }
@@ -326,7 +273,6 @@ function showTooltip(imageUrls, startIndex = 0, forceAnimation = false) {
 function hideTooltip() {
     clearTimeout(hideTimeout);
     clearInterval(slideshowInterval);
-
     hideTimeout = setTimeout(() => {
         tooltipEl.style.opacity = '0';
         setTimeout(() => {
@@ -356,28 +302,69 @@ function centerTooltip() {
     isTooltipCentered = true;
     tooltipEl.style.top = "50%";
     tooltipEl.style.left = "50%";
-    tooltipEl.style.width = "80vh"; 
-    tooltipEl.style.height = "80vh";
+    tooltipEl.style.width = "80vh"; tooltipEl.style.height = "80vh";
 }
-
 function moveTooltip(e) {
     isTooltipCentered = false;
-    const tooltipSize = 200; 
-    const offset = 15; 
+    const tooltipSize = 200; const offset = 15; 
     const windowHeight = window.innerHeight;
-    
-    tooltipEl.style.width = tooltipSize + "px";
-    tooltipEl.style.height = tooltipSize + "px";
+    tooltipEl.style.width = tooltipSize + "px"; tooltipEl.style.height = tooltipSize + "px";
+    let left = e.clientX + offset; let top = e.clientY + offset;
+    if (top + tooltipSize > windowHeight) { top = e.clientY - tooltipSize - offset; }
+    tooltipEl.style.left = left + "px"; tooltipEl.style.top = top + "px";
+}
 
-    let left = e.clientX + offset;
-    let top = e.clientY + offset;
+// --- SPECIALTY FILTER LOGIC ---
+// 1. State
+let activeSpecialtyFilters = new Set();
+
+// 2. Click Handler for Tags in Cells
+window.addSpecialtyFilter = function(tag) {
+    // Add tag, update UI, trigger filter
+    activeSpecialtyFilters.add(tag.trim());
+    updateFilterHeader();
+    table.recalc(); // Triggers the custom filter function
+}
+
+// 3. Remove Handler for Header
+window.removeSpecialtyFilter = function(tag) {
+    activeSpecialtyFilters.delete(tag);
+    updateFilterHeader();
+    table.recalc();
+}
+
+// 4. Clear All Handler
+window.clearSpecialtyFilters = function() {
+    activeSpecialtyFilters.clear();
+    updateFilterHeader();
+    table.recalc();
+}
+
+// 5. UI Updater
+function updateFilterHeader() {
+    const container = document.getElementById('specialty-filter-container');
+    if(!container) return;
     
-    if (top + tooltipSize > windowHeight) {
-        top = e.clientY - tooltipSize - offset;
+    container.innerHTML = '';
+    
+    if (activeSpecialtyFilters.size === 0) {
+        container.innerHTML = '<span style="color:#888; font-style:italic; font-size:0.8em;">Filter active...</span>';
+        return;
     }
 
-    tooltipEl.style.left = left + "px";
-    tooltipEl.style.top = top + "px";
+    activeSpecialtyFilters.forEach(tag => {
+        const pill = document.createElement('span');
+        pill.className = 'filter-tag';
+        pill.innerHTML = `${tag} <span class="filter-remove" onclick="removeSpecialtyFilter('${tag}')">✕</span>`;
+        container.appendChild(pill);
+    });
+
+    // Add Clear All
+    const clearBtn = document.createElement('span');
+    clearBtn.className = 'filter-clear-all';
+    clearBtn.innerText = 'Clear All';
+    clearBtn.onclick = window.clearSpecialtyFilters;
+    container.appendChild(clearBtn);
 }
 
 // --- HELPERS ---
@@ -386,12 +373,10 @@ function parseImageFormula(formula) {
   const match = formula.match(/=IMAGE\("(.+)"\)/);
   return match ? match[1] : formula;
 }
-
 function parsePreviewImages(urlsString) {
     if (!urlsString || typeof urlsString !== 'string') return [];
     return urlsString.split(' ').map(url => url.trim()).filter(url => url !== '');
 }
-
 function cleanNumber(val) {
     if (val === null || val === undefined || val === "") return null;
     if (typeof val === 'string') {
@@ -402,7 +387,6 @@ function cleanNumber(val) {
     }
     return val; 
 }
-
 function getGradientColor(value, min, max, lowIsGreen=false){
     if(value === null || value === undefined || value === "" || isNaN(value)) return "";
     const ratio = (value - min)/(max - min);
@@ -417,57 +401,37 @@ function getGradientColor(value, min, max, lowIsGreen=false){
     }
     return `rgb(${r},${g},0)`;
 }
+function formatTextCell(cell) {
+    const val = cell.getValue();
+    if(val === null || val === undefined) return "";
+    return `<div class="text-wrapper"><span class="text-content">${val}</span></div>`;
+}
 
-// --- HEADER ANIMATION LOGIC ---
+// --- HEADER ANIMATION ---
 const header = document.getElementById('page-header');
 let starInterval;
-
 function createStar() {
     const star = document.createElement('div');
     star.className = 'star-particle';
     star.textContent = '★';
-    
     const headerRect = header.getBoundingClientRect();
     const startX = headerRect.left + (Math.random() * headerRect.width);
     const startY = headerRect.bottom - 10; 
-    
-    star.style.left = startX + 'px';
-    star.style.top = startY + 'px';
-    
+    star.style.left = startX + 'px'; star.style.top = startY + 'px';
     const size = 0.8 + Math.random() * 0.8;
     star.style.fontSize = size + 'em';
-    
     document.body.appendChild(star);
-    
-    setTimeout(() => {
-        star.remove();
-    }, 1500);
+    setTimeout(() => { star.remove(); }, 1500);
 }
-
-header.addEventListener('mouseenter', () => {
-    starInterval = setInterval(createStar, 50);
-});
-
-header.addEventListener('mouseleave', () => {
-    clearInterval(starInterval);
-});
-
+header.addEventListener('mouseenter', () => { starInterval = setInterval(createStar, 50); });
+header.addEventListener('mouseleave', () => { clearInterval(starInterval); });
 
 // --- MAIN SCRIPT ---
 let table;
 
-// HELPER FOR TEXT WRAPPING
-function formatTextCell(cell) {
-    const val = cell.getValue();
-    if(val === null || val === undefined) return "";
-    // Wraps text in a div so we can apply absolute positioning on hover
-    return `<div class="text-wrapper"><span class="text-content">${val}</span></div>`;
-}
-
 Papa.parse(csvUrl, {
     download: true, header: true, dynamicTyping: true,
     complete: function(results) {
-        
         const data = results.data.map(row => ({
             rank: cleanNumber(row['Rank']),
             maker: row['Maker'],
@@ -504,10 +468,7 @@ Papa.parse(csvUrl, {
             priceRank: cleanNumber(row['Price Rank']),
         })).filter(row => row.maker); 
 
-        if (data.length === 0) {
-            console.warn("Data array is empty.");
-            return;
-        }
+        if (data.length === 0) { console.warn("Data array is empty."); return; }
 
         const colMinMax = {};
         const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
@@ -526,8 +487,8 @@ Papa.parse(csvUrl, {
             initialSort:[ {column:"rank", dir:"asc"} ],
             
             columns: [
-                { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell },
-                { title:"Maker", field:"maker", formatter: formatTextCell },
+                { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell, cssClass: "text-cell" },
+                { title:"Maker", field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
                 {
                     title:"Logo", field:"logo", hozAlign:"center", width:60,
                     formatter:function(cell){
@@ -535,23 +496,18 @@ Papa.parse(csvUrl, {
                         return val ? `<div class="logo-box" style="background-image:url('${val}');"></div>` : "";
                     }
                 },
-                { title:"Maker Type", field:"makerType", formatter: formatTextCell },
+                { title:"Maker Type", field:"makerType", formatter: formatTextCell, cssClass: "text-cell" },
                 {
                     title:"Link", field:"link", formatter:"link", hozAlign:"center",
                     formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
                 },
                 {
-                    title: "Preview",
-                    field: "previewImages",
-                    hozAlign: "center",
-                    width: 200,
+                    title: "Preview", field: "previewImages", hozAlign: "center", width: 200,
                     formatter: function(cell) {
                         const imageUrls = cell.getValue();
                         if (!imageUrls || imageUrls.length === 0) return "";
-                        
                         const container = document.createElement('div');
                         container.className = 'preview-container';
-
                         imageUrls.forEach((url, index) => {
                             const previewBox = document.createElement('div');
                             previewBox.className = 'preview-box';
@@ -571,22 +527,67 @@ Papa.parse(csvUrl, {
                         const c = getGradientColor(val,colMinMax['price'].min,colMinMax['price'].max,true);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
-                        // No formatTextCell here because we want background color + simple text
                         return val;
                     }
                 },
-                { title:"$ Ship or Fly", field:"shipOrFly", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell },
-                { title:"$ Tariff (2025)", field:"tariff", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell },
-                { title:"$ Ship", field:"ship", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell },
-                { title:"$ Air Travel", field:"airTravel", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell },
-                { title:"$ Travel Surplus", field:"travelSurplus", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell },
+                { title:"$ Ship or Fly", field:"shipOrFly", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell, cssClass: "text-cell" },
+                { title:"$ Tariff (2025)", field:"tariff", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell, cssClass: "text-cell" },
+                { title:"$ Ship", field:"ship", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell, cssClass: "text-cell" },
+                { title:"$ Air Travel", field:"airTravel", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell, cssClass: "text-cell" },
+                { title:"$ Travel Surplus", field:"travelSurplus", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell, cssClass: "text-cell" },
                 
-                { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell },
-                { title:"Status", field:"status", formatter: formatTextCell },
+                { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell, cssClass: "text-cell" },
+                { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
+                
+                // --- UPDATED SPECIALTY COLUMN FOR FILTERING ---
                 {
-                    title:"Specialty", field:"specialty", formatter: formatTextCell,
-                    headerFilter:"input", headerFilterPlaceholder:"Filter on specialty here..."
+                    title:"Specialty", 
+                    field:"specialty", 
+                    // We use headerFilter to inject our custom DOM logic
+                    headerFilter: function(cell, onRendered, success, cancel, editorParams){
+                        const container = document.createElement("div");
+                        container.id = "specialty-filter-container";
+                        container.className = "filter-container";
+                        container.innerHTML = '<span style="color:#888; font-style:italic; font-size:0.8em;">Filter active...</span>';
+                        return container;
+                    },
+                    // Custom filtering function
+                    headerFilterFunc: function(headerValue, rowValue, rowData, filterParams){
+                        // If no tags selected, show everything
+                        if (activeSpecialtyFilters.size === 0) return true;
+                        if (!rowValue) return false;
+                        
+                        // Check if row contains ALL selected tags
+                        const rowTags = rowValue.split(',').map(t => t.trim());
+                        let match = true;
+                        activeSpecialtyFilters.forEach(filterTag => {
+                            if (!rowTags.includes(filterTag)) match = false;
+                        });
+                        return match;
+                    },
+                    // Custom formatter to make tags clickable
+                    formatter: function(cell) {
+                        const val = cell.getValue();
+                        if (!val) return "";
+                        const tags = val.split(',').map(t => t.trim()).filter(t => t);
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'tag-wrapper';
+                        
+                        tags.forEach(tag => {
+                            const span = document.createElement('span');
+                            span.className = 'specialty-tag';
+                            span.textContent = tag;
+                            span.onclick = function(e) {
+                                e.stopPropagation(); // prevent row selection
+                                window.addSpecialtyFilter(tag);
+                            };
+                            wrapper.appendChild(span);
+                        });
+                        return wrapper;
+                    }
                 },
+                // ---------------------------------------------
+
                 {
                     title:"Partials", field:"partials", hozAlign:"right", sorter:"number",
                     sorterParams:{ alignEmptyValues:"bottom" },
@@ -623,7 +624,7 @@ Papa.parse(csvUrl, {
                         return val;
                     }
                 },
-                { title:"Country", field:"country", formatter: formatTextCell },
+                { title:"Country", field:"country", formatter: formatTextCell, cssClass: "text-cell" },
                 {
                     title:"Followers", field:"followers", hozAlign:"right", sorter:"number",
                     sorterParams:{ alignEmptyValues:"bottom" },
@@ -649,7 +650,7 @@ Papa.parse(csvUrl, {
                         return val;
                     }
                 },
-                { title:"Acct Date", field:"acctDate", formatter: formatTextCell }
+                { title:"Acct Date", field:"acctDate", formatter: formatTextCell, cssClass: "text-cell" }
             ],
             rowFormatter:function(row){
                 const el = row.getElement();
@@ -661,134 +662,91 @@ Papa.parse(csvUrl, {
 
         // --- EVENT LISTENERS ---
         document.getElementById("reset-sort").addEventListener("click", function(){
-            table.clearSort();
-            table.setSort("rank", "asc");
-            table.clearHeaderFilter(); 
+            table.clearSort(); table.setSort("rank", "asc"); table.clearHeaderFilter(); 
             document.getElementById("sort-field").value = "rank";
             document.getElementById("sort-dir").value = "asc";
+            window.clearSpecialtyFilters(); // Clear tags too
         });
-
         document.getElementById("sort-field").addEventListener("change", function(){
-             const field = this.value;
-             const dir = document.getElementById("sort-dir").value;
-             table.setSort(field, dir);
+             const field = this.value; const dir = document.getElementById("sort-dir").value; table.setSort(field, dir);
         });
-
         document.getElementById("sort-dir").addEventListener("change", function(){
-             const field = document.getElementById("sort-field").value;
-             const dir = this.value;
-             table.setSort(field, dir);
+             const field = document.getElementById("sort-field").value; const dir = this.value; table.setSort(field, dir);
         });
     }
 });
 
-// --- GLOBAL HOVER TRACKING & REACTIVE TILT LOGIC ---
+// --- GLOBAL HOVER TRACKING ---
 let lastTiltCell = null; 
-
 document.addEventListener('mousemove', (e) => {
     const target = e.target;
     const isOverPreview = target.closest('.preview-box');
     const isOverLogo = target.closest('.logo-box'); 
     const isOverTooltip = target.closest('#image-tooltip');
     
-    // --- PART 1: REACTIVE CELL TILT ---
+    // PART 1: REACTIVE TILT
     const cell = target.closest('.tabulator-cell');
-
     if (lastTiltCell && lastTiltCell !== cell) {
-        // Clean up previous cell
         const oldWrapper = lastTiltCell.querySelector('.text-wrapper');
         if (oldWrapper) oldWrapper.style.transform = '';
         lastTiltCell.style.transform = 'none';
-        
         lastTiltCell.classList.remove('active-tilt');
         lastTiltCell = null;
     }
-
     if (cell) {
         lastTiltCell = cell;
         cell.classList.add('active-tilt');
-
         const rect = cell.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-
         const mouseX = e.clientX - centerX;
         const mouseY = e.clientY - centerY;
-
         const rotateX = -1 * (mouseY / (rect.height / 2)) * 10; 
         const rotateY = (mouseX / (rect.width / 2)) * 10;
-
-        // Determine where to apply the transform: wrapper or cell?
         const wrapper = cell.querySelector('.text-wrapper');
-        
         const transformString = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.15)`;
-
-        if (wrapper) {
-            // Text Cells: Apply tilt to the wrapper, keeping it centered
-            wrapper.style.transform = `translateY(-50%) ${transformString}`;
-        } else if (!cell.querySelector('a')) {
-            // Non-Text/Non-Link Cells (e.g. Images): Apply tilt to the cell itself
-            cell.style.transform = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+        if (wrapper) { wrapper.style.transform = `translateY(-50%) ${transformString}`; } 
+        else if (!cell.querySelector('a') && !cell.querySelector('.tag-wrapper')) { 
+             // Exclude tag wrapper from direct cell tilt if needed, or apply to it.
+             // Applying to cell works for most.
+             cell.style.transform = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
         }
     }
 
-    // --- PART 2: TOOLTIP & SLIDESHOW LOGIC ---
+    // PART 2: TOOLTIP
     const sourceBox = isOverPreview || isOverLogo;
-
     if (sourceBox) {
         clearTimeout(hideTimeout);
-
         const rowEl = target.closest('.tabulator-row');
-        
         if (rowEl && table) {
             const row = table.getRow(rowEl);
             if (row) {
                 const rowData = row.getData();
-                
-                let imageUrls = [];
-                let index = 0;
-                let isLogo = false;
-
+                let imageUrls = []; let index = 0; let isLogo = false;
                 if (isOverPreview) {
                     imageUrls = rowData.previewImages;
                     index = parseInt(sourceBox.getAttribute('data-image-index'), 10);
                     isLogo = false;
                 } else if (isOverLogo) {
-                    imageUrls = [rowData.logo];
-                    index = 0;
-                    isLogo = true;
+                    imageUrls = [rowData.logo]; index = 0; isLogo = true;
                 }
-
                 if (imageUrls && imageUrls.length > 0) {
                     const isNewContent = (currentPreviewImages[0] !== imageUrls[0] || currentPreviewImages.length !== imageUrls.length);
-                    
                     if (tooltipEl.style.display === 'none' || isNewContent || currentImageIndex !== index || isLogo) {
-                        
                         const shouldAnimate = (isNewContent || currentImageIndex !== index);
-
                         if (isLogo) {
-                            clearInterval(slideshowInterval);
-                            moveTooltip(e); 
-                            if (tooltipEl.style.display === 'none' || isNewContent) {
-                                showTooltip(imageUrls, index, true); 
-                            }
+                            clearInterval(slideshowInterval); moveTooltip(e); 
+                            if (tooltipEl.style.display === 'none' || isNewContent) { showTooltip(imageUrls, index, true); }
                         } else {
-                            clearInterval(slideshowInterval);
-                            centerTooltip(); 
-                            if (isNewContent || currentImageIndex !== index) {
-                                showTooltip(imageUrls, index, shouldAnimate);
-                            } else {
-                                tooltipEl.style.display = "flex";
-                            }
+                            clearInterval(slideshowInterval); centerTooltip(); 
+                            if (isNewContent || currentImageIndex !== index) { showTooltip(imageUrls, index, shouldAnimate); } 
+                            else { tooltipEl.style.display = "flex"; }
                         }
                     }
                 }
             }
         }
-    } 
-    else if (!isOverTooltip && tooltipEl.style.display !== 'none') {
-        hideTooltip();
-    }
+    } else if (!isOverTooltip && tooltipEl.style.display !== 'none') { hideTooltip(); }
 });
 </script>
 
