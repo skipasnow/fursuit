@@ -364,35 +364,51 @@ Papa.parse(csvUrl, {
                     title:"Link", field:"link", formatter:"link", 
                     formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
                 },
-                {
-                    title:"Preview", field:"previewImages", hozAlign:"center", width:200,
-                    formatter:function(cell){
-                        const imageUrls = cell.getValue();
-                        if (!imageUrls || imageUrls.length === 0) return "";
-                        
-                        const container = document.createElement('div');
-                        container.className = 'preview-container';
+				{
+					title: "Preview",
+					field: "previewImages",
+					hozAlign: "center",
+					width: 200,
+					formatter: function(cell) {
+						const imageUrls = cell.getValue();
+						if (!imageUrls || imageUrls.length === 0) return "";
+						
+						const container = document.createElement('div');
+						container.className = 'preview-container';
 
-                        imageUrls.forEach((url, index) => {
-                            const previewBox = document.createElement('div');
-                            previewBox.className = 'preview-box';
-                            previewBox.style.backgroundImage = `url('${url}')`;
-                            previewBox.setAttribute('data-image-index', index);
-                            
-                            previewBox.addEventListener('mouseenter', (e) => {
-                                showTooltip(imageUrls, index);
-                                clearInterval(slideshowInterval);
-                            });
-                            previewBox.addEventListener('mouseleave', (e) => {
-                                startSlideshow();
-                            });
+						imageUrls.forEach((url, index) => {
+							const previewBox = document.createElement('div');
+							previewBox.className = 'preview-box';
+							previewBox.style.backgroundImage = `url('${url}')`;
+							previewBox.setAttribute('data-image-index', index);
+							
+							// 1. Mouse enters a specific box: Show image, stop slideshow
+							previewBox.addEventListener('mouseenter', (e) => {
+								clearInterval(slideshowInterval);
+								showTooltip(imageUrls, index);
+							});
 
-                            container.appendChild(previewBox);
-                        });
-                        return container;
-                    },
-                    cellMouseLeave:function(e, cell){ hideTooltip(); } 
-                },
+							// 2. Mouse leaves a specific box: Start slideshow, do NOT hide tooltip
+							previewBox.addEventListener('mouseleave', (e) => {
+								startSlideshow(); // Starts the 2-second cycle
+							});
+
+							container.appendChild(previewBox);
+						});
+						
+						// 3. Mouse leaves the ENTIRE CELL AREA: Hide tooltip and clear slideshow
+						// This listener is attached to the Tabulator cell's main element.
+						cell.getElement().addEventListener('mouseleave', (e) => {
+							 // Check if the related target (where the mouse moved to) is outside the preview boxes
+							if (!e.relatedTarget || !e.relatedTarget.closest('.preview-container')) {
+								hideTooltip();
+							}
+						});
+
+						return container;
+					},
+					// *** NOTE: The original "cellMouseLeave:function(e, cell){ hideTooltip(); }" is intentionally missing here. ***
+				},
                 {
                     title:"$ Price", field:"price", hozAlign:"right", sorter:"number",
                     sorterParams:{ alignEmptyValues:"bottom" },
