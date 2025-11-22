@@ -58,7 +58,7 @@
     border: 1px solid #444;
   }
 
-  /* --- PREVIEW BOXES --- */
+  /* --- PREVIEW & LOGO BOXES --- */
   .preview-container { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
 
   .preview-box, .logo-box {
@@ -90,27 +90,26 @@
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     z-index: 99999;
     
-    /* MUST be 'none' so mouse can pass through to cell hover logic */
     pointer-events: none; 
     
     opacity: 0; 
     transition: opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
-  /* --- TABULATOR OVERRIDES & ANIMATIONS --- */
+  /* --- TABULATOR STYLES --- */
   .tabulator .tabulator-header { background-color: #1f1f1f !important; }
   .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; }
   .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
   .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
 
-  /* Base Transition for all cells */
+  /* 1. Base Cell Transition */
   .tabulator-row .tabulator-cell {
-    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, background-position 0.4s ease;
+    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease;
     position: relative; 
     background-clip: padding-box;
   }
 
-  /* 1. ACTIVE CELL (Base 3D Tilt) */
+  /* 2. Active Tilt State (Applied by JS) */
   .tabulator-row .tabulator-cell.active-tilt {
     z-index: 10000 !important; 
     box-shadow: 0 15px 30px rgba(0,0,0,0.6);
@@ -119,7 +118,7 @@
     overflow: visible !important; 
   }
 
-  /* 2. URL/LINK ANIMATION */
+  /* 3. URL/LINK ANIMATION */
   .tabulator-row .tabulator-cell.active-tilt a {
     display: inline-block; 
     color: #ffd699 !important; 
@@ -131,39 +130,40 @@
   }
   a { color: darkorange; text-decoration: none; transition: all 0.2s; }
 
-  /* 3. TEXT GRADIENT SWEEP & SCALE (FIXED) */
-  /* This selector targets cells that contain TEXT ONLY (no images/links) */
-  .tabulator-row .tabulator-cell:not(:has(.preview-container)):not(:has(.logo-box)):not(:has(a)) {
-    /* Defines the Gradient: [WHITE REGION] ... [ORANGE REGION] */
-    /* 200% Width means only half is visible at a time */
-    background-image: linear-gradient(to right, #ffffff 50%, #ff8c00 50%, #ff8c00 100%);
+  /* 4. TEXT SWEEP ANIMATION */
+  /* Targeted via the 'text-cell' class added in JS columns */
+  .tabulator-row .tabulator-cell.text-cell {
+    /* Gradient: White (Left) -> Orange (Right) */
+    background-image: linear-gradient(90deg, #ffffff 40%, #ff8c00 80%);
     background-size: 200% 100%;
-    background-position: 0% center; /* Show White side by default */
+    background-position: 0% center; /* Start showing White */
     
-    /* Clip the background to the text shape */
     -webkit-background-clip: text;
     background-clip: text;
     
-    /* Make the actual text transparent so background shows */
+    /* Text is transparent so background shows */
     -webkit-text-fill-color: transparent;
-    color: transparent !important;
+    color: transparent;
     
     font-weight: bold;
-    
-    /* Smoothly animate the background slide and the scale */
-    transition: background-position 0.4s ease-out, transform 0.2s ease;
-    
-    /* Ensure text stays centered if applicable */
-    display: flex;
-    align-items: center;
-    justify-content: inherit; 
+    transition: background-position 0.5s ease-out, transform 0.2s ease;
   }
 
-  /* ON HOVER: Slide background to right (Orange) and Scale Up */
-  .tabulator-row .tabulator-cell.active-tilt:not(:has(.preview-container)):not(:has(.logo-box)):not(:has(a)) {
-    background-position: 100% center; /* Slide to Orange side */
-    /* Use transform scale instead of font-size to prevent layout jitter */
+  /* On Hover: Slide background to right (Orange) and Scale */
+  .tabulator-row .tabulator-cell.text-cell.active-tilt {
+    background-position: 100% center; 
     transform: perspective(500px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.15) !important; 
+  }
+  
+  /* Fix for Firefox/Other browsers to ensure text is visible if background-clip fails */
+  @supports not (background-clip: text) {
+    .tabulator-row .tabulator-cell.text-cell {
+      color: #fff;
+      background: none;
+    }
+    .tabulator-row .tabulator-cell.text-cell.active-tilt {
+      color: #ff8c00;
+    }
   }
 </style>
 </head>
@@ -418,7 +418,8 @@ Papa.parse(csvUrl, {
             
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number" },
-                { title:"Maker", field:"maker" },
+                // ADDED cssClass: "text-cell" to text-only columns
+                { title:"Maker", field:"maker", cssClass: "text-cell" },
                 {
                     title:"Logo", field:"logo", hozAlign:"center", width:60,
                     formatter:function(cell){
@@ -426,9 +427,8 @@ Papa.parse(csvUrl, {
                         return val ? `<div class="logo-box" style="background-image:url('${val}');"></div>` : "";
                     }
                 },
-                { title:"Maker Type", field:"makerType" },
+                { title:"Maker Type", field:"makerType", cssClass: "text-cell" },
                 {
-                    // FIX: Centering and Visible Overflow for Links
                     title:"Link", field:"link", formatter:"link", hozAlign:"center",
                     formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
                 },
@@ -472,10 +472,10 @@ Papa.parse(csvUrl, {
                 { title:"$ Air Travel", field:"airTravel", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
                 { title:"$ Travel Surplus", field:"travelSurplus", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
                 
-                { title:"Aesthetic", field:"aesthetic" },
-                { title:"Status", field:"status" },
+                { title:"Aesthetic", field:"aesthetic", cssClass: "text-cell" },
+                { title:"Status", field:"status", cssClass: "text-cell" },
                 {
-                    title:"Specialty", field:"specialty",
+                    title:"Specialty", field:"specialty", cssClass: "text-cell",
                     headerFilter:"input", headerFilterPlaceholder:"Filter on specialty here..."
                 },
                 {
@@ -514,7 +514,7 @@ Papa.parse(csvUrl, {
                         return val;
                     }
                 },
-                { title:"Country", field:"country" },
+                { title:"Country", field:"country", cssClass: "text-cell" },
                 {
                     title:"Followers", field:"followers", hozAlign:"right", sorter:"number",
                     sorterParams:{ alignEmptyValues:"bottom" },
@@ -540,7 +540,7 @@ Papa.parse(csvUrl, {
                         return val;
                     }
                 },
-                { title:"Acct Date", field:"acctDate" }
+                { title:"Acct Date", field:"acctDate", cssClass: "text-cell" }
             ],
             rowFormatter:function(row){
                 const el = row.getElement();
@@ -586,10 +586,8 @@ document.addEventListener('mousemove', (e) => {
     const cell = target.closest('.tabulator-cell');
 
     if (lastTiltCell && lastTiltCell !== cell) {
-        // Reset previous cell
         lastTiltCell.style.transform = 'none';
         lastTiltCell.classList.remove('active-tilt');
-        // Reset text scale variable manually if needed, though class removal handles it
         lastTiltCell = null;
     }
 
@@ -604,23 +602,15 @@ document.addEventListener('mousemove', (e) => {
         const mouseX = e.clientX - centerX;
         const mouseY = e.clientY - centerY;
 
-        // Calculate Tilt
         const rotateX = -1 * (mouseY / (rect.height / 2)) * 10; 
         const rotateY = (mouseX / (rect.width / 2)) * 10;
 
-        // Pass these variables to CSS if we wanted strictly CSS animations, 
-        // but setting inline style is performant for mouse movement.
-        // Note: We only set the TILT here. The text scale is handled by the CSS class .active-tilt
-        
-        // We must combine the tilt with the scale(1.15) defined in CSS for text cells
-        // The CSS has !important on transform for text cells to handle the scale, 
-        // so we need to set CSS variables for the rotation to combine them cleanly in CSS.
-        
+        // Set variables for text gradient rotation sync
         cell.style.setProperty('--rx', `${rotateX}deg`);
         cell.style.setProperty('--ry', `${rotateY}deg`);
-        
-        // For non-text cells (like images), we can just apply transform directly
-        if (cell.querySelector('.preview-box') || cell.querySelector('.logo-box')) {
+
+        // Apply 3D Transform (non-text cells get it directly here)
+        if (!cell.classList.contains('text-cell')) {
              cell.style.transform = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
         }
     }
@@ -653,11 +643,9 @@ document.addEventListener('mousemove', (e) => {
                 }
 
                 if (imageUrls && imageUrls.length > 0) {
-                    // FIX: Compare CONTENT string, not just array reference
                     const isNewContent = (currentPreviewImages[0] !== imageUrls[0] || currentPreviewImages.length !== imageUrls.length);
                     
                     if (tooltipEl.style.display === 'none' || isNewContent || currentImageIndex !== index || isLogo) {
-                        
                         const shouldAnimate = (isNewContent || currentImageIndex !== index);
 
                         if (isLogo) {
