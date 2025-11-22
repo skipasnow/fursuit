@@ -265,6 +265,34 @@ a, button, [role="button"], input[type="submit"] {
   }
   .filter-apply-btn:hover { color: #66bb6a; }
   .tags-area { display: flex; flex-wrap: wrap; gap: 3px; width: 100%; margin-bottom: 4px; }
+  
+/* --- PAW PRINT TRAIL FX --- */
+.paw-trail {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    opacity: 0.6;
+    pointer-events: none; /* Crucial: lets you click through the prints */
+    z-index: 9990;        /* Below the tooltip (99999) but above the table */
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QsXFQAJLw8I2gAAArVJREFUSMetlU1IVFEUx3/n3jc1ZSqZWyRm5CD0sRGCtGnRqkXQok21CCJo1TZa1CJaRdtW1KZF2iRUtGgRKKVmjS/Gj0nHR02d0ZlzW8yZ0fQ8bRbe4zF6M9q06IfDuffO+f/uOffc/0H+czH+ZgD19fU1iUQi73K5rMlkck53d3dO/0sAr9dbI4S4JYRoltK1J51O09/f/2x6evqD3+8f+C0A2traGgKBwG3TNG3LsgRCSCRJIpVKEQqFePTo0XMg+FMAu91+y7btGiHEt5dM08Rut2OaJj6fDwDHcV4tC1BcXHyzoqKiTtf1Lw8VRSEej9PQ0EAwGMTv9/eXlZXdHRsbC30RoK6urlbX9Z2SJGmtra3U1dWRzWbRdZ1kMsns7CzhcJienp7Hw8PDT5YFqK2t3Z1Op6/Z7Xba2toQBIFsNks+n0eSJGKxGIqiMDg4SDQa7Zdl+dKyAJIk7VYUZZeFhQWWl5dRFCW/h8MhVFVF0zQURSEcDqPr+pBlWdstC6Dr+i5BEBaQJAmHw0E2m0XX9fzebreTzWbRdR2Hw4FlWbssC5BKpYqXl5fNfD6P1+tF13Xy+TzZ7Nf57Ha7yWazuFwuFEV5uSyA3++f9Hg8TxOJRI2qqvi8XlzO/5t8IpHg/fsPjI2N0d3d/dDhcDy1LMDMzMxzb2/vYF1d3e3a2tq9fr+fQCBAKpUinU7jcDiorKwkGo3S1tZ2f2Ji4smyALquD/b29j4sLy+/U1FRcba8vNxWUlKCIAjY7XbS6TRzc3NEo1FevHgxPDc392h2dvbjX88gEAj09/T0PCoqKrpSWVk5V1xcbJdlGdu2SSaTxONxQqEQr169et/f3z/S1tb26q8AANDT0xMCQkDHf37+G/kF89X0w171sU0AAAAASUVORK5CYII=');
+    background-size: cover;
+    /* The animation makes it fade out and shrink slightly */
+    animation: pawFade 1.2s linear forwards;
+}
+
+/* If you want different colors for the paws, use a filter here */
+/* Example: filter: brightness(0) invert(1) for white paws */
+
+@keyframes pawFade {
+    0% {
+        opacity: 0.5;
+        transform: scale(1) rotate(var(--angle));
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.6) rotate(var(--angle));
+    }
+}
 </style>
 </head>
 <body>
@@ -785,6 +813,60 @@ Papa.parse(csvUrl, {
         });
     }
 });
+
+// --- PAW TRAIL LOGIC ---
+let trailX = 0;
+let trailY = 0;
+let stepCount = 0;
+const stepLength = 40; // Pixels between paws (Higher = fewer paws)
+
+document.addEventListener('mousemove', function(e) {
+    // 1. Calculate distance moved
+    const dist = Math.hypot(e.pageX - trailX, e.pageY - trailY);
+
+    // 2. Only leave a print if we've moved enough (stepLength)
+    if (dist > stepLength) {
+        createPaw(e.pageX, e.pageY, trailX, trailY);
+        trailX = e.pageX;
+        trailY = e.pageY;
+    }
+});
+
+function createPaw(x, y, lastX, lastY) {
+    const paw = document.createElement('div');
+    paw.className = 'paw-trail';
+
+    // 3. Calculate Angle of movement
+    // Math.atan2 gives rotation in radians. Convert to Degrees.
+    // +90 corrects the image orientation (assuming paw image points up)
+    const angle = Math.atan2(y - lastY, x - lastX) * 180 / Math.PI + 90;
+
+    // 4. "Left/Right" Foot logic
+    stepCount++;
+    const isRightFoot = stepCount % 2 === 0;
+    
+    // We create a composite transform string
+    // We use a CSS variable for the angle so the animation can use it
+    paw.style.setProperty('--angle', `${angle}deg`);
+    
+    // If it's the "Left" foot, we flip the image horizontally
+    if (!isRightFoot) {
+        paw.style.transform = `scaleX(-1) rotate(${angle}deg)`;
+    } else {
+        paw.style.transform = `rotate(${angle}deg)`;
+    }
+
+    // Center the paw on the cursor (12px is half the 24px width)
+    paw.style.left = (x - 12) + 'px';
+    paw.style.top = (y - 12) + 'px';
+
+    document.body.appendChild(paw);
+
+    // 5. Cleanup DOM
+    setTimeout(() => {
+        paw.remove();
+    }, 1200); // Matches CSS animation duration
+}
 
 // --- GLOBAL HOVER TRACKING ---
 let lastTiltCell = null; 
