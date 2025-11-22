@@ -30,24 +30,24 @@ a, button, [role="button"], input[type="submit"] {
     color: #000;
 }
 
-/* --- PAW PRINT TRAIL FX (Corrected) --- */
+/* --- PAW PRINT TRAIL FX --- */
 .paw-trail {
     position: absolute;
     width: 24px;
     height: 24px;
     opacity: 0.6;
-    pointer-events: none; /* Crucial: lets you click through the prints */
+    pointer-events: none;
     
-    /* Z-INDEX FIX: Higher than active table cells */
-    z-index: 100000;        
+    /* Max Z-Index to ensure it is ALWAYS on top of everything */
+    z-index: 2147483647;        
 
-    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QsXFQAJLw8I2gAAArVJREFUSMetlU1IVFEUx3/n3jc1ZSqZWyRm5CD0sRGCtGnRqkXQok21CCJo1TZa1CJaRdtW1KZF2iRUtGgRKKVmjS/Gj0nHR02d0ZlzW8yZ0fQ8bRbe4zF6M9q06IfDuffO+f/uOffc/0H+czH+ZgD19fU1iUQi73K5rMlkck53d3dO/0sAr9dbI4S4JYRoltK1J51O09/f/2x6evqD3+8f+C0A2traGgKBwG3TNG3LsgRCSCRJIpVKEQqFePTo0XMg+FMAu91+y7btGiHEt5dM08Rut2OaJj6fDwDHcV4tC1BcXHyzoqKiTtf1Lw8VRSEej9PQ0EAwGMTv9/eXlZXdHRsbC30RoK6urlbX9Z2SJGmtra3U1dWRzWbRdZ1kMsns7CzhcJienp7Hw8PDT5YFqK2t3Z1Op6/Z7Xba2toQBIFsNks+n0eSJGKxGIqiMDg4SDQa7Zdl+dKyAJIk7VYUZZeFhQWWl5dRFCW/h8MhVFVF0zQURSEcDqPr+pBlWdstC6Dr+i5BEBaQJAmHw0E2m0XX9fzebreTzWbRdR2Hw4FlWbssC5BKpYqXl5fNfD6P1+tF13Xy+TzZ7Nf57Ha7yWazuFwuFEV5uSyA3++f9Hg8TxOJRI2qqvi8XlzO/5t8IpHg/fsPjI2N0d3d/dDhcDy1LMDMzMxzb2/vYF1d3e3a2tq9fr+fQCBAKpUinU7jcDiorKwkGo3S1tZ2f2Ji4smyALquD/b29j4sLy+/U1FRcba8vNxWUlKCIAjY7XbS6TRzc3NEo1FevHgxPDc392h2dvbjX88gEAj09/T0PCoqKrpSWVk5V1xcbJdlGdu2SSaTxONxQqEQr169et/f3z/S1tb26q8AANDT0xMCQkDHf37+G/kF89X0w171sU0AAAAASUVORK5CYII=');
+    /* New Image: PURE WHITE Paw Print (Visible on dark backgrounds) */
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAAAmklEQVRIx2NgGAWjYBSMglEwCgYGMDAwMDDs37//PwwTAmQ1IyMjwnB00NjYyDC6uJiQIXFxcQxHjhzBZ0hCQgLDUUaGg6Ojo8n169eJMQSuYd+/f2c4cuQIUcMwMDAQ4wCyGqKGRg2N4Q0YGRkZWNnZ8RmCKyZINgQvX77MkJGRQYwh+AzB5StiDINrCDaH4DME11B8hmAUjIJRMAoAZnM3544261AAAAAASUVORK5CYII=');
     background-size: cover;
     
-    /* COLOR FIX: Turns black paw to Orange */
-    filter: invert(78%) sepia(61%) saturate(3000%) hue-rotate(359deg) brightness(101%) contrast(106%);
+    /* Optional: Uncomment this line if you want them ORANGE again */
+    /* filter: sepia(100%) saturate(500%) hue-rotate(360deg) brightness(100%); */
     
-    /* ANIMATION & TRANSFORM: Uses CSS variables */
     animation: pawFade 1.2s linear forwards;
     transform: rotate(var(--angle)) scaleX(var(--flip));
 }
@@ -59,7 +59,7 @@ a, button, [role="button"], input[type="submit"] {
     }
     100% {
         opacity: 0;
-        transform: rotate(var(--angle)) scaleX(var(--flip)) scale(0.6);
+        transform: rotate(var(--angle)) scaleX(var(--flip)) scale(0.5);
     }
 }
 
@@ -806,11 +806,11 @@ Papa.parse(csvUrl, {
     }
 });
 
-// --- PAW TRAIL LOGIC (SINGLE, CORRECT DEFINITION) ---
+// --- PAW TRAIL LOGIC ---
 let trailX = 0;
 let trailY = 0;
 let stepCount = 0;
-const stepLength = 40; 
+const stepLength = 25; // Reduced to 25 for more frequent prints
 
 document.addEventListener('mousemove', function(e) {
     const dist = Math.hypot(e.pageX - trailX, e.pageY - trailY);
@@ -833,16 +833,17 @@ function createPaw(x, y, lastX, lastY) {
     stepCount++;
     const isRightFoot = stepCount % 2 === 0;
     
-    // Set CSS Variables instead of direct transform
+    // Set CSS Variables
     paw.style.setProperty('--angle', `${angle}deg`);
     paw.style.setProperty('--flip', isRightFoot ? 1 : -1);
 
-    // Center the paw
+    // Center the paw (12px is half of 24px width)
     paw.style.left = (x - 12) + 'px';
     paw.style.top = (y - 12) + 'px';
 
     document.body.appendChild(paw);
 
+    // Cleanup
     setTimeout(() => {
         paw.remove();
     }, 1200);
