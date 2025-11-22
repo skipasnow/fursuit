@@ -406,7 +406,6 @@ Papa.parse(csvUrl, {
 						
 						// --- 3. Mouse leaves the ENTIRE CELL AREA: Hide tooltip ---
 						// Attaching the listener to the cell element, but only once using a check
-						// to prevent double-attachment if Tabulator re-runs the formatter.
 						let cellElement = cell.getElement();
 						if (!cellElement.hasAttribute('data-mouseleave-attached')) {
 							cellElement.setAttribute('data-mouseleave-attached', 'true');
@@ -414,7 +413,7 @@ Papa.parse(csvUrl, {
 							cellElement.addEventListener('mouseleave', (e) => {
 								// Check if the mouse is moving to the large floating tooltip
 								if (!e.relatedTarget || e.relatedTarget.id !== 'image-tooltip') {
-									// Also check if the mouse is not moving to another preview box (shouldn't be needed, but safe)
+									// Check if the mouse is not moving to another preview box
 									if (!e.relatedTarget || !e.relatedTarget.closest('.preview-box')) {
 										hideTooltip();
 									}
@@ -423,7 +422,8 @@ Papa.parse(csvUrl, {
 						}
 						
 						return container;
-                },
+					}, // <-- COMMA ADDED HERE TO SEPARATE formatter FROM THE NEXT COLUMN
+				}, // <-- This comma is needed because the next column follows
                 { title:"$ Ship or Fly", field:"shipOrFly", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
                 { title:"$ Tariff (2025)", field:"tariff", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
                 { title:"$ Ship", field:"ship", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" } },
