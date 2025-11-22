@@ -100,11 +100,9 @@
     display: none; 
     position: fixed;
     
-    /* Dimensions */
+    /* Dimensions: handled by JS mostly, but defaults here */
     width: 400px;
     height: 400px;
-    max-width: 90vw;
-    max-height: 90vh;
     
     /* Appearance */
     background-color: #222;
@@ -115,14 +113,15 @@
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     z-index: 99999;
     
-    /* Layout for Text */
+    /* FIX 2: Pointer events NONE so mouse passes through to boxes underneath */
+    pointer-events: none; 
+    
+    /* Layout for Text (though we removed text, good to keep just in case) */
     justify-content: center;
     align-items: center;
     font-size: 1.2em;
     color: #ccc;
     text-align: center;
-
-    /* NOTE: Top/Left/Transform removed here. Handled by JS now. */
   }
 
   .tabulator .tabulator-header { background-color: #1f1f1f !important; }
@@ -182,30 +181,23 @@ let slideshowInterval;
 let hideTimeout; 
 
 function displayImageInTooltip(imageUrl) {
+    // FIX 1: Removed textContent setting so no "Loading..." message appears
     if (!imageUrl) {
         tooltipEl.style.backgroundImage = 'none';
-        tooltipEl.textContent = 'No Image';
         return;
     }
     
-    // Clear previous
-    tooltipEl.style.backgroundImage = 'none';
+    // We simply set the new URL. The browser handles the swap.
+    // If you want to clear the previous image immediately while loading:
+    // tooltipEl.style.backgroundImage = 'none'; 
     
-    // Only show text if the image takes time to load
-    tooltipEl.textContent = 'Loading Content...';
-
     const img = new Image();
     img.onload = () => {
-        // Only apply if the tooltip is still visible
         if (tooltipEl.style.display !== 'none') {
             tooltipEl.style.backgroundImage = `url('${imageUrl}')`;
-            tooltipEl.textContent = ''; // Clear text immediately upon load
         }
     };
-    img.onerror = () => {
-        tooltipEl.style.backgroundImage = 'none';
-        tooltipEl.textContent = 'Image Failed';
-    };
+    // Start load
     img.src = imageUrl;
 }
 
@@ -228,10 +220,10 @@ function hideTooltip() {
     hideTimeout = setTimeout(() => {
         tooltipEl.style.display = "none";
         tooltipEl.style.backgroundImage = 'none';
-        tooltipEl.textContent = ''; // FIX: Clear text immediately so it doesn't linger
+        tooltipEl.textContent = ''; 
         currentPreviewImages = [];
         currentImageIndex = 0;
-    }, 50); // Shortened delay for snappier feel
+    }, 50);
 }
 
 function startSlideshow() {
@@ -246,25 +238,23 @@ function startSlideshow() {
 
 // --- POSITIONING LOGIC ---
 
-// 1. For Previews: Center Screen
+// 1. For Previews: Center Screen, Large Size
 function centerTooltip() {
-    // Use fixed centering
     tooltipEl.style.top = "50%";
     tooltipEl.style.left = "50%";
     tooltipEl.style.transform = "translate(-50%, -50%)";
     
-    // Reset specific dimensions if needed, or keep CSS defaults
-    tooltipEl.style.width = "400px";
-    tooltipEl.style.height = "400px";
+    // FIX 3: Set size to 80% of vertical height
+    tooltipEl.style.width = "80vh"; 
+    tooltipEl.style.height = "80vh";
 }
 
-// 2. For Logos: Follow Cursor (with boundary checks)
+// 2. For Logos: Follow Cursor
 function moveTooltip(e) {
-    const tooltipSize = 200; // Smaller size for logos
+    const tooltipSize = 200; 
     const offset = 15; 
     const windowHeight = window.innerHeight;
     
-    // Reset transform because we are calculating exact pixels
     tooltipEl.style.transform = "none"; 
     tooltipEl.style.width = tooltipSize + "px";
     tooltipEl.style.height = tooltipSize + "px";
@@ -272,7 +262,6 @@ function moveTooltip(e) {
     let left = e.clientX + offset;
     let top = e.clientY + offset;
     
-    // Flip up if hitting bottom
     if (top + tooltipSize > windowHeight) {
         top = e.clientY - tooltipSize - offset;
     }
@@ -390,7 +379,6 @@ Papa.parse(csvUrl, {
                     title:"Logo", field:"logo", hozAlign:"center", width:60,
                     formatter:function(cell){
                         const val = cell.getValue();
-                        // 'logo-box' class used for tracking
                         return val ? `<div class="logo-box" style="background-image:url('${val}');"></div>` : "";
                     }
                 },
@@ -416,7 +404,6 @@ Papa.parse(csvUrl, {
                             previewBox.className = 'preview-box';
                             previewBox.style.backgroundImage = `url('${url}')`;
                             previewBox.setAttribute('data-image-index', index);
-                            // No internal listeners needed; global tracker handles it
                             container.appendChild(previewBox);
                         });
                         return container;
@@ -518,7 +505,7 @@ Papa.parse(csvUrl, {
             reactiveData:true, virtualDom:true
         });
 
-        // --- EVENT LISTENERS ---
+        // --- EVENT LISTENERS (UNCHANGED) ---
         document.getElementById("reset-sort").addEventListener("click", function(){
             table.clearSort();
             table.setSort("rank", "asc");
@@ -576,10 +563,6 @@ document.addEventListener('mousemove', (e) => {
                 }
 
                 if (imageUrls && imageUrls.length > 0) {
-                    // LOGIC: Show Tooltip
-                    // 1. If hovering Logo: Move tooltip with cursor.
-                    // 2. If hovering Preview: Center tooltip.
-                    
                     // Check if content changed OR if we just need to update position (Logo)
                     if (tooltipEl.style.display === 'none' || currentPreviewImages !== imageUrls || currentImageIndex !== index || isLogo) {
                         
@@ -594,7 +577,7 @@ document.addEventListener('mousemove', (e) => {
                                 tooltipEl.style.display = "flex"; // Ensure visible
                             }
                         } else {
-                            // Preview: Center, lock image (Stop slideshow while hovering specific box)
+                            // Preview: Center, lock image
                             clearInterval(slideshowInterval);
                             centerTooltip();
                             
