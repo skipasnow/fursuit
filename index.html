@@ -96,7 +96,7 @@
 
   /* --- THE FLOATING TOOLTIP --- */
   #image-tooltip {
-    /* CRITICAL FIX 1: Hide the tooltip by default */
+    /* CRITICAL FIX: Hide the tooltip by default */
     display: none !important; 
     
     position: fixed;
@@ -116,7 +116,6 @@
     left: 50%;
     transform: translate(-50%, -50%);
     
-    /* These styles are used when the JS switches display to flex */
     justify-content: center;
     align-items: center;
     font-size: 1.2em;
@@ -126,7 +125,6 @@
 
   .tabulator .tabulator-header { background-color: #1f1f1f !important; }
   a { color: darkorange; text-decoration: none; }
-  a:hover { color: orange; }
   .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; }
   .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
   .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
@@ -180,12 +178,7 @@ let currentPreviewImages = [];
 let currentImageIndex = 0;
 let slideshowInterval;
 
-/**
- * Loads an image and updates the tooltip, displaying "Loading Content..." 
- * while the image is fetching.
- */
 function displayImageInTooltip(imageUrl) {
-    // CRITICAL FIX 2: Ensure loading message is cleared/shown correctly
     if (!imageUrl) {
         tooltipEl.style.backgroundImage = 'none';
         tooltipEl.textContent = 'No Image Available';
@@ -193,12 +186,12 @@ function displayImageInTooltip(imageUrl) {
     }
     
     tooltipEl.style.backgroundImage = 'none';
-    tooltipEl.textContent = 'Loading Content...'; // Show loading message immediately
+    tooltipEl.textContent = 'Loading Content...';
 
     const img = new Image();
     img.onload = () => {
         tooltipEl.style.backgroundImage = `url('${imageUrl}')`;
-        tooltipEl.textContent = ''; // Clear loading message on success
+        tooltipEl.textContent = '';
     };
     img.onerror = () => {
         tooltipEl.style.backgroundImage = 'none';
@@ -207,9 +200,6 @@ function displayImageInTooltip(imageUrl) {
     img.src = imageUrl;
 }
 
-/**
- * Shows the tooltip. Uses display: flex to center the loading message.
- */
 function showTooltip(imageUrls, startIndex = 0) {
     if (!imageUrls || imageUrls.length === 0) {
         hideTooltip();
@@ -217,18 +207,12 @@ function showTooltip(imageUrls, startIndex = 0) {
     }
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
-    
-    // Switch to display: flex (overriding the CSS default of display: none)
     tooltipEl.style.display = "flex"; 
-    
     displayImageInTooltip(currentPreviewImages[currentImageIndex]);
 }
 
-/**
- * Hides the tooltip and clears the slideshow interval.
- */
 function hideTooltip() {
-    tooltipEl.style.display = "none"; // Hide the tooltip
+    tooltipEl.style.display = "none";
     tooltipEl.style.backgroundImage = 'none';
     tooltipEl.textContent = 'Loading Content...';
     currentPreviewImages = [];
@@ -242,7 +226,7 @@ function startSlideshow() {
         slideshowInterval = setInterval(() => {
             currentImageIndex = (currentImageIndex + 1) % currentPreviewImages.length;
             displayImageInTooltip(currentPreviewImages[currentImageIndex]);
-        }, 2000); // Cycle every 2 seconds
+        }, 2000);
     }
 }
 
@@ -295,7 +279,7 @@ let table;
 Papa.parse(csvUrl, {
     download: true, header: true, dynamicTyping: true,
     complete: function(results) {
-        // Map all requested columns from CSV
+        // Mapped all 26 columns based on the structure provided by the user.
         const data = results.data.map(row => ({
             rank: cleanNumber(row['Rank']),
             maker: row['Maker'],
@@ -321,7 +305,20 @@ Papa.parse(csvUrl, {
             country: row['Country'],
             followers: cleanNumber(row['Followers']), 
             acctAge: cleanNumber(row['Acct Age']),
-            acctDate: row['Acct Date'], 
+            acctDate: row['Acct Date'],
+            
+            // NEW COLUMNS MAPPED TO ENSURE DATA INTEGRITY (but not necessarily displayed)
+            rep: row['Rep'],
+            timeline: row['Timeline'],
+            rankScore: cleanNumber(row['Rank Score']),
+            imperfections: cleanNumber(row['Imperfections']),
+            worksPerYear: cleanNumber(row['Works Per Year']),
+            worksRank: cleanNumber(row['Works Rank']),
+            followersRank: cleanNumber(row['Followers Rank']),
+            acctDateRank: cleanNumber(row['Acct Date Rank']),
+            partialsRank: cleanNumber(row['Partials Rank']),
+            fursuitsRank: cleanNumber(row['Fursuits Rank']),
+            priceRank: cleanNumber(row['Price Rank']),
         }));
 
         const colMinMax = {};
@@ -340,6 +337,7 @@ Papa.parse(csvUrl, {
             height:"75vh", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
+            // Column definitions remain the same as the desired display list
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number" },
                 { title:"Maker", field:"maker" },
@@ -355,7 +353,6 @@ Papa.parse(csvUrl, {
                     title:"Link", field:"link", formatter:"link", 
                     formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
                 },
-                // Custom formatter for multiple preview images
                 {
                     title:"Preview", field:"previewImages", hozAlign:"center", width:200,
                     formatter:function(cell){
@@ -384,7 +381,6 @@ Papa.parse(csvUrl, {
                         });
                         return container;
                     },
-                    // Attach hide tooltip to the cell's mouseleave
                     cellMouseLeave:function(e, cell){ hideTooltip(); } 
                 },
                 {
