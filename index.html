@@ -96,7 +96,9 @@
 
   /* --- THE FLOATING TOOLTIP --- */
   #image-tooltip {
-    display: none; 
+    /* CRITICAL FIX 1: Hide the tooltip by default */
+    display: none !important; 
+    
     position: fixed;
     width: 400px;
     height: 400px;
@@ -114,7 +116,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     
-    display: flex;
+    /* These styles are used when the JS switches display to flex */
     justify-content: center;
     align-items: center;
     font-size: 1.2em;
@@ -172,13 +174,18 @@
 <script>
 const csvUrl = "https://docs.google.com/sheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
-// --- TOOLTIP LOGIC (ENHANCED) ---
+// --- TOOLTIP LOGIC ---
 const tooltipEl = document.getElementById("image-tooltip");
 let currentPreviewImages = [];
 let currentImageIndex = 0;
 let slideshowInterval;
 
+/**
+ * Loads an image and updates the tooltip, displaying "Loading Content..." 
+ * while the image is fetching.
+ */
 function displayImageInTooltip(imageUrl) {
+    // CRITICAL FIX 2: Ensure loading message is cleared/shown correctly
     if (!imageUrl) {
         tooltipEl.style.backgroundImage = 'none';
         tooltipEl.textContent = 'No Image Available';
@@ -186,12 +193,12 @@ function displayImageInTooltip(imageUrl) {
     }
     
     tooltipEl.style.backgroundImage = 'none';
-    tooltipEl.textContent = 'Loading Content...';
+    tooltipEl.textContent = 'Loading Content...'; // Show loading message immediately
 
     const img = new Image();
     img.onload = () => {
         tooltipEl.style.backgroundImage = `url('${imageUrl}')`;
-        tooltipEl.textContent = '';
+        tooltipEl.textContent = ''; // Clear loading message on success
     };
     img.onerror = () => {
         tooltipEl.style.backgroundImage = 'none';
@@ -200,6 +207,9 @@ function displayImageInTooltip(imageUrl) {
     img.src = imageUrl;
 }
 
+/**
+ * Shows the tooltip. Uses display: flex to center the loading message.
+ */
 function showTooltip(imageUrls, startIndex = 0) {
     if (!imageUrls || imageUrls.length === 0) {
         hideTooltip();
@@ -207,12 +217,18 @@ function showTooltip(imageUrls, startIndex = 0) {
     }
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
-    tooltipEl.style.display = "flex";
+    
+    // Switch to display: flex (overriding the CSS default of display: none)
+    tooltipEl.style.display = "flex"; 
+    
     displayImageInTooltip(currentPreviewImages[currentImageIndex]);
 }
 
+/**
+ * Hides the tooltip and clears the slideshow interval.
+ */
 function hideTooltip() {
-    tooltipEl.style.display = "none";
+    tooltipEl.style.display = "none"; // Hide the tooltip
     tooltipEl.style.backgroundImage = 'none';
     tooltipEl.textContent = 'Loading Content...';
     currentPreviewImages = [];
@@ -239,12 +255,10 @@ function parseImageFormula(formula) {
 }
 
 /**
- * UPDATED: Function to parse multiple preview image URLs using a single space as the delimiter.
+ * Function to parse multiple preview image URLs using a single space as the delimiter.
  */
 function parsePreviewImages(urlsString) {
     if (!urlsString || typeof urlsString !== 'string') return [];
-    
-    // Split the string by a single space, then filter out empty strings
     return urlsString.split(' ').map(url => url.trim()).filter(url => url !== '');
 }
 
@@ -289,7 +303,6 @@ Papa.parse(csvUrl, {
             makerType: row['Maker Type'],
             link: row['Link'],
             
-            // NEW: Parse multiple preview URLs using the space delimiter
             previewImages: parsePreviewImages(row['Preview']), 
             
             price: cleanNumber(row['$ Price']),
