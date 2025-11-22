@@ -140,7 +140,7 @@
 
   /* --- TABULATOR STYLES --- */
   
-  /* FIX: Ensure Headers are BOLD */
+  /* Headers */
   .tabulator .tabulator-header { 
     background-color: #1f1f1f !important; 
     font-weight: bold !important;
@@ -152,8 +152,7 @@
 
   /* Base Cell Transition */
   .tabulator-row .tabulator-cell {
-    /* Added font-weight to transition list */
-    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, background-position 0.4s ease, font-size 0.2s ease, font-weight 0.2s ease;
+    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
     position: relative; 
     background-clip: padding-box;
   }
@@ -168,6 +167,14 @@
   }
 
   /* 2. URL/LINK ANIMATION */
+  /* Default Link State */
+  a { 
+    color: darkorange !important; 
+    text-decoration: none; 
+    transition: all 0.2s; 
+  }
+  
+  /* Link Hover State */
   .tabulator-row .tabulator-cell.active-tilt a {
     display: inline-block; 
     color: #ffd699 !important; 
@@ -177,35 +184,47 @@
     position: relative;
     z-index: 10001;
   }
-  
-  /* Default Link Color */
-  a { color: darkorange; text-decoration: none; transition: all 0.2s; }
 
   /* 3. LIGHT SWEEP ANIMATION (Text Cells Only) */
   
+  /* DEFAULT STATE: Solid White, Normal Weight */
   .tabulator-row .tabulator-cell.text-cell {
-    /* Gradient: White (Left) -> Orange (Right) */
-    background-image: linear-gradient(110deg, #ffffff 40%, #ff8c00 50%, #ffffff 60%);
-    background-size: 200% 100%;
-    background-position: 0% center; 
+    color: #fff !important; 
+    background: none; 
+    -webkit-text-fill-color: initial;
+    font-weight: normal;
+    /* Transition specific properties to avoid flickering */
+    transition: transform 0.2s ease, font-weight 0.2s ease;
+  }
+
+  /* HOVER STATE: Apply Gradient, Clip, and Animation */
+  .tabulator-row .tabulator-cell.text-cell.active-tilt {
+    font-weight: bold; 
     
+    /* The Gradient: White -> Orange -> White */
+    background: linear-gradient(
+      110deg, 
+      #ffffff 40%, 
+      #ff8c00 50%, 
+      #ffffff 60%
+    );
+    
+    /* Set size to allow movement */
+    background-size: 200% 100%;
+    background-position: 200% center; 
+    
+    /* Clip to text */
     -webkit-background-clip: text;
     background-clip: text;
     
-    /* Transparent text allows background to show */
+    /* Switch to transparent text so background shows */
     -webkit-text-fill-color: transparent;
     color: transparent !important;
     
-    /* FIX: Normal weight by default */
-    font-weight: normal;
-    
-    transition: background-position 0.4s ease-out, transform 0.2s ease, font-weight 0.2s ease;
-  }
-
-  /* On Hover: Animate Sweep, Scale Up, and turn BOLD */
-  .tabulator-row .tabulator-cell.text-cell.active-tilt {
-    font-weight: bold; /* Make bold only on hover for effect */
+    /* The Loop */
     animation: shine-sweep 1.5s linear infinite;
+    
+    /* 3D Tilt */
     transform: perspective(500px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.15) !important; 
   }
 
@@ -499,6 +518,7 @@ Papa.parse(csvUrl, {
             height:"75vh", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
+            // Note: Added cssClass: "text-cell" to ALL text/number columns for animation support
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", cssClass: "text-cell" },
                 { title:"Maker", field:"maker", cssClass: "text-cell" },
@@ -539,15 +559,13 @@ Papa.parse(csvUrl, {
                 {
                     title:"$ Price", field:"price", hozAlign:"right", sorter:"number",
                     sorterParams:{ alignEmptyValues:"bottom" },
-                    cssClass: "text-cell",
                     formatter:function(cell){
                         const val = cell.getValue();
                         if(val === null) return "N/A"; 
                         const c = getGradientColor(val,colMinMax['price'].min,colMinMax['price'].max,true);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
-                        // Remove text-cell class at runtime if we want background color to take precedence over gradient text
-                        cell.getElement().classList.remove('text-cell');
+                        // Skip text-cell class if background color is present to keep it clean
                         return val;
                     }
                 },
@@ -572,7 +590,6 @@ Papa.parse(csvUrl, {
                         const c = getGradientColor(val,colMinMax['partials'].min,colMinMax['partials'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
-                        cell.getElement().classList.remove('text-cell');
                         return val;
                     }
                 },
@@ -585,7 +602,6 @@ Papa.parse(csvUrl, {
                         const c = getGradientColor(val,colMinMax['fursuits'].min,colMinMax['fursuits'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
-                        cell.getElement().classList.remove('text-cell');
                         return val;
                     }
                 },
@@ -598,7 +614,6 @@ Papa.parse(csvUrl, {
                         const c = getGradientColor(val,colMinMax['portfolio'].min,colMinMax['portfolio'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
-                        cell.getElement().classList.remove('text-cell');
                         return val;
                     }
                 },
@@ -613,7 +628,6 @@ Papa.parse(csvUrl, {
                         const c = getGradientColor(val,colMinMax['followers'].min,colMinMax['followers'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
-                        cell.getElement().classList.remove('text-cell');
                         return displayVal;
                     }
                 },
@@ -626,7 +640,6 @@ Papa.parse(csvUrl, {
                         const c = getGradientColor(val,colMinMax['acctAge'].min,colMinMax['acctAge'].max,false);
                         cell.getElement().style.backgroundColor = c;
                         cell.getElement().style.color="#fff";
-                        cell.getElement().classList.remove('text-cell');
                         return val;
                     }
                 },
