@@ -89,9 +89,12 @@
     border: 2px solid #fff;
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     z-index: 99999;
+    
     pointer-events: none; /* Allow clicks to pass through */
     
+    /* Base opacity for fade effects */
     opacity: 0; 
+    /* We handle transitions manually in JS for the twist effect */
     transition: opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
@@ -103,58 +106,54 @@
 
   /* Base Transition for all cells */
   .tabulator-row .tabulator-cell {
-    transition: all 0.2s ease-out;
+    /* Transition background-position for the text color sweep */
+    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, background-position 0.5s ease, font-size 0.2s ease;
     position: relative; 
     background-clip: padding-box;
   }
 
   /* 1. ACTIVE CELL (Base 3D Tilt) */
   .tabulator-row .tabulator-cell.active-tilt {
-    z-index: 10000 !important; /* Very high Z-index to sit on top */
+    z-index: 10000 !important; 
     box-shadow: 0 15px 30px rgba(0,0,0,0.6);
     border-color: rgba(255,255,255,0.5) !important;
     filter: brightness(1.2);
-    overflow: visible !important; /* FIX: Allow content to expand outside cell */
+    overflow: visible !important; 
   }
 
-  /* 2. URL/LINK ANIMATION (Hover out + Glow) */
+  /* 2. URL/LINK ANIMATION */
   .tabulator-row .tabulator-cell.active-tilt a {
     display: inline-block; 
     color: #ffd699 !important; 
-    transform: translateY(-4px) scale(1.2); /* Hover out */
+    transform: translateY(-4px) scale(1.2);
     text-shadow: 0 0 8px rgba(255, 140, 0, 0.8), 0 0 15px rgba(255, 140, 0, 0.6);
     transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
-    z-index: 10001; /* Ensure link sits on top of cell */
+    z-index: 10001;
   }
   a { color: darkorange; text-decoration: none; transition: all 0.2s; }
 
-  /* 3. TEXT GRADIENT ANIMATION (Left to Right Fill) */
-  /* This targets cells that have text but NO images/links */
-  .tabulator-row .tabulator-cell.active-tilt:not(:has(div)):not(:has(a)) {
-    /* Gradient from White (left) to Orange (right) */
-    background-image: linear-gradient(90deg, #ffffff 0%, #ffffff 40%, #ff8c00 100%);
-    background-size: 200% auto;
-    background-position: 0% center; /* Start at white */
+  /* 3. TEXT GRADIENT SWEEP (FIXED) */
+  /* Targets cells with text only (no images/links) */
+  .tabulator-row .tabulator-cell:not(:has(div)):not(:has(a)) {
+    /* Set up a wide background: White on the left, Orange on the right */
+    background-image: linear-gradient(90deg, #ffffff 0%, #ffffff 50%, #ff8c00 100%);
+    background-size: 300% 100%; /* Wide enough to slide */
+    background-position: 0% center; /* Start at White */
     
-    /* Clip background to text */
     -webkit-background-clip: text;
     background-clip: text;
-    
-    /* Make text transparent so background shows through */
     -webkit-text-fill-color: transparent;
-    color: transparent; 
+    color: transparent;
     
-    font-size: 1.15em; 
+    font-size: 1em;
     font-weight: bold;
-    
-    /* Animate background position to reveal orange */
-    animation: gradient-slide 0.4s forwards ease-out;
   }
 
-  @keyframes gradient-slide {
-    0% { background-position: 0% center; }
-    100% { background-position: 100% center; }
+  /* When hovered, slide the background to the Orange side */
+  .tabulator-row .tabulator-cell.active-tilt:not(:has(div)):not(:has(a)) {
+    background-position: 100% center; /* Slide to Orange */
+    font-size: 1.15em; /* Enlarge */
   }
 </style>
 </head>
@@ -208,18 +207,22 @@ let slideshowInterval;
 let hideTimeout; 
 let isTooltipCentered = false; 
 
-function displayImageInTooltip(imageUrl) {
+function displayImageInTooltip(imageUrl, forceAnimation = false) {
     if (!imageUrl) {
         tooltipEl.style.backgroundImage = 'none';
         return;
     }
 
     const baseTransform = isTooltipCentered ? "translate(-50%, -50%)" : "";
-    // Only apply twist animation if we are initiating a NEW tooltip show
-    // To prevent twisting while moving mouse across Logo
-    if (tooltipEl.style.opacity === '0') {
+    
+    // TRIGGER ANIMATION:
+    // We animate if the tooltip was hidden (opacity 0) OR if forced (switching images)
+    if (tooltipEl.style.opacity === '0' || forceAnimation) {
         const startAngle = Math.random() < 0.5 ? -5 : 5;
+        
+        // Disable transition to snap to starting position instantly
         tooltipEl.style.transition = 'none';
+        tooltipEl.style.opacity = '0';
         tooltipEl.style.transform = `${baseTransform} rotate(${startAngle}deg) scale(0.95)`;
     }
 
@@ -227,8 +230,14 @@ function displayImageInTooltip(imageUrl) {
     img.onload = () => {
         if (tooltipEl.style.display !== 'none') {
             tooltipEl.style.backgroundImage = `url('${imageUrl}')`;
-            void tooltipEl.offsetWidth; // Force Reflow
+            
+            // Force Reflow to apply the "snap" before we animate
+            void tooltipEl.offsetWidth; 
+
+            // Enable transition for smooth entry
             tooltipEl.style.transition = 'opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            
+            // Set Final State
             tooltipEl.style.opacity = '1';
             tooltipEl.style.transform = `${baseTransform} rotate(0deg) scale(1)`;
         }
@@ -236,15 +245,16 @@ function displayImageInTooltip(imageUrl) {
     img.src = imageUrl;
 }
 
-function showTooltip(imageUrls, startIndex = 0) {
+function showTooltip(imageUrls, startIndex = 0, forceAnimation = false) {
     if (!imageUrls || imageUrls.length === 0) {
         hideTooltip();
         return;
     }
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
+    
     tooltipEl.style.display = "flex"; 
-    displayImageInTooltip(currentPreviewImages[currentImageIndex]);
+    displayImageInTooltip(currentPreviewImages[currentImageIndex], forceAnimation);
 }
 
 function hideTooltip() {
@@ -257,6 +267,7 @@ function hideTooltip() {
              if(tooltipEl.style.opacity === '0') {
                  tooltipEl.style.display = "none";
                  tooltipEl.style.backgroundImage = 'none';
+                 tooltipEl.textContent = ''; 
                  currentPreviewImages = [];
                  currentImageIndex = 0;
              }
@@ -269,7 +280,8 @@ function startSlideshow() {
     if (currentPreviewImages.length > 1) {
         slideshowInterval = setInterval(() => {
             currentImageIndex = (currentImageIndex + 1) % currentPreviewImages.length;
-            displayImageInTooltip(currentPreviewImages[currentImageIndex]);
+            // Pass true to force animation on slideshow change
+            displayImageInTooltip(currentPreviewImages[currentImageIndex], true);
         }, 2000);
     }
 }
@@ -417,7 +429,6 @@ Papa.parse(csvUrl, {
                 },
                 { title:"Maker Type", field:"makerType" },
                 {
-                    // FIX: Added hozAlign center for proper centering
                     title:"Link", field:"link", formatter:"link", hozAlign:"center",
                     formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
                 },
@@ -625,22 +636,25 @@ document.addEventListener('mousemove', (e) => {
                 }
 
                 if (imageUrls && imageUrls.length > 0) {
-                    // FIX 3: Compare CONTENT string, not just array reference
-                    // This prevents the logo animation from resetting on every pixel
-                    const isNewContent = (currentPreviewImages[0] !== imageUrls[0]);
+                    // Detect if content changed (even if switching between different Logos)
+                    const isNewContent = (currentPreviewImages[0] !== imageUrls[0] || currentPreviewImages.length !== imageUrls.length);
                     
                     if (tooltipEl.style.display === 'none' || isNewContent || currentImageIndex !== index || isLogo) {
+                        
+                        // Pass TRUE to force animation if it is new content or a new index
+                        const shouldAnimate = (isNewContent || currentImageIndex !== index);
+
                         if (isLogo) {
                             clearInterval(slideshowInterval);
-                            moveTooltip(e); // Always update position
+                            moveTooltip(e); 
                             if (tooltipEl.style.display === 'none' || isNewContent) {
-                                showTooltip(imageUrls, index);
+                                showTooltip(imageUrls, index, true); // Force animation on new Logo
                             }
                         } else {
                             clearInterval(slideshowInterval);
                             centerTooltip(); 
                             if (isNewContent || currentImageIndex !== index) {
-                                showTooltip(imageUrls, index);
+                                showTooltip(imageUrls, index, shouldAnimate);
                             } else {
                                 tooltipEl.style.display = "flex";
                             }
