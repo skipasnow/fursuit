@@ -90,11 +90,9 @@
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     z-index: 99999;
     
-    pointer-events: none; /* Allow clicks to pass through */
+    pointer-events: none; 
     
-    /* Base opacity for fade effects */
     opacity: 0; 
-    /* We handle transitions manually in JS for the twist effect */
     transition: opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
@@ -106,8 +104,7 @@
 
   /* Base Transition for all cells */
   .tabulator-row .tabulator-cell {
-    /* Transition background-position for the text color sweep */
-    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, background-position 0.5s ease, font-size 0.2s ease;
+    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, background-position 0.4s ease, font-size 0.2s ease;
     position: relative; 
     background-clip: padding-box;
   }
@@ -133,27 +130,33 @@
   }
   a { color: darkorange; text-decoration: none; transition: all 0.2s; }
 
-  /* 3. TEXT GRADIENT SWEEP (FIXED) */
-  /* Targets cells with text only (no images/links) */
-  .tabulator-row .tabulator-cell:not(:has(div)):not(:has(a)) {
-    /* Set up a wide background: White on the left, Orange on the right */
-    background-image: linear-gradient(90deg, #ffffff 0%, #ffffff 50%, #ff8c00 100%);
-    background-size: 300% 100%; /* Wide enough to slide */
-    background-position: 0% center; /* Start at White */
+  /* 3. TEXT GRADIENT SWEEP */
+  /* Targeted specifically at text-only cells */
+  .tabulator-row .tabulator-cell:not(:has(.preview-container)):not(:has(.logo-box)):not(:has(a)) {
+    /* Gradient: Left half is White, Right half is Orange */
+    background-image: linear-gradient(to right, #ffffff 50%, #ff8c00 100%);
+    background-size: 200% 100%;
     
+    /* Start at 0% (White side) */
+    background-position: 0% center;
+    
+    /* Clip background to text */
     -webkit-background-clip: text;
     background-clip: text;
+    
+    /* Transparent text allows background to show */
     -webkit-text-fill-color: transparent;
     color: transparent;
     
-    font-size: 1em;
     font-weight: bold;
+    /* Transition background position for the sweep */
+    transition: background-position 0.4s ease-out, font-size 0.2s ease;
   }
 
-  /* When hovered, slide the background to the Orange side */
-  .tabulator-row .tabulator-cell.active-tilt:not(:has(div)):not(:has(a)) {
-    background-position: 100% center; /* Slide to Orange */
-    font-size: 1.15em; /* Enlarge */
+  /* On Hover: Slide background to 100% (Orange side) and enlarge */
+  .tabulator-row .tabulator-cell.active-tilt:not(:has(.preview-container)):not(:has(.logo-box)):not(:has(a)) {
+    background-position: 100% center; 
+    font-size: 1.15em;
   }
 </style>
 </head>
@@ -216,11 +219,11 @@ function displayImageInTooltip(imageUrl, forceAnimation = false) {
     const baseTransform = isTooltipCentered ? "translate(-50%, -50%)" : "";
     
     // TRIGGER ANIMATION:
-    // We animate if the tooltip was hidden (opacity 0) OR if forced (switching images)
+    // We animate if hidden OR if forced (content switch)
     if (tooltipEl.style.opacity === '0' || forceAnimation) {
         const startAngle = Math.random() < 0.5 ? -5 : 5;
         
-        // Disable transition to snap to starting position instantly
+        // Disable transition to snap to starting position
         tooltipEl.style.transition = 'none';
         tooltipEl.style.opacity = '0';
         tooltipEl.style.transform = `${baseTransform} rotate(${startAngle}deg) scale(0.95)`;
@@ -231,13 +234,9 @@ function displayImageInTooltip(imageUrl, forceAnimation = false) {
         if (tooltipEl.style.display !== 'none') {
             tooltipEl.style.backgroundImage = `url('${imageUrl}')`;
             
-            // Force Reflow to apply the "snap" before we animate
-            void tooltipEl.offsetWidth; 
+            void tooltipEl.offsetWidth; // Force Reflow
 
-            // Enable transition for smooth entry
             tooltipEl.style.transition = 'opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-            
-            // Set Final State
             tooltipEl.style.opacity = '1';
             tooltipEl.style.transform = `${baseTransform} rotate(0deg) scale(1)`;
         }
@@ -280,7 +279,7 @@ function startSlideshow() {
     if (currentPreviewImages.length > 1) {
         slideshowInterval = setInterval(() => {
             currentImageIndex = (currentImageIndex + 1) % currentPreviewImages.length;
-            // Pass true to force animation on slideshow change
+            // Force animation on slide change
             displayImageInTooltip(currentPreviewImages[currentImageIndex], true);
         }, 2000);
     }
