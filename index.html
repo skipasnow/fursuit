@@ -25,7 +25,8 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    overflow: auto; 
+    /* Let the Table handle the scrollbars */
+    overflow: hidden; 
   }
 
   /* --- HEADER ANIMATION --- */
@@ -114,17 +115,24 @@
   }
 
   /* --- TABULATOR STYLES & OVERRIDES --- */
+  
   .tabulator .tabulator-header { 
     background-color: #1f1f1f !important; 
     font-weight: bold !important;
-    overflow: hidden !important;
+    /* FIX: Removed overflow:hidden so buttons aren't clipped */
   }
+  
   .tabulator .tabulator-header .tabulator-col-content {
-    white-space: normal !important; padding: 8px 4px;
+    white-space: normal !important; 
+    padding: 8px 4px;
   }
+  
   .tabulator .tabulator-header .tabulator-header-filter {
-    height: auto !important; overflow: visible !important; margin-top: 5px;
+    height: auto !important; 
+    overflow: visible !important; 
+    margin-top: 5px;
   }
+
   .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; }
   .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
   .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
@@ -132,7 +140,9 @@
   /* Base Cell Transition */
   .tabulator-row .tabulator-cell {
     transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
-    position: relative; background-clip: padding-box; overflow: hidden; 
+    position: relative; 
+    background-clip: padding-box;
+    overflow: hidden; 
   }
 
   /* 1. ACTIVE TILT STATE */
@@ -195,8 +205,10 @@
   .filter-container {
     display: flex; flex-direction: column; gap: 6px; padding: 8px;
     background: #222; border-radius: 4px; width: 100%; box-sizing: border-box; 
-    min-height: 85px; 
-    /* FIX: Increased padding bottom significantly */
+    
+    /* FIX: Increased Min Height for button safety */
+    min-height: 100px; 
+    /* FIX: Added bottom padding to lift buttons */
     padding-bottom: 14px; 
   }
   .filter-input {
@@ -213,20 +225,22 @@
   @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
   .filter-remove { cursor: pointer; font-weight: bold; color: #000; font-size: 10px; }
   .filter-remove:hover { color: #fff; }
+  
   .filter-actions {
       margin-top: auto; width: 100%; display: flex; justify-content: space-between; align-items: center; 
       border-top: 1px solid #444; 
-      /* FIX: Added extra vertical padding and line-height */
-      padding-top: 8px; padding-bottom: 4px;
+      padding-top: 8px; 
+      /* FIX: Ensure text has room below */
+      padding-bottom: 4px; 
+      /* FIX: Ensure lines are tall enough */
+      line-height: 1.5;
   }
   .filter-clear-all {
     font-size: 0.85em; color: #ff6b6b; cursor: pointer; text-decoration: underline; white-space: nowrap;
-    line-height: 1.5;
   }
   .filter-clear-all:hover { color: #ff4040; }
   .filter-apply-btn {
     font-size: 0.85em; color: #4caf50; cursor: pointer; text-decoration: underline; white-space: nowrap; font-weight: bold;
-    line-height: 1.5;
   }
   .filter-apply-btn:hover { color: #66bb6a; }
   .tags-area { display: flex; flex-wrap: wrap; gap: 3px; width: 100%; margin-bottom: 4px; }
