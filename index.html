@@ -14,8 +14,8 @@
     font-family: sans-serif;
     margin: 0;
     padding: 20px;
+    /* FIX 3: Removed overflow-x: hidden so scrollbars work properly */
     overflow-y: scroll;
-    overflow-x: hidden;
   }
 
   /* --- HEADER ANIMATION --- */
@@ -99,12 +99,12 @@
 
   /* --- TABULATOR STYLES & OVERRIDES --- */
   
-  /* FIX: Force Headers to Expand Vertically and Wrap */
+  /* FIX 1: Ensure Headers stay synced by managing overflow correctly */
   .tabulator .tabulator-header { 
     height: auto !important; 
     background-color: #1f1f1f !important; 
     font-weight: bold !important;
-    white-space: normal !important; /* Allow wrapping */
+    white-space: normal !important; 
   }
   
   .tabulator .tabulator-header .tabulator-col,
@@ -113,7 +113,6 @@
     min-height: 40px; 
   }
   
-  /* Fix Filter Area Expansion */
   .tabulator .tabulator-header .tabulator-header-filter {
     height: auto !important;
     overflow: visible !important;
@@ -127,14 +126,19 @@
   /* Base Cell Transition */
   .tabulator-row .tabulator-cell {
     transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
-    position: relative; background-clip: padding-box;
-    overflow: visible !important;
+    position: relative; 
+    background-clip: padding-box;
+    /* FIX 1: Removed 'overflow: visible' from base state to fix scroll sync */
   }
 
   /* 1. ACTIVE TILT STATE */
   .tabulator-row .tabulator-cell.active-tilt {
-    z-index: 10000 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.6);
-    border-color: rgba(255,255,255,0.5) !important; filter: brightness(1.2);
+    z-index: 10000 !important; 
+    box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+    border-color: rgba(255,255,255,0.5) !important; 
+    filter: brightness(1.2);
+    /* Only allow overflow when actively hovering */
+    overflow: visible !important; 
   }
 
   /* 2. URL/LINK ANIMATION */
@@ -181,39 +185,27 @@
   }
   .specialty-tag:hover { background-color: darkorange; border-color: #fff; transform: scale(1.1); }
 
-  /* --- HEADER FILTER STYLES --- */
+  /* --- HEADER FILTER (ACTIVE TAGS) STYLES --- */
   .filter-container {
-    display: flex; 
-    flex-wrap: wrap; 
-    gap: 4px; 
-    padding: 6px;
-    background: #222; 
-    border-radius: 4px; 
-    align-items: flex-start; 
-    width: 100%; 
-    box-sizing: border-box;
-    /* FIX: Default height to show controls nicely */
-    min-height: 65px; 
+    display: flex; flex-wrap: wrap; gap: 4px; padding: 6px;
+    background: #222; border-radius: 4px; align-items: flex-start; 
+    width: 100%; box-sizing: border-box; min-height: 65px; 
   }
-  
   .filter-input {
     background: #333; color: #fff; border: 1px solid #555;
     padding: 4px 6px; border-radius: 3px; font-size: 0.85em;
     width: 100%; outline: none; margin-bottom: 4px;
   }
   .filter-input:focus { border-color: darkorange; }
-  
   .filter-tag {
     background-color: darkorange; color: #fff; padding: 2px 6px;
     border-radius: 4px; font-size: 0.8em; display: flex; align-items: center; gap: 4px;
     animation: popIn 0.2s ease-out; margin-bottom: 2px;
   }
   @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
-  
   .filter-remove { cursor: pointer; font-weight: bold; color: #000; font-size: 10px; }
   .filter-remove:hover { color: #fff; }
   
-  /* Buttons: Clear and Apply */
   .filter-actions {
       margin-top: 4px; width: 100%; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #444; padding-top: 4px;
   }
@@ -221,15 +213,11 @@
     font-size: 0.8em; color: #ff6b6b; cursor: pointer; text-decoration: underline; white-space: nowrap;
   }
   .filter-clear-all:hover { color: #ff4040; }
-  
   .filter-apply-btn {
     font-size: 0.8em; color: #4caf50; cursor: pointer; text-decoration: underline; white-space: nowrap; font-weight: bold;
   }
   .filter-apply-btn:hover { color: #66bb6a; }
-  
-  .tags-area {
-      display: flex; flex-wrap: wrap; gap: 3px; width: 100%;
-  }
+  .tags-area { display: flex; flex-wrap: wrap; gap: 3px; width: 100%; }
 </style>
 </head>
 <body>
@@ -355,12 +343,12 @@ function moveTooltip(e) {
 
 // --- SPECIALTY FILTER LOGIC ---
 let pendingSpecialtyFilters = new Set();
+let appliedSpecialtyFilters = new Set();
 
 window.addSpecialtyFilter = function(tag) {
     if(!tag) return;
     pendingSpecialtyFilters.add(tag.trim());
     updateFilterHeader();
-    // No recalc here, waits for Apply button
 }
 
 window.removeSpecialtyFilter = function(tag) {
@@ -370,15 +358,15 @@ window.removeSpecialtyFilter = function(tag) {
 
 window.clearSpecialtyFilters = function() {
     pendingSpecialtyFilters.clear();
+    appliedSpecialtyFilters.clear(); 
     updateFilterHeader();
-    // Clear the actual filter on the table
-    table.setHeaderFilterValue("specialty", []); 
+    table.setHeaderFilterValue("specialty", []); // FIX: Explicitly clear Tabulator filter
 }
 
 window.applySpecialtyFilters = function() {
-    // FIX: Use setHeaderFilterValue to trigger Tabulator's internal filter refresh
-    // This passes the array of tags to headerFilterFunc as 'headerValue'
-    table.setHeaderFilterValue("specialty", Array.from(pendingSpecialtyFilters));
+    appliedSpecialtyFilters = new Set(pendingSpecialtyFilters);
+    // FIX: Use setHeaderFilterValue to trigger the filter function properly
+    table.setHeaderFilterValue("specialty", Array.from(appliedSpecialtyFilters));
 }
 
 function updateFilterHeader() {
@@ -387,7 +375,6 @@ function updateFilterHeader() {
     
     let tagsArea = container.querySelector('.tags-area');
     if (!tagsArea) {
-        // Rebuild if lost
         container.innerHTML = '';
         const input = document.createElement("input");
         input.type = "text";
@@ -405,7 +392,6 @@ function updateFilterHeader() {
         tagsArea.className = "tags-area";
         container.appendChild(tagsArea);
         
-        // Action Buttons
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'filter-actions';
         
@@ -560,7 +546,8 @@ Papa.parse(csvUrl, {
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Maker", field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
                 {
-                    title:"Logo", field:"logo", hozAlign:"center", width:60,
+                    // FIX 2: Increased width to 80px for Logo
+                    title:"Logo", field:"logo", hozAlign:"center", width:80,
                     formatter:function(cell){
                         const val = cell.getValue();
                         return val ? `<div class="logo-box" style="background-image:url('${val}');"></div>` : "";
@@ -609,11 +596,11 @@ Papa.parse(csvUrl, {
                 { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
                 
-                // --- SPECIALTY FILTER (FIXED) ---
+                // --- SPECIALTY FILTER ---
                 {
                     title:"Specialty", 
                     field:"specialty", 
-                    width: 250, // Ensure width for UI
+                    width: 250,
                     headerFilter: function(cell, onRendered, success, cancel, editorParams){
                         const container = document.createElement("div");
                         container.id = "specialty-filter-container";
@@ -621,15 +608,13 @@ Papa.parse(csvUrl, {
                         setTimeout(updateFilterHeader, 100); 
                         return container;
                     },
-                    // The Function called by table.refreshFilter() or internal updates
                     headerFilterFunc: function(headerValue, rowValue, rowData, filterParams){
-                        // headerValue here comes from setHeaderFilterValue
+                        // headerValue comes from table.setHeaderFilterValue
                         if (!headerValue || headerValue.length === 0) return true;
                         if (!rowValue) return false;
                         
                         const rowTags = rowValue.split(',').map(t => t.trim());
                         let match = false;
-                        // Check if row matches ANY active tag (OR logic)
                         headerValue.forEach(filterTag => {
                             if (rowTags.includes(filterTag)) match = true;
                         });
