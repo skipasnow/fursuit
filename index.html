@@ -19,7 +19,7 @@
 
   h1 { margin-bottom: 10px; }
 
-  /* --- CONTROLS SECTION --- */
+  /* --- CONTROLS --- */
   .controls-container {
     background: #1f1f1f;
     padding: 15px;
@@ -32,11 +32,7 @@
     border: 1px solid #444;
   }
 
-  .control-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+  .control-group { display: flex; align-items: center; gap: 10px; }
 
   select, button {
     padding: 8px 12px;
@@ -48,21 +44,12 @@
     font-size: 14px;
   }
 
-  select:hover, button:hover {
-    background: #444;
-    border-color: darkorange;
-  }
+  select:hover, button:hover { background: #444; border-color: darkorange; }
 
-  button.reset-btn {
-    background: #c62828;
-    border-color: #e53935;
-  }
+  button.reset-btn { background: #c62828; border-color: #e53935; }
   button.reset-btn:hover { background: #d32f2f; }
 
-  label {
-    font-weight: bold;
-    color: #ccc;
-  }
+  label { font-weight: bold; color: #ccc; }
 
   #creator-table {
     width: 100%;
@@ -71,13 +58,8 @@
     border: 1px solid #444;
   }
 
-  /* --- CUSTOM PREVIEW BOXES --- */
-  .preview-container {
-    display: flex;
-    gap: 2px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
+  /* --- PREVIEW BOXES --- */
+  .preview-container { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
 
   .preview-box, .logo-box {
     display: inline-block;
@@ -95,13 +77,11 @@
       box-shadow: 0 0 5px rgba(255,140,0,0.5);
   }
 
-  /* --- THE FLOATING TOOLTIP --- */
+  /* --- FLOATING TOOLTIP --- */
   #image-tooltip {
     display: none; 
     position: fixed;
-    width: 400px;
-    height: 400px;
-    
+    width: 400px; height: 400px;
     background-color: #222;
     background-size: contain;
     background-repeat: no-repeat;
@@ -109,73 +89,73 @@
     border: 2px solid #fff;
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     z-index: 99999;
+    pointer-events: none; /* Allow clicks to pass through */
     
-    /* Pointer events MUST be enabled for the hover-through logic to work */
-    pointer-events: none; 
-    
-    /* Tooltip Animation Styles */
     opacity: 0; 
     transition: opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
-  /* --- REACTIVE CELL STYLES (NEW EFFECTS) --- */
-  .tabulator-row .tabulator-cell {
-    transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease, font-size 0.2s ease, color 0.2s ease;
-    position: relative; 
-    background-clip: padding-box; 
-  }
-
-  /* 1. Active Cell Base Style (3D Tilt + Brightness) */
-  .tabulator-row .tabulator-cell.active-tilt {
-    z-index: 1000 !important;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.6);
-    border-color: rgba(255,255,255,0.5) !important;
-    filter: brightness(1.2); /* Slightly brighter overall */
-  }
-
-  /* 2. Text Cell Effect: Gradient Slide & Enlarge */
-  /* We target cells that DO NOT have images or links for the text effect */
-  .tabulator-row .tabulator-cell.active-tilt:not(:has(.preview-box)):not(:has(.logo-box)):not(:has(a)) {
-    /* Gradient Text Setup */
-    background-image: linear-gradient(to right, #fff 0%, #fff 50%, #ff8c00 100%);
-    background-size: 200% auto;
-    background-position: 0% center;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent; 
-    color: transparent; /* Fallback */
-    
-    /* Enlarge Text */
-    font-size: 1.15em; 
-    font-weight: bold;
-    
-    /* Animate the gradient position */
-    animation: gradient-slide 0.4s forwards;
-  }
-
-  @keyframes gradient-slide {
-    to { background-position: 100% center; }
-  }
-
-  /* 3. URL/Link Effect: Glow, Lift, and Enlarge */
-  .tabulator-row .tabulator-cell.active-tilt a {
-    display: inline-block; /* Required for transform */
-    color: #ffd699 !important; /* Lighter orange */
-    
-    /* Hover Out + Enlarge */
-    transform: translateY(-4px) scale(1.2); 
-    
-    /* Glow Effect */
-    text-shadow: 0 0 8px rgba(255, 140, 0, 0.8), 0 0 15px rgba(255, 140, 0, 0.6);
-    
-    /* Smooth Transition */
-    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-
+  /* --- TABULATOR OVERRIDES & ANIMATIONS --- */
   .tabulator .tabulator-header { background-color: #1f1f1f !important; }
-  a { color: darkorange; text-decoration: none; transition: all 0.2s; }
   .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; }
   .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
   .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
+
+  /* Base Transition for all cells */
+  .tabulator-row .tabulator-cell {
+    transition: all 0.2s ease-out;
+    position: relative; 
+    background-clip: padding-box;
+  }
+
+  /* 1. ACTIVE CELL (Base 3D Tilt) */
+  .tabulator-row .tabulator-cell.active-tilt {
+    z-index: 10000 !important; /* Very high Z-index to sit on top */
+    box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+    border-color: rgba(255,255,255,0.5) !important;
+    filter: brightness(1.2);
+    overflow: visible !important; /* FIX: Allow content to expand outside cell */
+  }
+
+  /* 2. URL/LINK ANIMATION (Hover out + Glow) */
+  .tabulator-row .tabulator-cell.active-tilt a {
+    display: inline-block; 
+    color: #ffd699 !important; 
+    transform: translateY(-4px) scale(1.2); /* Hover out */
+    text-shadow: 0 0 8px rgba(255, 140, 0, 0.8), 0 0 15px rgba(255, 140, 0, 0.6);
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    z-index: 10001; /* Ensure link sits on top of cell */
+  }
+  a { color: darkorange; text-decoration: none; transition: all 0.2s; }
+
+  /* 3. TEXT GRADIENT ANIMATION (Left to Right Fill) */
+  /* This targets cells that have text but NO images/links */
+  .tabulator-row .tabulator-cell.active-tilt:not(:has(div)):not(:has(a)) {
+    /* Gradient from White (left) to Orange (right) */
+    background-image: linear-gradient(90deg, #ffffff 0%, #ffffff 40%, #ff8c00 100%);
+    background-size: 200% auto;
+    background-position: 0% center; /* Start at white */
+    
+    /* Clip background to text */
+    -webkit-background-clip: text;
+    background-clip: text;
+    
+    /* Make text transparent so background shows through */
+    -webkit-text-fill-color: transparent;
+    color: transparent; 
+    
+    font-size: 1.15em; 
+    font-weight: bold;
+    
+    /* Animate background position to reveal orange */
+    animation: gradient-slide 0.4s forwards ease-out;
+  }
+
+  @keyframes gradient-slide {
+    0% { background-position: 0% center; }
+    100% { background-position: 100% center; }
+  }
 </style>
 </head>
 <body>
@@ -235,19 +215,19 @@ function displayImageInTooltip(imageUrl) {
     }
 
     const baseTransform = isTooltipCentered ? "translate(-50%, -50%)" : "";
-    const startAngle = Math.random() < 0.5 ? -5 : 5;
-
-    tooltipEl.style.transition = 'none';
-    tooltipEl.style.opacity = '0';
-    tooltipEl.style.transform = `${baseTransform} rotate(${startAngle}deg) scale(0.95)`;
+    // Only apply twist animation if we are initiating a NEW tooltip show
+    // To prevent twisting while moving mouse across Logo
+    if (tooltipEl.style.opacity === '0') {
+        const startAngle = Math.random() < 0.5 ? -5 : 5;
+        tooltipEl.style.transition = 'none';
+        tooltipEl.style.transform = `${baseTransform} rotate(${startAngle}deg) scale(0.95)`;
+    }
 
     const img = new Image();
     img.onload = () => {
         if (tooltipEl.style.display !== 'none') {
             tooltipEl.style.backgroundImage = `url('${imageUrl}')`;
-            
             void tooltipEl.offsetWidth; // Force Reflow
-
             tooltipEl.style.transition = 'opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
             tooltipEl.style.opacity = '1';
             tooltipEl.style.transform = `${baseTransform} rotate(0deg) scale(1)`;
@@ -263,7 +243,6 @@ function showTooltip(imageUrls, startIndex = 0) {
     }
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
-    
     tooltipEl.style.display = "flex"; 
     displayImageInTooltip(currentPreviewImages[currentImageIndex]);
 }
@@ -296,7 +275,6 @@ function startSlideshow() {
 }
 
 // --- POSITIONING LOGIC ---
-
 function centerTooltip() {
     isTooltipCentered = true;
     tooltipEl.style.top = "50%";
@@ -407,7 +385,7 @@ Papa.parse(csvUrl, {
         })).filter(row => row.maker); 
 
         if (data.length === 0) {
-            console.warn("Data array is empty after mapping.");
+            console.warn("Data array is empty.");
             return;
         }
 
@@ -439,7 +417,8 @@ Papa.parse(csvUrl, {
                 },
                 { title:"Maker Type", field:"makerType" },
                 {
-                    title:"Link", field:"link", formatter:"link", 
+                    // FIX: Added hozAlign center for proper centering
+                    title:"Link", field:"link", formatter:"link", hozAlign:"center",
                     formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
                 },
                 {
@@ -646,17 +625,21 @@ document.addEventListener('mousemove', (e) => {
                 }
 
                 if (imageUrls && imageUrls.length > 0) {
-                    if (tooltipEl.style.display === 'none' || currentPreviewImages !== imageUrls || currentImageIndex !== index || isLogo) {
+                    // FIX 3: Compare CONTENT string, not just array reference
+                    // This prevents the logo animation from resetting on every pixel
+                    const isNewContent = (currentPreviewImages[0] !== imageUrls[0]);
+                    
+                    if (tooltipEl.style.display === 'none' || isNewContent || currentImageIndex !== index || isLogo) {
                         if (isLogo) {
                             clearInterval(slideshowInterval);
-                            moveTooltip(e); 
-                            if (tooltipEl.style.display === 'none' || currentPreviewImages !== imageUrls) {
+                            moveTooltip(e); // Always update position
+                            if (tooltipEl.style.display === 'none' || isNewContent) {
                                 showTooltip(imageUrls, index);
                             }
                         } else {
                             clearInterval(slideshowInterval);
                             centerTooltip(); 
-                            if (currentPreviewImages !== imageUrls || currentImageIndex !== index) {
+                            if (isNewContent || currentImageIndex !== index) {
                                 showTooltip(imageUrls, index);
                             } else {
                                 tooltipEl.style.display = "flex";
