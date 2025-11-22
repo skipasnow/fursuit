@@ -72,7 +72,12 @@
   button.reset-btn:hover { background: #d32f2f; }
   label { font-weight: bold; color: #ccc; }
 
-  #creator-table { width: 100%; margin: auto; height: 75vh; border: 1px solid #444; }
+  #creator-table {
+    width: 100%;
+    margin: auto;
+    height: 75vh; 
+    border: 1px solid #444;
+  }
 
   /* --- PREVIEW & LOGO BOXES --- */
   .preview-container { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
@@ -93,19 +98,32 @@
   }
 
   /* --- TABULATOR STYLES & OVERRIDES --- */
+  
+  /* FIX: Force Headers to Expand Vertically and Wrap */
   .tabulator .tabulator-header { 
     height: auto !important; 
     background-color: #1f1f1f !important; 
     font-weight: bold !important;
+    white-space: normal !important; /* Allow wrapping */
   }
-  .tabulator .tabulator-header .tabulator-col,
+  
+  /* Allow individual columns to grow height */
+  .tabulator .tabulator-header .tabulator-col {
+    height: auto !important;
+  }
+  
+  /* Allow content inside header to wrap */
   .tabulator .tabulator-header .tabulator-col-content {
     height: auto !important;
-    min-height: 40px; 
+    white-space: normal !important;
+    padding-bottom: 5px;
   }
+  
+  /* Allow filter area to expand */
   .tabulator .tabulator-header .tabulator-header-filter {
     height: auto !important;
     overflow: visible !important;
+    margin-top: 5px;
   }
 
   .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; }
@@ -171,20 +189,30 @@
 
   /* --- HEADER FILTER (ACTIVE TAGS) STYLES --- */
   .filter-container {
-    display: flex; flex-wrap: wrap; gap: 4px; padding: 4px;
-    background: #222; border-radius: 4px; align-items: center;
-    width: 100%; box-sizing: border-box;
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 4px; 
+    padding: 6px;
+    background: #222; 
+    border-radius: 4px; 
+    align-items: flex-start; /* Align to top so it grows down */
+    width: 100%; 
+    box-sizing: border-box;
+    /* FIX: Set Minimum Height to accommodate buttons by default */
+    min-height: 65px; 
   }
+  
   .filter-input {
     background: #333; color: #fff; border: 1px solid #555;
-    padding: 2px 5px; border-radius: 3px; font-size: 0.85em;
-    flex-grow: 1; min-width: 60px; outline: none;
+    padding: 4px 6px; border-radius: 3px; font-size: 0.85em;
+    width: 100%; outline: none; margin-bottom: 4px;
   }
   .filter-input:focus { border-color: darkorange; }
+  
   .filter-tag {
     background-color: darkorange; color: #fff; padding: 2px 6px;
     border-radius: 4px; font-size: 0.8em; display: flex; align-items: center; gap: 4px;
-    animation: popIn 0.2s ease-out;
+    animation: popIn 0.2s ease-out; margin-bottom: 2px;
   }
   @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
   
@@ -193,20 +221,21 @@
   
   /* Buttons: Clear and Apply */
   .filter-actions {
-      margin-left: auto; display: flex; gap: 8px; align-items: center;
+      margin-top: 4px; width: 100%; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #444; padding-top: 4px;
   }
   .filter-clear-all {
-    font-size: 0.75em; color: #ff6b6b; cursor: pointer;
-    text-decoration: underline; white-space: nowrap;
+    font-size: 0.8em; color: #ff6b6b; cursor: pointer; text-decoration: underline; white-space: nowrap;
   }
   .filter-clear-all:hover { color: #ff4040; }
   
-  /* New Apply Button Style */
   .filter-apply-btn {
-    font-size: 0.75em; color: #4caf50; cursor: pointer;
-    text-decoration: underline; white-space: nowrap; font-weight: bold;
+    font-size: 0.8em; color: #4caf50; cursor: pointer; text-decoration: underline; white-space: nowrap; font-weight: bold;
   }
   .filter-apply-btn:hover { color: #66bb6a; }
+  
+  .tags-area {
+      display: flex; flex-wrap: wrap; gap: 3px; width: 100%;
+  }
 </style>
 </head>
 <body>
@@ -340,7 +369,7 @@ window.addSpecialtyFilter = function(tag) {
     if(!tag) return;
     pendingSpecialtyFilters.add(tag.trim());
     updateFilterHeader();
-    // Note: We do NOT call table.recalc() here anymore.
+    // Does NOT recalc here. User must click Apply.
 }
 
 window.removeSpecialtyFilter = function(tag) {
@@ -350,23 +379,23 @@ window.removeSpecialtyFilter = function(tag) {
 
 window.clearSpecialtyFilters = function() {
     pendingSpecialtyFilters.clear();
-    appliedSpecialtyFilters.clear(); // Clear active logic too
+    appliedSpecialtyFilters.clear(); // Clear active logic
     updateFilterHeader();
-    table.recalc(); // Reset table immediately
+    table.refreshFilter(); // FIX: refreshFilter forces re-evaluation
 }
 
 window.applySpecialtyFilters = function() {
     // Move Pending -> Applied
     appliedSpecialtyFilters = new Set(pendingSpecialtyFilters);
-    table.recalc(); // Trigger filter
+    table.refreshFilter(); // FIX: Forces the headerFilterFunc to run again
 }
 
 function updateFilterHeader() {
     const container = document.getElementById('specialty-filter-container');
     if(!container) return;
     
-    // Find or create tags area
     let tagsArea = container.querySelector('.tags-area');
+    // If re-rendered, rebuild structure
     if (!tagsArea) {
         container.innerHTML = '';
         const input = document.createElement("input");
@@ -383,17 +412,29 @@ function updateFilterHeader() {
         
         tagsArea = document.createElement("div");
         tagsArea.className = "tags-area";
-        tagsArea.style.display = "flex";
-        tagsArea.style.flexWrap = "wrap";
-        tagsArea.style.gap = "3px";
-        tagsArea.style.width = "100%";
-        tagsArea.style.marginTop = "4px";
         container.appendChild(tagsArea);
-    } else {
-        tagsArea.innerHTML = ''; 
-    }
+        
+        // Action Buttons
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'filter-actions';
+        
+        const applyBtn = document.createElement('span');
+        applyBtn.className = 'filter-apply-btn';
+        applyBtn.innerText = 'Apply Filter';
+        applyBtn.onclick = window.applySpecialtyFilters;
+        actionsDiv.appendChild(applyBtn);
 
-    // Draw Tags (from Pending list)
+        const clearBtn = document.createElement('span');
+        clearBtn.className = 'filter-clear-all';
+        clearBtn.innerText = 'Clear All';
+        clearBtn.onclick = window.clearSpecialtyFilters;
+        actionsDiv.appendChild(clearBtn);
+        
+        container.appendChild(actionsDiv);
+    } 
+
+    // Update Tags Visuals
+    tagsArea.innerHTML = '';
     if (pendingSpecialtyFilters.size > 0) {
         pendingSpecialtyFilters.forEach(tag => {
             const pill = document.createElement('span');
@@ -401,24 +442,8 @@ function updateFilterHeader() {
             pill.innerHTML = `${tag} <span class="filter-remove" onclick="removeSpecialtyFilter('${tag}')">✕</span>`;
             tagsArea.appendChild(pill);
         });
-
-        // Action Buttons Container
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'filter-actions';
-        
-        const applyBtn = document.createElement('span');
-        applyBtn.className = 'filter-apply-btn';
-        applyBtn.innerText = 'Apply';
-        applyBtn.onclick = window.applySpecialtyFilters;
-        actionsDiv.appendChild(applyBtn);
-
-        const clearBtn = document.createElement('span');
-        clearBtn.className = 'filter-clear-all';
-        clearBtn.innerText = 'Clear';
-        clearBtn.onclick = window.clearSpecialtyFilters;
-        actionsDiv.appendChild(clearBtn);
-        
-        tagsArea.appendChild(actionsDiv);
+    } else {
+        tagsArea.innerHTML = '<span style="color:#666; font-size:0.8em;">No tags selected</span>';
     }
 }
 
@@ -598,6 +623,7 @@ Papa.parse(csvUrl, {
                 {
                     title:"Specialty", 
                     field:"specialty", 
+                    width: 250, // FIX: Width increased for filter UI
                     headerFilter: function(cell, onRendered, success, cancel, editorParams){
                         const container = document.createElement("div");
                         container.id = "specialty-filter-container";
@@ -606,13 +632,12 @@ Papa.parse(csvUrl, {
                         return container;
                     },
                     headerFilterFunc: function(headerValue, rowValue, rowData, filterParams){
-                        // Use appliedSpecialtyFilters for logic
                         if (appliedSpecialtyFilters.size === 0) return true;
                         if (!rowValue) return false;
                         
-                        // OR Logic: Row matches if it contains ANY of the selected tags
                         const rowTags = rowValue.split(',').map(t => t.trim());
                         let match = false;
+                        // OR Logic
                         appliedSpecialtyFilters.forEach(filterTag => {
                             if (rowTags.includes(filterTag)) match = true;
                         });
