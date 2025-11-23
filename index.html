@@ -733,11 +733,15 @@ Papa.parse(csvUrl, {
 							previewBox.className = 'preview-box';
 							
 							// 1. GENERATE TINY THUMBNAIL (60x60px webp)
-							// This ensures we only download ~1KB instead of 5MB
 							const thumbUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=60&h=60&output=webp&q=80`;
 							
-							// 2. Apply the thumbnail as the background
+							// 2. Apply the thumbnail
 							previewBox.style.backgroundImage = `url('${thumbUrl}')`;
+							
+							// --- NEW: Force the image to center and fill the box ---
+							previewBox.style.backgroundSize = "cover";
+							previewBox.style.backgroundPosition = "center";
+							// ------------------------------------------------------
 							
 							// 3. Store original URL for the large tooltip
 							previewBox.setAttribute('data-image-index', index);
