@@ -18,59 +18,53 @@
 
     <h1><span id="header-text">Kemono Fursuit Makers</span></h1>
 
-	<div class="controls-container">
-	  
-	<div class="control-group slider-group">
-			<div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
-				<label>
-					Price: <span id="price-values" style="color:#ff8c00; font-weight:normal;">$2,000 - $10,000</span>
-					<button id="reset-price-btn" style="padding:2px 6px; margin-left:5px; font-size:0.8em; background:#444; border:1px solid #666; cursor:pointer;" title="Reset Price">↺</button>
-				</label>
-				<label style="font-size:0.8em; display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none;">
-					<input type="checkbox" id="show-na-prices" checked> Show N/A
-				</label>
-			</div>
-			<div id="price-slider"></div>
-		</div>
+    <div class="controls-container">
+      
+      <div class="control-group slider-group">
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
+            <label>
+                Price: <span id="price-values" style="color:#ff8c00; font-weight:normal;">$2,000 - $10,000</span>
+                <button id="reset-price-btn" style="padding:2px 6px; margin-left:5px; font-size:0.8em; background:#444; border:1px solid #666; cursor:pointer;" title="Reset Price">↺</button>
+            </label>
+            <label style="font-size:0.8em; display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none;">
+                <input type="checkbox" id="show-na-prices" checked> Show N/A
+            </label>
+        </div>
+        <div id="price-slider"></div>
+      </div>
 
-	  <div class="control-group">
-		<label>Quick Sort:</label>
-		<select id="sort-field">
-		  <option value="rank">Rank (Default)</option>
-		  <option value="price">Price</option>
-		  <option value="portfolio">Portfolio Size</option>
-		  <option value="followers">Followers</option>
-		  <option value="acctAge">Account Age</option>
-		  <option value="partials">Partials Count</option>
-		  <option value="fursuits">Fursuits Count</option>
-		</select>
-	  </div>
+      <div class="control-group">
+        <label>Quick Sort:</label>
+        <select id="sort-field">
+          <option value="rank">Rank (Default)</option>
+          <option value="price">Price</option>
+          <option value="portfolio">Portfolio Size</option>
+          <option value="followers">Followers</option>
+          <option value="acctAge">Account Age</option>
+          <option value="partials">Partials Count</option>
+          <option value="fursuits">Fursuits Count</option>
+        </select>
+      </div>
 
-	  <div class="control-group">
-		<label>Order:</label>
-		<select id="sort-dir">
-		  <option value="asc">Low to High (Asc)</option>
-		  <option value="desc">High to Low (Desc)</option>
-		</select>
-	  </div>
+      <div class="control-group">
+        <label>Order:</label>
+        <select id="sort-dir">
+          <option value="asc">Low to High (Asc)</option>
+          <option value="desc">High to Low (Desc)</option>
+        </select>
+      </div>
 
-	  <button id="reset-sort" class="reset-btn">Reset Sort</button>
-	  
-	  <div style="margin-left: auto; font-size: 0.9em; color: #aaa; width: 100%; margin-top:10px;">
-		*Hold <b>Shift</b> and click column headers to sort by multiple columns at once.
-	  </div>
+      <button id="reset-sort" class="reset-btn">Reset Sort</button>
+      
+      <div style="margin-left: auto; font-size: 0.9em; color: #aaa; width: 100%; margin-top:10px;">
+        *Hold <b>Shift</b> and click column headers to sort by multiple columns at once.
+      </div>
 
-	<button id="reset-sort" class="reset-btn">Reset Sort</button>
-		  
-		  <div style="margin-left: auto; font-size: 0.9em; color: #aaa; width: 100%; margin-top:10px;">
-			*Hold <b>Shift</b> and click column headers to sort by multiple columns at once.
-		  </div>
+      <div id="results-counter" class="results-counter">
+         Loading data...
+      </div>
 
-		  <div id="results-counter" class="results-counter">
-			 Loading data...
-		  </div>
-
-	</div>
+    </div>
 
     <div id="image-tooltip"></div>
     <div id="creator-table"></div>
