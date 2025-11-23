@@ -719,31 +719,35 @@ Papa.parse(csvUrl, {
                     title:"Link", field:"link", formatter:"link", hozAlign:"center",
                     formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
                 },
-                {
-                    title: "Preview", field: "previewImages", hozAlign: "center", width: 200,
-                    formatter: function(cell) {
-                        const imageUrls = cell.getValue();
-                        if (!imageUrls || imageUrls.length === 0) return "";
-                        const container = document.createElement('div');
-                        container.className = 'preview-container';
-                        imageUrls.forEach((url, index) => {
-                            const previewBox = document.createElement('div');
-                            previewBox.className = 'preview-box';
-                            
-                            // --- CHANGE HERE: DO NOT set background-image yet ---
-                            // previewBox.style.backgroundImage = `url('${url}')`; <--- DELETED
-                            
-                            // Instead, just store the data for the tooltip to find later
-                            previewBox.setAttribute('data-image-index', index);
-                            
-                            // Optional: Add a data-src attribute if we want to access it easily
-                            previewBox.dataset.src = url; 
-                            
-                            container.appendChild(previewBox);
-                        });
-                        return container;
-                    },
-                },
+				{
+					title: "Preview", field: "previewImages", hozAlign: "center", width: 200,
+					formatter: function(cell) {
+						const imageUrls = cell.getValue();
+						if (!imageUrls || imageUrls.length === 0) return "";
+						
+						const container = document.createElement('div');
+						container.className = 'preview-container';
+						
+						imageUrls.forEach((url, index) => {
+							const previewBox = document.createElement('div');
+							previewBox.className = 'preview-box';
+							
+							// 1. GENERATE TINY THUMBNAIL (60x60px webp)
+							// This ensures we only download ~1KB instead of 5MB
+							const thumbUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=60&h=60&output=webp&q=80`;
+							
+							// 2. Apply the thumbnail as the background
+							previewBox.style.backgroundImage = `url('${thumbUrl}')`;
+							
+							// 3. Store original URL for the large tooltip
+							previewBox.setAttribute('data-image-index', index);
+							previewBox.dataset.src = url; 
+							
+							container.appendChild(previewBox);
+						});
+						return container;
+					},
+				},
                 {
                     title:"$ Price", field:"price", hozAlign:"right", sorter:"number",
                     sorterParams:{ alignEmptyValues:"bottom" },
@@ -936,15 +940,6 @@ document.addEventListener('mousemove', (e) => {
     const sourceBox = isOverPreview || isOverLogo;
     if (sourceBox) {
         clearTimeout(hideTimeout);
-        // --- NEW CODE: Reveal the tiny thumbnail on hover ---
-        // This sets the background image ONLY when the mouse touches it.
-        // Since the browser has to download it for the tooltip anyway, 
-        // this doesn't add extra cost.
-        if (sourceBox.dataset.src && !sourceBox.style.backgroundImage.includes('http')) {
-             sourceBox.style.backgroundImage = `url('${sourceBox.dataset.src}')`;
-             sourceBox.style.backgroundSize = 'cover';
-        }
-        // -----------------------------------------------------
         
         const rowEl = target.closest('.tabulator-row');
         if (rowEl && table) {
