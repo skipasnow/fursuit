@@ -9,9 +9,7 @@ const stepLength = 30;
 console.log("Initializing Paw Trail...");
 
 document.addEventListener('mousemove', function(e) {
-    // Calculate Distance
     const dist = Math.hypot(e.clientX - trailX, e.clientY - trailY);
-    
     if (dist > stepLength) {
         createPaw(e.clientX, e.clientY, trailX, trailY);
         trailX = e.clientX;
@@ -22,29 +20,17 @@ document.addEventListener('mousemove', function(e) {
 function createPaw(x, y, lastX, lastY) {
     const paw = document.createElement('div');
     paw.className = 'paw-trail';
-
-    // Calculate Angle (+90 deg correction if paw points UP by default)
     const angle = Math.atan2(y - lastY, x - lastX) * 180 / Math.PI + 90;
-
-    // Left/Right Foot Logic
     stepCount++;
     const isRightFoot = stepCount % 2 === 0;
     
-    // Set Variables for CSS
     paw.style.setProperty('--angle', `${angle}deg`);
     paw.style.setProperty('--flip', isRightFoot ? 1 : -1);
-
-    // Positioning (Fixed) - Offset by 12px to center
     paw.style.left = (x - 12) + 'px';
     paw.style.top = (y - 12) + 'px';
 
-    // Append to documentElement (safest for fixed elements)
     document.documentElement.appendChild(paw);
-
-    // Cleanup
-    setTimeout(() => {
-        paw.remove();
-    }, 1200);
+    setTimeout(() => { paw.remove(); }, 1200);
 }
 
 
@@ -83,43 +69,34 @@ function displayImageInTooltip(imageUrl, forceAnimation = false) {
     img.src = imageUrl;
 }
 
-// 1. New Helper: Updates the Ghost HUD classes only (Lightweight)
+// HUD Helper
 function updateHudHighlight(index) {
     const hudContainer = tooltipEl.querySelector('.tooltip-hud');
     if (!hudContainer) return;
-    
     const boxes = hudContainer.children;
     for (let i = 0; i < boxes.length; i++) {
-        if (i === index) {
-            boxes[i].classList.add('active');
-        } else {
-            boxes[i].classList.remove('active');
-        }
+        if (i === index) boxes[i].classList.add('active');
+        else boxes[i].classList.remove('active');
     }
 }
 
-// 2. Updated: showTooltip with HUD Toggle
+// Show Tooltip (with Enable HUD Toggle)
 function showTooltip(imageUrls, startIndex = 0, forceAnimation = false, enableHud = true) {
     if (!imageUrls || imageUrls.length === 0) { hideTooltip(); return; }
     
-    // Check if content changed
     const isContentDifferent = !currentPreviewImages.length || currentPreviewImages[0] !== imageUrls[0];
 
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
     tooltipEl.style.display = "flex"; 
 
-    // --- BUILD THE GHOST HUD ---
     const existingHud = tooltipEl.querySelector('.tooltip-hud');
     
     if (enableHud) {
-        // If HUD is enabled but missing OR content changed, rebuild it
         if (isContentDifferent || !existingHud) {
             if (existingHud) existingHud.remove();
-            
             const hud = document.createElement('div');
             hud.className = 'tooltip-hud';
-            
             imageUrls.forEach((_, i) => {
                 const box = document.createElement('div');
                 box.className = 'hud-box';
@@ -129,11 +106,8 @@ function showTooltip(imageUrls, startIndex = 0, forceAnimation = false, enableHu
         }
         updateHudHighlight(startIndex);
     } else {
-        // If HUD is disabled (e.g. Logo), remove it if it exists
         if (existingHud) existingHud.remove();
     }
-    
-    // Show the image
     displayImageInTooltip(currentPreviewImages[currentImageIndex], forceAnimation);
 }
 
@@ -164,7 +138,7 @@ function startSlideshow() {
     }
 }
 
-// --- POSITIONING LOGIC ---
+// Positioning
 function centerTooltip() {
     isTooltipCentered = true;
     tooltipEl.style.top = "50%";
@@ -181,7 +155,7 @@ function moveTooltip(e) {
     tooltipEl.style.left = left + "px"; tooltipEl.style.top = top + "px";
 }
 
-// --- SPECIALTY FILTER LOGIC ---
+// Specialty Filters
 let pendingSpecialtyFilters = new Set();
 let appliedSpecialtyFilters = new Set();
 
@@ -212,7 +186,6 @@ window.applySpecialtyFilters = function() {
     triggerHeaderResize();
 }
 
-// Helper to force Tabulator to redraw headers (Fixes sizing issue)
 function triggerHeaderResize() {
     if(table) {
         setTimeout(() => {
@@ -225,7 +198,6 @@ function triggerHeaderResize() {
 function updateFilterHeader() {
     const container = document.getElementById('specialty-filter-container');
     if(!container) return;
-    
     let tagsArea = container.querySelector('.tags-area');
     if (!tagsArea) {
         container.innerHTML = '';
@@ -240,29 +212,23 @@ function updateFilterHeader() {
             }
         });
         container.appendChild(input);
-        
         tagsArea = document.createElement("div");
         tagsArea.className = "tags-area";
         container.appendChild(tagsArea);
-        
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'filter-actions';
-        
         const applyBtn = document.createElement('span');
         applyBtn.className = 'filter-apply-btn';
         applyBtn.innerText = 'Apply Filter';
         applyBtn.onclick = window.applySpecialtyFilters;
         actionsDiv.appendChild(applyBtn);
-
         const clearBtn = document.createElement('span');
         clearBtn.className = 'filter-clear-all';
         clearBtn.innerText = 'Clear All';
         clearBtn.onclick = window.clearSpecialtyFilters;
         actionsDiv.appendChild(clearBtn);
-        
         container.appendChild(actionsDiv);
     } 
-
     tagsArea.innerHTML = '';
     if (pendingSpecialtyFilters.size > 0) {
         pendingSpecialtyFilters.forEach(tag => {
@@ -276,7 +242,7 @@ function updateFilterHeader() {
     }
 }
 
-// --- HELPERS ---
+// Helpers
 function parseImageFormula(formula) {
   if(!formula) return "";
   const match = formula.match(/=IMAGE\("(.+)"\)/);
@@ -318,7 +284,6 @@ function formatTextCell(cell) {
     return `<div class="text-wrapper"><span class="text-content">${val}</span></div>`;
 }
 
-// --- HEADER ANIMATION ---
 const headerText = document.getElementById('header-text');
 let starInterval;
 function createStar() {
@@ -337,7 +302,7 @@ function createStar() {
 headerText.addEventListener('mouseenter', () => { starInterval = setInterval(createStar, 50); });
 headerText.addEventListener('mouseleave', () => { clearInterval(starInterval); });
 
-// --- MAIN SCRIPT ---
+// --- MAIN TABLE LOGIC ---
 let table;
 
 Papa.parse(csvUrl, {
@@ -388,41 +353,37 @@ Papa.parse(csvUrl, {
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
 
-// --- PRICE SLIDER INIT ---
+        // --- PRICE SLIDER INIT (NEW) ---
         const slider = document.getElementById('price-slider');
         const priceLabel = document.getElementById('price-values');
         
-        // Create the dual slider
-        noUiSlider.create(slider, {
-            start: [2000, 10000], // Initial handles
-            connect: true,        // Color the space between handles
-            range: {
-                'min': 2000,
-                'max': 10000
-            },
-            step: 100,            // Snap to increments of 100
-            tooltips: false,      // We use a static label instead
-        });
+        if (slider && typeof noUiSlider !== 'undefined') {
+            noUiSlider.create(slider, {
+                start: [2000, 10000], 
+                connect: true,        
+                range: { 'min': 2000, 'max': 10000 },
+                step: 100,            
+                tooltips: false,      
+            });
 
-        // Event: When slider moves, update the label
-        slider.noUiSlider.on('update', function (values) {
-            const min = Math.round(values[0]);
-            const max = Math.round(values[1]);
-            
-            // Update visual text
-            priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-            
-            // Update Tabulator Filter
-            if (table) {
-                // Custom filter function: checks if row price is between min and max
-                table.setFilter(function(data){
-                    // If price is N/A (null), don't show it (or return true to show N/A rows)
-                    if (data.price === null) return false; 
-                    return data.price >= min && data.price <= max;
-                });
-            }
-        });
+            slider.noUiSlider.on('update', function (values) {
+                const min = Math.round(values[0]);
+                const max = Math.round(values[1]);
+                priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+                
+                if (table) {
+                    table.setFilter(function(data){
+                        // Hide row if Price is N/A (null) or outside range
+                        if (data.price === null) return false; 
+                        return data.price >= min && data.price <= max;
+                    });
+                }
+            });
+        } else {
+            console.error("Slider element missing or noUiSlider library not loaded.");
+        }
 
+        // --- TABULATOR INIT ---
         table = new Tabulator("#creator-table", {
             data: data,
             layout: "fitData",
@@ -455,50 +416,35 @@ Papa.parse(csvUrl, {
                     formatter: function(cell) {
                         const imageUrls = cell.getValue();
                         if (!imageUrls || imageUrls.length === 0) return "";
-                        
                         const container = document.createElement('div');
                         container.className = 'preview-container';
                         
-                        // --- 1. Create Thumbnails (Existing Logic) ---
                         imageUrls.forEach((url, index) => {
                             const previewBox = document.createElement('div');
                             previewBox.className = 'preview-box';
-                            
-                            // Generate Thumbnail
                             const thumbUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=60&h=60&output=webp&q=80`;
                             previewBox.style.backgroundImage = `url('${thumbUrl}')`;
                             previewBox.style.backgroundSize = "cover";
                             previewBox.style.backgroundPosition = "center";
-                            
-                            // Metadata for desktop hover
                             previewBox.setAttribute('data-image-index', index);
                             previewBox.dataset.src = url; 
-                            
                             container.appendChild(previewBox);
                         });
 
-                        // --- 2. MOBILE TOUCH SCRUBBING LOGIC ---
-                        
                         const updateScrub = (e) => {
                             if(e.cancelable) e.preventDefault(); 
-
-                            // Get touch X position relative to the container
                             const rect = container.getBoundingClientRect();
                             const touch = e.touches[0];
                             const touchX = touch.clientX - rect.left;
-                            
-                            // Calculate percentage across the container (0.0 to 1.0)
                             let percent = touchX / rect.width;
                             percent = Math.max(0, Math.min(1, percent)); 
-                            
-                            // Map percentage to Image Index
                             const totalImages = imageUrls.length;
                             const index = Math.floor(percent * totalImages);
                             const clampedIndex = Math.min(totalImages - 1, index);
 
-                            // Update UI
+                            // Pass 'true' for Enable HUD
                             centerTooltip(); 
-                            showTooltip(imageUrls, clampedIndex, false);
+                            showTooltip(imageUrls, clampedIndex, false, true);
                             
                             const boxes = container.querySelectorAll('.preview-box');
                             boxes.forEach(b => b.style.borderColor = ''); 
@@ -513,7 +459,6 @@ Papa.parse(csvUrl, {
                             const boxes = container.querySelectorAll('.preview-box');
                             boxes.forEach(b => b.style.borderColor = ''); 
                         });
-
                         return container;
                     },
                 },
@@ -534,11 +479,8 @@ Papa.parse(csvUrl, {
                 { title:"$ Ship", field:"ship", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"$ Air Travel", field:"airTravel", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"$ Travel Surplus", field:"travelSurplus", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, formatter: formatTextCell, cssClass: "text-cell" },
-                
                 { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
-                
-                // --- SPECIALTY FILTER ---
                 {
                     title:"Specialty", 
                     field:"specialty", 
@@ -566,7 +508,6 @@ Papa.parse(csvUrl, {
                         const tags = val.split(',').map(t => t.trim()).filter(t => t);
                         const wrapper = document.createElement('div');
                         wrapper.className = 'tag-wrapper';
-                        
                         tags.forEach(tag => {
                             const span = document.createElement('span');
                             span.className = 'specialty-tag';
@@ -580,7 +521,6 @@ Papa.parse(csvUrl, {
                         return wrapper;
                     }
                 },
-
                 {
                     title:"Partials", field:"partials", hozAlign:"right", sorter:"number",
                     sorterParams:{ alignEmptyValues:"bottom" },
@@ -653,12 +593,13 @@ Papa.parse(csvUrl, {
             reactiveData:true, virtualDom:true
         });
 
-        // --- EVENT LISTENERS ---
         document.getElementById("reset-sort").addEventListener("click", function(){
             table.clearSort(); table.setSort("rank", "asc"); table.clearHeaderFilter(); 
             document.getElementById("sort-field").value = "rank";
             document.getElementById("sort-dir").value = "asc";
             window.clearSpecialtyFilters(); 
+            // Reset Slider (Added)
+            if(slider && slider.noUiSlider) slider.noUiSlider.set([2000, 10000]);
         });
         document.getElementById("sort-field").addEventListener("change", function(){
              const field = this.value; const dir = document.getElementById("sort-dir").value; table.setSort(field, dir);
@@ -705,11 +646,10 @@ document.addEventListener('mousemove', (e) => {
         }
     }
 
-// PART 2: TOOLTIP
+    // PART 2: TOOLTIP
     const sourceBox = isOverPreview || isOverLogo;
     if (sourceBox) {
         clearTimeout(hideTimeout);
-        
         const rowEl = target.closest('.tabulator-row');
         if (rowEl && table) {
             const row = table.getRow(rowEl);
@@ -727,23 +667,18 @@ document.addEventListener('mousemove', (e) => {
                 
                 if (imageUrls && imageUrls.length > 0) {
                     const isNewContent = (currentPreviewImages[0] !== imageUrls[0] || currentPreviewImages.length !== imageUrls.length);
-                    
                     if (tooltipEl.style.display === 'none' || isNewContent || currentImageIndex !== index || isLogo) {
                         const shouldAnimate = (isNewContent || currentImageIndex !== index);
-                        
                         if (isLogo) {
                             clearInterval(slideshowInterval); 
                             moveTooltip(e); 
-                            // ENABLE HUD = FALSE
-                            if (tooltipEl.style.display === 'none' || isNewContent) { 
-                                showTooltip(imageUrls, index, true, false); 
-                            }
+                            // LOGO: Enable HUD = FALSE
+                            if (tooltipEl.style.display === 'none' || isNewContent) { showTooltip(imageUrls, index, true, false); }
                         } else {
                             clearInterval(slideshowInterval); 
                             centerTooltip(); 
-                            
+                            // PREVIEW: Enable HUD = TRUE
                             if (isNewContent || currentImageIndex !== index) { 
-                                // ENABLE HUD = TRUE
                                 showTooltip(imageUrls, index, shouldAnimate, true); 
                                 updateHudHighlight(index); 
                             } 
