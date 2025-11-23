@@ -220,18 +220,33 @@ label { font-weight: bold; color: #ccc; }
 
 /* --- FLOATING TOOLTIP --- */
 #image-tooltip {
-    /* ... existing styles ... */
     display: none; /* JS toggles this to Flex */
     
-    /* Flex properties are required to center the HUD at the bottom */
-    flex-direction: column;
-    justify-content: flex-end; /* Pushes HUD to bottom */
-    align-items: center;     /* Centers HUD horizontally */
+    /* CRITICAL: Must be fixed so page doesn't morph */
+    position: fixed; 
+    z-index: 99999; 
+    pointer-events: none;
     
-    /* Ensure background image doesn't override children */
+    /* Size and Look */
+    width: 400px; 
+    height: 400px;
+    background-color: #222; 
+    border: 2px solid #fff;
+    box-shadow: 0 0 20px rgba(0,0,0,0.7); 
+    
+    /* Image handling */
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
+    
+    /* Animation */
+    opacity: 0; 
+    transition: opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    /* Flex Layout for the Ghost HUD */
+    flex-direction: column;
+    justify-content: flex-end; /* Pushes HUD to bottom */
+    align-items: center;       /* Centers HUD horizontally */
 }
 
 /* --- TABULATOR STYLES & OVERRIDES --- */

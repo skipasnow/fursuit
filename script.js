@@ -98,39 +98,41 @@ function updateHudHighlight(index) {
     }
 }
 
-// 2. Updated: showTooltip with forced HUD rebuilding
-function showTooltip(imageUrls, startIndex = 0, forceAnimation = false) {
+// 2. Updated: showTooltip with HUD Toggle
+function showTooltip(imageUrls, startIndex = 0, forceAnimation = false, enableHud = true) {
     if (!imageUrls || imageUrls.length === 0) { hideTooltip(); return; }
     
-    // Check if content changed OR if the HUD is missing from the DOM (e.g. cleared by hideTooltip)
+    // Check if content changed
     const isContentDifferent = !currentPreviewImages.length || currentPreviewImages[0] !== imageUrls[0];
-    const isHudMissing = !tooltipEl.querySelector('.tooltip-hud');
 
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
     tooltipEl.style.display = "flex"; 
 
     // --- BUILD THE GHOST HUD ---
-    if (isContentDifferent || isHudMissing) {
-        // Clear any existing HUD to be safe
-        const oldHud = tooltipEl.querySelector('.tooltip-hud');
-        if (oldHud) oldHud.remove();
-        
-        const hud = document.createElement('div');
-        hud.className = 'tooltip-hud';
-        
-        // Create a ghost circle for every image
-        imageUrls.forEach((_, i) => {
-            const box = document.createElement('div');
-            box.className = 'hud-box';
-            hud.appendChild(box);
-        });
-        tooltipEl.appendChild(hud);
+    const existingHud = tooltipEl.querySelector('.tooltip-hud');
+    
+    if (enableHud) {
+        // If HUD is enabled but missing OR content changed, rebuild it
+        if (isContentDifferent || !existingHud) {
+            if (existingHud) existingHud.remove();
+            
+            const hud = document.createElement('div');
+            hud.className = 'tooltip-hud';
+            
+            imageUrls.forEach((_, i) => {
+                const box = document.createElement('div');
+                box.className = 'hud-box';
+                hud.appendChild(box);
+            });
+            tooltipEl.appendChild(hud);
+        }
+        updateHudHighlight(startIndex);
+    } else {
+        // If HUD is disabled (e.g. Logo), remove it if it exists
+        if (existingHud) existingHud.remove();
     }
     
-    // Highlight the current position immediately
-    updateHudHighlight(startIndex);
-
     // Show the image
     displayImageInTooltip(currentPreviewImages[currentImageIndex], forceAnimation);
 }
@@ -668,7 +670,7 @@ document.addEventListener('mousemove', (e) => {
         }
     }
 
-    // PART 2: TOOLTIP
+// PART 2: TOOLTIP
     const sourceBox = isOverPreview || isOverLogo;
     if (sourceBox) {
         clearTimeout(hideTimeout);
@@ -697,14 +699,18 @@ document.addEventListener('mousemove', (e) => {
                         if (isLogo) {
                             clearInterval(slideshowInterval); 
                             moveTooltip(e); 
-                            if (tooltipEl.style.display === 'none' || isNewContent) { showTooltip(imageUrls, index, true); }
+                            // ENABLE HUD = FALSE
+                            if (tooltipEl.style.display === 'none' || isNewContent) { 
+                                showTooltip(imageUrls, index, true, false); 
+                            }
                         } else {
                             clearInterval(slideshowInterval); 
                             centerTooltip(); 
                             
                             if (isNewContent || currentImageIndex !== index) { 
-                                showTooltip(imageUrls, index, shouldAnimate); 
-                                updateHudHighlight(index); // HUD SYNC
+                                // ENABLE HUD = TRUE
+                                showTooltip(imageUrls, index, shouldAnimate, true); 
+                                updateHudHighlight(index); 
                             } 
                             else { 
                                 tooltipEl.style.display = "flex"; 
