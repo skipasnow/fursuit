@@ -82,72 +82,87 @@ label { font-weight: bold; color: #ccc; }
 
 /* --- PRICE SLIDER STYLING --- */
 .slider-group {
-    width: 90%; /* Reduce width slightly so it doesn't hit the right edge either */
+    display: flex !important;
+    flex-direction: column !important;
+    width: 90%; 
     min-width: 250px;
-    padding: 0 10px 20px 10px; /* Bottom padding for numbers */
     box-sizing: border-box;
     
-    /* 1. SPACING FIX: Move 5% from the left */
-    margin-left: 5%; 
+    /* 1. SPACING FIX: Push away from the left edge */
+    padding-left: 15px; 
+    padding-right: 15px;
+    margin-left: 10px; 
+    margin-bottom: 20px; /* Room for pips */
 }
 
-/* The Track (The Line) */
+/* The Track */
 .noUi-target {
-    background: #555; 
+    background: #555;
     border: 1px solid #000;
     border-radius: 4px;
     box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
-    height: 8px; 
+    height: 8px;
     margin-top: 10px;
-    margin-bottom: 10px;
     cursor: pointer;
 }
 
-/* The Connect Bar (Orange Range) */
+/* The Connect Bar */
 .noUi-connect {
-    /* 2. COLOR FIX: Force Orange theme */
-    background: #ff8c00 !important; 
-    box-shadow: inset 0 0 3px rgba(0,0,0,0.3);
-    
-    /* Smooth transition for the bar width when tapping */
-    transition: background 0.15s ease; 
+    background: #ff8c00 !important; /* Force Orange */
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+    transition: background 0.2s;
 }
 
 /* The Handles (Knobs) */
 .noUi-handle {
-    height: 22px; /* Slightly larger for better touch target */
-    width: 22px;
-    top: -8px; 
-    right: -11px;
-    border-radius: 50%;
+    /* 3. SHAPE FIX: Perfect Circles */
+    width: 24px !important; 
+    height: 24px !important;
+    border-radius: 50%; 
+    
+    /* Centering the handle on the track */
+    top: -9px !important; 
+    right: -12px !important; 
+    
     background: #eee;
-    border: 2px solid #ff8c00; /* Orange border by default */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    border: 2px solid #ff8c00;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6);
     cursor: grab;
     outline: none;
 
-    /* 3. ANIMATION FIX: Fluid "Swipe" Feel */
-    /* This makes the handle morph smoothly when grabbed/released */
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
-                box-shadow 0.2s ease, 
-                background-color 0.2s ease;
+    /* 4. TELEPORT ANIMATION SETUP */
+    /* 'left' transition creates the glide. 'opacity' creates the fade. */
+    transition: left 0.1s ease-out, 
+                transform 0.1s ease, 
+                box-shadow 0.1s ease,
+                opacity 0.1s ease;
 }
 
-/* Remove default lines on handles */
-.noUi-handle:before, .noUi-handle:after {
-    display: none;
-}
+.noUi-handle:before, .noUi-handle:after { display: none; }
 
-/* Active State (Grabbing) */
-.noUi-handle:active {
-    background: #ff8c00; /* Fill with orange */
-    border-color: #fff;   /* White rim */
+/* Active/Moving State */
+.noUi-handle.noUi-active {
+    background: #ff8c00;
+    border-color: #fff;
     cursor: grabbing;
+    transform: scale(1.2);
     
-    /* The "Swipe" Effect: Scale up and glow */
-    transform: scale(1.3); 
-    box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.3), 0 5px 10px rgba(0,0,0,0.6);
+    /* 4. THE TELEPORT EFFECT */
+    /* When active, opacity drops slightly to simulate a "phase shift" */
+    opacity: 0.6; 
+    box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.3), 0 0 15px #ff8c00;
 }
+
+/* --- PIPS (Numbers) --- */
+.noUi-pips {
+    font-family: sans-serif;
+    font-size: 10px;
+    color: #aaa;
+    height: 30px;
+    top: 10px;
+}
+.noUi-marker { background: #666; }
+.noUi-value { color: #ccc; margin-top: 2px; }
 
 /* --- PRICE SLIDER PIPS (Visual Ticks) --- */
 .noUi-pips {

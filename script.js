@@ -353,7 +353,7 @@ Papa.parse(csvUrl, {
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
 
-        // --- PRICE SLIDER INIT (FIXED & ENHANCED) ---
+// --- PRICE SLIDER INIT (FIXED) ---
         const slider = document.getElementById('price-slider');
         const priceLabel = document.getElementById('price-values');
         const naCheckbox = document.getElementById('show-na-prices');
@@ -366,11 +366,10 @@ Papa.parse(csvUrl, {
                 range: { 'min': 2000, 'max': 10000 },
                 step: 500,            
                 tooltips: false, 
-                // PIPS: Adds the visual ticks/numbers at the bottom
                 pips: {
                     mode: 'count',
-                    values: 5, // Shows 5 numbers (2000, 4000, 6000, 8000, 10000)
-                    density: 10, // Reduced density to prevent overlap
+                    values: 5, 
+                    density: 10,
                     stepped: true
                 },
                 format: {
@@ -388,15 +387,13 @@ Papa.parse(csvUrl, {
                 const max = parseInt(values[1]);
                 const showNA = naCheckbox.checked;
 
+                // Update the visual label
                 priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
 
                 table.setFilter(function(data){
-                    // 1. Check if Price is Valid Number
-                    // cleanNumber returns null for N/A, so we check for non-number types
                     if (typeof data.price !== 'number') {
-                        return showNA; // Return true if box checked, false if unchecked
+                        return showNA; 
                     }
-                    // 2. If it IS a number, check range
                     return data.price >= min && data.price <= max;
                 });
             };
@@ -410,7 +407,11 @@ Papa.parse(csvUrl, {
                 resetPriceBtn.addEventListener('click', function(){
                     slider.noUiSlider.set([2000, 10000]);
                     naCheckbox.checked = true;
-                    // The 'set' event doesn't always fire 'update', so force update
+                    // Manually fire update so the table and label reset immediately
+                    // (The 'set' method doesn't always trigger the 'update' event automatically)
+                    const values = slider.noUiSlider.get(); 
+                    priceLabel.innerText = `$${parseInt(values[0]).toLocaleString()} - $${parseInt(values[1]).toLocaleString()}`;
+                    table.recalc(); // Force table refresh
                     updateTableFilter(); 
                 });
             }
@@ -418,7 +419,6 @@ Papa.parse(csvUrl, {
         } else {
             console.error("Slider element missing or noUiSlider library not loaded.");
         }
-
         // --- TABULATOR INIT ---
         table = new Tabulator("#creator-table", {
             data: data,
