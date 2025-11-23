@@ -353,35 +353,68 @@ Papa.parse(csvUrl, {
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
 
-        // --- PRICE SLIDER INIT (NEW) ---
-        const slider = document.getElementById('price-slider');
-        const priceLabel = document.getElementById('price-values');
-        
-        if (slider && typeof noUiSlider !== 'undefined') {
-            noUiSlider.create(slider, {
-                start: [2000, 10000], 
-                connect: true,        
-                range: { 'min': 2000, 'max': 10000 },
-                step: 100,            
-                tooltips: false,      
-            });
+		// --- PRICE SLIDER INIT ---
+		const slider = document.getElementById('price-slider');
+		const priceLabel = document.getElementById('price-values');
+		const naCheckbox = document.getElementById('show-na-prices');
+		
+		if (slider && typeof noUiSlider !== 'undefined') {
+			// 1. Create Slider
+			noUiSlider.create(slider, {
+				start: [2000, 10000], 
+				connect: true,        
+				range: { 
+					'min': 2000, 
+					'max': 10000 
+				},
+				step: 500, // INCREMENT OF $500
+				tooltips: false,
+				// Format ensures we get Numbers, not "2000.00" strings which can cause NaN issues
+				format: {
+					to: function (value) { return Math.round(value); },
+					from: function (value) { return Number(value); }
+				}
+			});
 
-            slider.noUiSlider.on('update', function (values) {
-                const min = Math.round(values[0]);
-                const max = Math.round(values[1]);
-                priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-                
-                if (table) {
-                    table.setFilter(function(data){
-                        // Hide row if Price is N/A (null) or outside range
-                        if (data.price === null) return false; 
-                        return data.price >= min && data.price <= max;
-                    });
-                }
-            });
-        } else {
-            console.error("Slider element missing or noUiSlider library not loaded.");
-        }
+			// 2. Define Filter Function
+			const updateTableFilter = () => {
+				if (!table) return;
+				
+				const values = slider.noUiSlider.get();
+				const min = parseInt(values[0]); // Ensure Integer
+				const max = parseInt(values[1]); // Ensure Integer
+				const showNA = naCheckbox.checked;
+
+				// Update Label
+				priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+
+				// Apply Filter
+				table.setFilter(function(data){
+					// Handle N/A (null) prices
+					if (data.price === null || data.price === "" || isNaN(data.price)) {
+						return showNA; // Show if checkbox is checked
+					}
+					// Handle Numeric prices
+					return data.price >= min && data.price <= max;
+				});
+			};
+
+			// 3. Bind Events
+			slider.noUiSlider.on('update', updateTableFilter); // Update on slide
+			naCheckbox.addEventListener('change', updateTableFilter); // Update on checkbox toggle
+			
+			// 4. Hook up Reset Button (Optional: add this to your reset button listener)
+			const resetBtn = document.getElementById("reset-sort");
+			if(resetBtn) {
+				resetBtn.addEventListener("click", function(){
+					slider.noUiSlider.set([2000, 10000]);
+					naCheckbox.checked = true;
+				});
+			}
+
+		} else {
+			console.error("Slider element missing or noUiSlider library not loaded.");
+		}
 
         // --- TABULATOR INIT ---
         table = new Tabulator("#creator-table", {

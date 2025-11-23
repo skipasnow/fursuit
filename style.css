@@ -364,55 +364,53 @@ a { color: darkorange !important; text-decoration: none; transition: all 0.2s; c
 }
 .filter-apply-btn:hover { color: #66bb6a; }
 .tags-area { display: flex; flex-wrap: wrap; gap: 3px; width: 100%; margin-bottom: 4px; }
-/* --- PRICE SLIDER STYLING (noUiSlider Overrides) --- */
+/* --- PRICE SLIDER STYLING --- */
 .slider-group {
     width: 100%;
-    max-width: 300px; /* Keep it contained on desktop */
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-right: 15px; /* Room for handle overflow */
+    min-width: 250px; /* Ensure it has width on desktop */
+    padding: 0 10px;
+    box-sizing: border-box;
 }
 
-/* The Track (Background) */
+/* The Track (The Line) */
 .noUi-target {
-    background: #444;
-    border: none;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
-    height: 10px;
-    border-radius: 5px;
+    background: #555; /* Dark grey track */
+    border: 1px solid #000;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+    height: 8px; /* Thicker line */
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
-/* The Connecting Bar (Range Highlight) */
+/* The Connect Bar (Orange Range) */
 .noUi-connect {
     background: darkorange;
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.3);
 }
 
 /* The Handles (Knobs) */
 .noUi-handle {
-    height: 24px;
-    width: 24px;
-    top: -7px; /* Center vertically on the 10px track */
-    right: -12px;
+    height: 20px;
+    width: 20px;
+    top: -7px; /* Center vertically */
+    right: -10px; /* Center horizontally */
     border-radius: 50%;
-    background: #ccc;
-    border: 2px solid #fff;
+    background: #eee;
+    border: 2px solid darkorange;
     box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     cursor: grab;
 }
+
+/* Remove default lines on handles */
 .noUi-handle:before, .noUi-handle:after {
-    display: none; /* Remove the default decoration lines */
-}
-.noUi-handle:active {
-    cursor: grabbing;
-    background: #ff8c00; /* Turn orange when grabbing */
-    transform: scale(1.1);
+    display: none;
 }
 
-/* Mobile adjustments for the controls container */
-@media (max-width: 600px) {
-    .slider-group {
-        max-width: 100%; /* Full width on mobile */
-        margin-bottom: 15px;
-    }
+/* Active State */
+.noUi-handle:active {
+    background: darkorange;
+    border-color: #fff;
+    transform: scale(1.2);
+    cursor: grabbing;
 }
