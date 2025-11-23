@@ -346,6 +346,14 @@ Papa.parse(csvUrl, {
 
         if (data.length === 0) { console.warn("Data array is empty."); return; }
 
+        // --- UPDATE COUNTER IMMEDIATELY (Fix for "Loading Data") ---
+        const initialTotal = data.length;
+        const counterEl = document.getElementById("results-counter");
+        if(counterEl) {
+            counterEl.innerHTML = `Makers matching criteria: <b>${initialTotal}</b> <span style="font-size:0.8em; color:#666;">(of ${initialTotal})</span>`;
+        }
+        // -----------------------------------------------------------
+
         const colMinMax = {};
         const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
         gradientColumns.forEach(col=>{
@@ -353,7 +361,7 @@ Papa.parse(csvUrl, {
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
 
-        // --- PRICE SLIDER INIT (FIXED & ENHANCED) ---
+        // --- PRICE SLIDER INIT ---
         const slider = document.getElementById('price-slider');
         const priceLabel = document.getElementById('price-values');
         const naCheckbox = document.getElementById('show-na-prices');
@@ -366,76 +374,53 @@ Papa.parse(csvUrl, {
                 range: { 'min': 2000, 'max': 10000 },
                 step: 500,            
                 tooltips: false, 
-                
-                // --- PIPS (MARKERS) ---
                 pips: {
-                    mode: 'steps', // Use Steps to align with $500 increments
-                    density: 6.25, // Spacing calculation
-                    
-                    // The Filter decides which ticks get numbers vs just lines
+                    mode: 'steps',
+                    density: 6.25,
                     filter: function (value, type) {
-                        // If it's 2000, 4000, 6000, 8000, 10000 -> Draw Large Line + Number (1)
-                        if (value % 2000 === 0) {
-                            return 1; 
-                        }
-                        // For all other $500 steps -> Draw Small Line (0)
+                        if (value % 2000 === 0) return 1; 
                         return 0; 
                     },
-                    
-                    // Format the numbers (e.g., show "4k" instead of "4000")
                     format: {
-                        to: function (value) { 
-                            return '$' + (value / 1000) + 'k'; 
-                        }
+                        to: function (value) { return '$' + (value / 1000) + 'k'; }
                     }
                 },
-                
                 format: {
                     to: function (value) { return Math.round(value); },
                     from: function (value) { return Number(value); }
                 }
             });
 
-            // Define the Filter Logic
             const updateTableFilter = () => {
                 if (!table) return;
-                
                 const values = slider.noUiSlider.get();
                 const min = parseInt(values[0]);
                 const max = parseInt(values[1]);
                 const showNA = naCheckbox.checked;
 
-                // Update the visual label
                 priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
 
                 table.setFilter(function(data){
-                    // 1. Check if Price is Valid Number
                     if (typeof data.price !== 'number') {
                         return showNA; 
                     }
-                    // 2. If it IS a number, check range
                     return data.price >= min && data.price <= max;
                 });
             };
 
-            // Bind Events
             slider.noUiSlider.on('update', updateTableFilter);
             naCheckbox.addEventListener('change', updateTableFilter);
             
-            // Bind Mini Reset Button
             if(resetPriceBtn) {
                 resetPriceBtn.addEventListener('click', function(){
                     slider.noUiSlider.set([2000, 10000]);
                     naCheckbox.checked = true;
                     const values = slider.noUiSlider.get(); 
                     priceLabel.innerText = `$${parseInt(values[0]).toLocaleString()} - $${parseInt(values[1]).toLocaleString()}`;
-                    table.recalc(); // Force table refresh
+                    table.recalc(); 
                     updateTableFilter(); 
                 });
             }
-
-        } else {
-            console.error("Slider element missing or noUiSlider library not loaded.");
         }
 
         // --- TABULATOR INIT ---
@@ -448,24 +433,17 @@ Papa.parse(csvUrl, {
             height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
-            // --- LIVE RESULT COUNTER ---
-            // This event fires whenever filters (Slider, Tags, etc) change
+            // UPDATE COUNTER ON FILTER CHANGE
             dataFiltered: function(filters, rows) {
                 const el = document.getElementById("results-counter");
                 if(el) {
+                    // Tabulator v5+ sometimes counts grouped rows, so we check logic
                     const total = table.getDataCount(); 
                     const active = rows.length;
                     el.innerHTML = `Makers matching criteria: <b>${active}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
                 }
             },
-            
-            // Update count immediately on load
-            tableBuilt: function() {
-                const el = document.getElementById("results-counter");
-                const total = table.getDataCount();
-                if(el) el.innerHTML = `Makers matching criteria: <b>${total}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
-            },
-            
+
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Maker", field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
@@ -675,7 +653,6 @@ Papa.parse(csvUrl, {
             if(slider && slider.noUiSlider) {
                 slider.noUiSlider.set([2000, 10000]);
                 naCheckbox.checked = true;
-                // Force update trigger after reset
                 slider.noUiSlider.fireEvent('update'); 
             }
         });
