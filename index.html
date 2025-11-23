@@ -10,6 +10,39 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
+/* --- GHOST HUD (Heads-Up Display) --- */
+.tooltip-hud {
+    position: absolute;
+    bottom: 20px; /* Position at bottom of the preview image */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px; /* Space between ghost boxes */
+    z-index: 10;
+    pointer-events: none; /* Ensure it doesn't block interactions */
+    background: rgba(0, 0, 0, 0.3); /* Dark backing for contrast */
+    padding: 6px;
+    border-radius: 8px;
+    backdrop-filter: blur(2px); /* Blur the image behind the strip slightly */
+}
+
+.hud-box {
+    width: 20px;
+    height: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.4); /* Faint outline */
+    border-radius: 2px;
+    box-sizing: border-box;
+    transition: all 0.1s ease;
+}
+
+/* The "Active" ghost box - lights up to show position */
+.hud-box.active {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: #fff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+    transform: scale(1.2);
+}
+
 /* Prevent vertical scrolling when touching the preview container */
 .preview-container {
     touch-action: none; 
@@ -437,11 +470,57 @@ function displayImageInTooltip(imageUrl, forceAnimation = false) {
     img.src = imageUrl;
 }
 
+// --- UPDATED TOOLTIP LOGIC ---
+
+// 1. New Helper: Updates the Ghost HUD classes only (Lightweight)
+function updateHudHighlight(index) {
+    const hudContainer = tooltipEl.querySelector('.tooltip-hud');
+    if (!hudContainer) return;
+    
+    const boxes = hudContainer.children;
+    for (let i = 0; i < boxes.length; i++) {
+        if (i === index) {
+            boxes[i].classList.add('active');
+        } else {
+            boxes[i].classList.remove('active');
+        }
+    }
+}
+
+// 2. Updated: showTooltip now builds the HUD
 function showTooltip(imageUrls, startIndex = 0, forceAnimation = false) {
     if (!imageUrls || imageUrls.length === 0) { hideTooltip(); return; }
+    
+    // Check if we need to rebuild the HUD (if content changed)
+    const isNewContent = (currentPreviewImages !== imageUrls);
+
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
     tooltipEl.style.display = "flex"; 
+
+    // --- BUILD THE GHOST HUD ---
+    // Only rebuild if it's a new set of images to save performance
+    let hud = tooltipEl.querySelector('.tooltip-hud');
+    if (isNewContent || !hud) {
+        // Remove old HUD if exists
+        if (hud) hud.remove();
+        
+        hud = document.createElement('div');
+        hud.className = 'tooltip-hud';
+        
+        // Create a ghost box for every image in the list
+        imageUrls.forEach((_, i) => {
+            const box = document.createElement('div');
+            box.className = 'hud-box';
+            hud.appendChild(box);
+        });
+        tooltipEl.appendChild(hud);
+    }
+    
+    // Highlight the current position immediately
+    updateHudHighlight(startIndex);
+
+    // Show the image
     displayImageInTooltip(currentPreviewImages[currentImageIndex], forceAnimation);
 }
 
@@ -760,6 +839,8 @@ Papa.parse(csvUrl, {
 						
 						// Helper to update tooltip based on finger position
 						const updateScrub = (e) => {
+							const index = Math.floor(percent * totalImages);
+							const clampedIndex = Math.min(totalImages - 1, index);
 							// Prevent browser scrolling while scrubbing
 							if(e.cancelable) e.preventDefault(); 
 
@@ -790,6 +871,10 @@ Papa.parse(csvUrl, {
 							const boxes = container.querySelectorAll('.preview-box');
 							boxes.forEach(b => b.style.borderColor = '#555'); // Reset others
 							if(boxes[clampedIndex]) boxes[clampedIndex].style.borderColor = 'darkorange';
+							
+							updateHudHighlight(clampedIndex); 
+
+							showTooltip(imageUrls, clampedIndex, false);
 						};
 
 						// Event Listeners
@@ -1001,7 +1086,7 @@ document.addEventListener('mousemove', (e) => {
         }
     }
 
-    // PART 2: TOOLTIP
+// PART 2: TOOLTIP
     const sourceBox = isOverPreview || isOverLogo;
     if (sourceBox) {
         clearTimeout(hideTimeout);
@@ -1012,6 +1097,7 @@ document.addEventListener('mousemove', (e) => {
             if (row) {
                 const rowData = row.getData();
                 let imageUrls = []; let index = 0; let isLogo = false;
+                
                 if (isOverPreview) {
                     imageUrls = rowData.previewImages;
                     index = parseInt(sourceBox.getAttribute('data-image-index'), 10);
@@ -1019,17 +1105,32 @@ document.addEventListener('mousemove', (e) => {
                 } else if (isOverLogo) {
                     imageUrls = [rowData.logo]; index = 0; isLogo = true;
                 }
+                
                 if (imageUrls && imageUrls.length > 0) {
                     const isNewContent = (currentPreviewImages[0] !== imageUrls[0] || currentPreviewImages.length !== imageUrls.length);
+                    
                     if (tooltipEl.style.display === 'none' || isNewContent || currentImageIndex !== index || isLogo) {
                         const shouldAnimate = (isNewContent || currentImageIndex !== index);
+                        
                         if (isLogo) {
-                            clearInterval(slideshowInterval); moveTooltip(e); 
+                            // Logo logic (HUD not needed/relevant here)
+                            clearInterval(slideshowInterval); 
+                            moveTooltip(e); 
                             if (tooltipEl.style.display === 'none' || isNewContent) { showTooltip(imageUrls, index, true); }
                         } else {
-                            clearInterval(slideshowInterval); centerTooltip(); 
-                            if (isNewContent || currentImageIndex !== index) { showTooltip(imageUrls, index, shouldAnimate); } 
-                            else { tooltipEl.style.display = "flex"; }
+                            // Preview Image logic
+                            clearInterval(slideshowInterval); 
+                            centerTooltip(); 
+                            
+                            if (isNewContent || currentImageIndex !== index) { 
+                                showTooltip(imageUrls, index, shouldAnimate); 
+                                
+                                // --- CRITICAL UPDATE HERE ---
+                                updateHudHighlight(index); // <--- ENSURES HUD SYNC ON MOUSE HOVER
+                            } 
+                            else { 
+                                tooltipEl.style.display = "flex"; 
+                            }
                         }
                     }
                 }
