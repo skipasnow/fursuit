@@ -346,14 +346,6 @@ Papa.parse(csvUrl, {
 
         if (data.length === 0) { console.warn("Data array is empty."); return; }
 
-        // --- UPDATE COUNTER IMMEDIATELY (Fix for "Loading Data") ---
-        const initialTotal = data.length;
-        const counterEl = document.getElementById("results-counter");
-        if(counterEl) {
-            counterEl.innerHTML = `Makers matching criteria: <b>${initialTotal}</b> <span style="font-size:0.8em; color:#666;">(of ${initialTotal})</span>`;
-        }
-        // -----------------------------------------------------------
-
         const colMinMax = {};
         const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
         gradientColumns.forEach(col=>{
@@ -433,11 +425,21 @@ Papa.parse(csvUrl, {
             height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
-            // UPDATE COUNTER ON FILTER CHANGE
+            // --- COUNTER EVENTS ---
+            // Fires when data is loaded (Initial Count)
+            dataLoaded: function(data) {
+                const el = document.getElementById("results-counter");
+                if(el) {
+                    const total = data.length;
+                    el.innerHTML = `Makers matching criteria: <b>${total}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
+                }
+            },
+            
+            // Fires when filters change (Filtered Count)
             dataFiltered: function(filters, rows) {
                 const el = document.getElementById("results-counter");
                 if(el) {
-                    // Tabulator v5+ sometimes counts grouped rows, so we check logic
+                    // Get total directly from the filtered data set + active rows
                     const total = table.getDataCount(); 
                     const active = rows.length;
                     el.innerHTML = `Makers matching criteria: <b>${active}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
