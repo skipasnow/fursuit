@@ -20,15 +20,18 @@
 
 	<div class="controls-container">
 	  
-	  <div class="control-group slider-group">
-		<div style="display:flex; justify-content:space-between; width:100%; margin-bottom:5px;">
-			<label>Price: <span id="price-values" style="color:#ff8c00; font-weight:normal;">Loading...</span></label>
-			<label style="font-size:0.8em; display:flex; align-items:center; gap:5px; cursor:pointer;">
-				<input type="checkbox" id="show-na-prices" checked> Show N/A
-			</label>
+	<div class="control-group slider-group">
+			<div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
+				<label>
+					Price: <span id="price-values" style="color:#ff8c00; font-weight:normal;">Loading...</span>
+					<button id="reset-price-btn" style="padding:2px 6px; margin-left:5px; font-size:0.8em; background:#444; border:1px solid #666;" title="Reset Price">↺</button>
+				</label>
+				<label style="font-size:0.8em; display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none;">
+					<input type="checkbox" id="show-na-prices" checked> Show N/A
+				</label>
+			</div>
+			<div id="price-slider" style="margin-bottom: 15px;"></div>
 		</div>
-		<div id="price-slider"></div>
-	  </div>
 
 	  <div class="control-group">
 		<label>Quick Sort:</label>

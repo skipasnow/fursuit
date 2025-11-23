@@ -414,3 +414,29 @@ a { color: darkorange !important; text-decoration: none; transition: all 0.2s; c
     transform: scale(1.2);
     cursor: grabbing;
 }
+
+/* --- PRICE SLIDER PIPS (Visual Ticks) --- */
+.noUi-pips {
+    font-family: sans-serif;
+    font-size: 10px;
+    color: #aaa; /* Light text for dark mode */
+}
+
+/* The lines */
+.noUi-marker {
+    background: #666;
+}
+.noUi-marker-large {
+    background: #aaa;
+    height: 10px;
+}
+
+/* The numbers */
+.noUi-value {
+    color: #ccc;
+}
+
+/* Adjust the slider container to prevent overlap */
+.slider-group {
+    padding-bottom: 20px; /* Extra space for numbers */
+}

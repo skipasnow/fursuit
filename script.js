@@ -353,68 +353,71 @@ Papa.parse(csvUrl, {
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
 
-		// --- PRICE SLIDER INIT ---
-		const slider = document.getElementById('price-slider');
-		const priceLabel = document.getElementById('price-values');
-		const naCheckbox = document.getElementById('show-na-prices');
-		
-		if (slider && typeof noUiSlider !== 'undefined') {
-			// 1. Create Slider
-			noUiSlider.create(slider, {
-				start: [2000, 10000], 
-				connect: true,        
-				range: { 
-					'min': 2000, 
-					'max': 10000 
-				},
-				step: 500, // INCREMENT OF $500
-				tooltips: false,
-				// Format ensures we get Numbers, not "2000.00" strings which can cause NaN issues
-				format: {
-					to: function (value) { return Math.round(value); },
-					from: function (value) { return Number(value); }
-				}
-			});
+        // --- PRICE SLIDER INIT (FIXED & ENHANCED) ---
+        const slider = document.getElementById('price-slider');
+        const priceLabel = document.getElementById('price-values');
+        const naCheckbox = document.getElementById('show-na-prices');
+        const resetPriceBtn = document.getElementById('reset-price-btn');
+        
+        if (slider && typeof noUiSlider !== 'undefined') {
+            noUiSlider.create(slider, {
+                start: [2000, 10000], 
+                connect: true,        
+                range: { 'min': 2000, 'max': 10000 },
+                step: 500,            
+                tooltips: false, 
+                // PIPS: Adds the visual ticks/numbers at the bottom
+                pips: {
+                    mode: 'count',
+                    values: 5, // Shows 5 numbers (2000, 4000, 6000, 8000, 10000)
+                    density: 4,
+                    stepped: true
+                },
+                format: {
+                    to: function (value) { return Math.round(value); },
+                    from: function (value) { return Number(value); }
+                }
+            });
 
-			// 2. Define Filter Function
-			const updateTableFilter = () => {
-				if (!table) return;
-				
-				const values = slider.noUiSlider.get();
-				const min = parseInt(values[0]); // Ensure Integer
-				const max = parseInt(values[1]); // Ensure Integer
-				const showNA = naCheckbox.checked;
+            // Define the Filter Logic
+            const updateTableFilter = () => {
+                if (!table) return;
+                
+                const values = slider.noUiSlider.get();
+                const min = parseInt(values[0]);
+                const max = parseInt(values[1]);
+                const showNA = naCheckbox.checked;
 
-				// Update Label
-				priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+                priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
 
-				// Apply Filter
-				table.setFilter(function(data){
-					// Handle N/A (null) prices
-					if (data.price === null || data.price === "" || isNaN(data.price)) {
-						return showNA; // Show if checkbox is checked
-					}
-					// Handle Numeric prices
-					return data.price >= min && data.price <= max;
-				});
-			};
+                table.setFilter(function(data){
+                    // 1. Check if Price is Valid Number
+                    // cleanNumber returns null for N/A, so we check for non-number types
+                    if (typeof data.price !== 'number') {
+                        return showNA; // Return true if box checked, false if unchecked
+                    }
+                    // 2. If it IS a number, check range
+                    return data.price >= min && data.price <= max;
+                });
+            };
 
-			// 3. Bind Events
-			slider.noUiSlider.on('update', updateTableFilter); // Update on slide
-			naCheckbox.addEventListener('change', updateTableFilter); // Update on checkbox toggle
-			
-			// 4. Hook up Reset Button (Optional: add this to your reset button listener)
-			const resetBtn = document.getElementById("reset-sort");
-			if(resetBtn) {
-				resetBtn.addEventListener("click", function(){
-					slider.noUiSlider.set([2000, 10000]);
-					naCheckbox.checked = true;
-				});
-			}
+            // Bind Events
+            slider.noUiSlider.on('update', updateTableFilter);
+            naCheckbox.addEventListener('change', updateTableFilter);
+            
+            // Bind Mini Reset Button
+            if(resetPriceBtn) {
+                resetPriceBtn.addEventListener('click', function(){
+                    slider.noUiSlider.set([2000, 10000]);
+                    naCheckbox.checked = true;
+                    // The 'set' event doesn't always fire 'update', so force update
+                    updateTableFilter(); 
+                });
+            }
 
-		} else {
-			console.error("Slider element missing or noUiSlider library not loaded.");
-		}
+        } else {
+            console.error("Slider element missing or noUiSlider library not loaded.");
+        }
 
         // --- TABULATOR INIT ---
         table = new Tabulator("#creator-table", {
@@ -475,7 +478,6 @@ Papa.parse(csvUrl, {
                             const index = Math.floor(percent * totalImages);
                             const clampedIndex = Math.min(totalImages - 1, index);
 
-                            // Pass 'true' for Enable HUD
                             centerTooltip(); 
                             showTooltip(imageUrls, clampedIndex, false, true);
                             
@@ -626,14 +628,20 @@ Papa.parse(csvUrl, {
             reactiveData:true, virtualDom:true
         });
 
+        // Global Reset (Resets everything including sort and slider)
         document.getElementById("reset-sort").addEventListener("click", function(){
             table.clearSort(); table.setSort("rank", "asc"); table.clearHeaderFilter(); 
             document.getElementById("sort-field").value = "rank";
             document.getElementById("sort-dir").value = "asc";
             window.clearSpecialtyFilters(); 
-            // Reset Slider (Added)
-            if(slider && slider.noUiSlider) slider.noUiSlider.set([2000, 10000]);
+            
+            if(slider && slider.noUiSlider) {
+                slider.noUiSlider.set([2000, 10000]);
+                naCheckbox.checked = true;
+                updateTableFilter(); // Ensure table refreshes
+            }
         });
+        
         document.getElementById("sort-field").addEventListener("change", function(){
              const field = this.value; const dir = document.getElementById("sort-dir").value; table.setSort(field, dir);
         });
