@@ -154,15 +154,29 @@ label { font-weight: bold; color: #ccc; }
     border: 1px solid #444;
 }
 
-/* --- PREVIEW & LOGO BOXES --- */
-.preview-container { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
+/* Updated Preview Box - Default Placeholder state */
 .preview-box, .logo-box {
-    display: inline-block; width: 30px; height: 30px;
-    background-size: cover; background-position: center;
-    border-radius: 4px; cursor: pointer; border: 1px solid #555; box-sizing: border-box;
-    cursor: inherit;
+    display: inline-block; 
+    width: 30px; 
+    height: 30px;
+    /* Use a dark gray color or a gradient as a placeholder */
+    background-color: #444; 
+    background-image: linear-gradient(45deg, #555 25%, transparent 25%, transparent 75%, #555 75%, #555), 
+                      linear-gradient(45deg, #555 25%, transparent 25%, transparent 75%, #555 75%, #555);
+    background-size: 10px 10px;
+    background-position: 0 0, 5px 5px;
+    
+    border-radius: 4px; 
+    cursor: pointer; 
+    border: 1px solid #555; 
+    box-sizing: border-box;
+    /* Ensure the real image covers the box when loaded */
+    background-repeat: no-repeat;
 }
-.preview-box:hover, .logo-box:hover { border-color: darkorange; box-shadow: 0 0 5px rgba(255,140,0,0.5); }
+.preview-box:hover, .logo-box:hover { 
+    border-color: darkorange; 
+    box-shadow: 0 0 5px rgba(255,140,0,0.5); 
+}
 
 /* --- FLOATING TOOLTIP --- */
 #image-tooltip {
@@ -628,7 +642,7 @@ headerText.addEventListener('mouseleave', () => { clearInterval(starInterval); }
 let table;
 
 Papa.parse(csvUrl, {
-    download: true, header: true, dynamicTyping: false, // Set to false to keep "00" as a string
+    download: true, header: true, dynamicTyping: true,
     complete: function(results) {
         const data = results.data.map(row => ({
             rank: cleanNumber(row['Rank']),
@@ -699,23 +713,31 @@ Papa.parse(csvUrl, {
                     title:"Link", field:"link", formatter:"link", hozAlign:"center",
                     formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
                 },
-                {
-                    title: "Preview", field: "previewImages", hozAlign: "center", width: 200,
-                    formatter: function(cell) {
-                        const imageUrls = cell.getValue();
-                        if (!imageUrls || imageUrls.length === 0) return "";
-                        const container = document.createElement('div');
-                        container.className = 'preview-container';
-                        imageUrls.forEach((url, index) => {
-                            const previewBox = document.createElement('div');
-                            previewBox.className = 'preview-box';
-                            previewBox.style.backgroundImage = `url('${url}')`;
-                            previewBox.setAttribute('data-image-index', index);
-                            container.appendChild(previewBox);
-                        });
-                        return container;
-                    },
-                },
+				{
+					title: "Preview", field: "previewImages", hozAlign: "center", width: 200,
+					formatter: function(cell) {
+						const imageUrls = cell.getValue();
+						if (!imageUrls || imageUrls.length === 0) return "";
+						const container = document.createElement('div');
+						container.className = 'preview-container';
+						imageUrls.forEach((url, index) => {
+							const previewBox = document.createElement('div');
+							previewBox.className = 'preview-box';
+							
+							// --- CHANGE HERE: DO NOT set background-image yet ---
+							// previewBox.style.backgroundImage = `url('${url}')`; <--- DELETED
+							
+							// Instead, just store the data for the tooltip to find later
+							previewBox.setAttribute('data-image-index', index);
+							
+							// Optional: Add a data-src attribute if we want to access it easily
+							previewBox.dataset.src = url; 
+							
+							container.appendChild(previewBox);
+						});
+						return container;
+					},
+				},
                 {
                     title:"$ Price", field:"price", hozAlign:"right", sorter:"number",
                     sorterParams:{ alignEmptyValues:"bottom" },
@@ -908,6 +930,16 @@ document.addEventListener('mousemove', (e) => {
     const sourceBox = isOverPreview || isOverLogo;
     if (sourceBox) {
         clearTimeout(hideTimeout);
+		// --- NEW CODE: Reveal the tiny thumbnail on hover ---
+        // This sets the background image ONLY when the mouse touches it.
+        // Since the browser has to download it for the tooltip anyway, 
+        // this doesn't add extra cost.
+        if (sourceBox.dataset.src && !sourceBox.style.backgroundImage.includes('http')) {
+             sourceBox.style.backgroundImage = `url('${sourceBox.dataset.src}')`;
+             sourceBox.style.backgroundSize = 'cover';
+        }
+		// -----------------------------------------------------
+		
         const rowEl = target.closest('.tabulator-row');
         if (rowEl && table) {
             const row = table.getRow(rowEl);
