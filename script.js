@@ -346,14 +346,12 @@ Papa.parse(csvUrl, {
 
         if (data.length === 0) { console.warn("Data array is empty."); return; }
 
-        // --- FORCE COUNTER UPDATE IMMEDIATELY ---
-        // This runs before table is built to ensure "Loading..." is replaced
+        // --- UPDATE COUNTER IMMEDIATELY ---
         const initialTotal = data.length;
         const counterEl = document.getElementById("results-counter");
         if(counterEl) {
             counterEl.innerHTML = `Makers matching criteria: <b>${initialTotal}</b> <span style="font-size:0.8em; color:#666;">(of ${initialTotal})</span>`;
         }
-        // ----------------------------------------
 
         const colMinMax = {};
         const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
@@ -434,12 +432,12 @@ Papa.parse(csvUrl, {
             height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
-            // --- COUNTER EVENTS ---
-            // Updates whenever filters change
+            // --- COUNTER LOGIC (FIXED) ---
             dataFiltered: function(filters, rows) {
                 const el = document.getElementById("results-counter");
                 if(el) {
-                    const total = table.getDataCount(); 
+                    // USE 'this' TO AVOID INITIALIZATION CRASH
+                    const total = this.getDataCount(); 
                     const active = rows.length;
                     el.innerHTML = `Makers matching criteria: <b>${active}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
                 }
@@ -654,6 +652,7 @@ Papa.parse(csvUrl, {
             if(slider && slider.noUiSlider) {
                 slider.noUiSlider.set([2000, 10000]);
                 naCheckbox.checked = true;
+                // Force update trigger after reset
                 slider.noUiSlider.fireEvent('update'); 
             }
         });
