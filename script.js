@@ -359,24 +359,42 @@ Papa.parse(csvUrl, {
         const naCheckbox = document.getElementById('show-na-prices');
         const resetPriceBtn = document.getElementById('reset-price-btn');
         
-        if (slider && typeof noUiSlider !== 'undefined') {
-            noUiSlider.create(slider, {
-                start: [2000, 10000], 
-                connect: true,        
-                range: { 'min': 2000, 'max': 10000 },
-                step: 500,            
-                tooltips: false, 
-                pips: {
-                    mode: 'count',
-                    values: 5, 
-                    density: 10,
-                    stepped: true
-                },
-                format: {
-                    to: function (value) { return Math.round(value); },
-                    from: function (value) { return Number(value); }
-                }
-            });
+		if (slider && typeof noUiSlider !== 'undefined') {
+					noUiSlider.create(slider, {
+						start: [2000, 10000], 
+						connect: true,        
+						range: { 'min': 2000, 'max': 10000 },
+						step: 500,            
+						tooltips: false, 
+						
+						// --- UPDATED PIPS LOGIC ---
+						pips: {
+							mode: 'steps', // Draw a tick for every $500 step
+							density: 6.25, // (100% / 16 steps) helps align them perfectly
+							
+							// The Filter decides which ticks get numbers vs just lines
+							filter: function (value, type) {
+								// If it's 2000, 4000, 6000, 8000, 10000 -> Draw Large Line + Number (1)
+								if (value % 2000 === 0) {
+									return 1; 
+								}
+								// For all other $500 steps -> Draw Small Line (0)
+								return 0; 
+							},
+							
+							// Format the numbers (e.g., show "4k" instead of "4000")
+							format: {
+								to: function (value) { 
+									return '$' + (value / 1000) + 'k'; 
+								}
+							}
+						},
+						
+						format: {
+							to: function (value) { return Math.round(value); },
+							from: function (value) { return Number(value); }
+						}
+					});
 
             // Define the Filter Logic
             const updateTableFilter = () => {
