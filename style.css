@@ -1,49 +1,47 @@
-/* --- GHOST HUD (Heads-Up Display) --- */
+/* --- GHOST HUD (High Visibility) --- */
 .tooltip-hud {
     position: absolute;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 8px;
-    /* Maximum Z-Index to ensure it floats ABOVE the image */
-    z-index: 2147483647; 
+    gap: 10px; /* Spacing between dots */
+    z-index: 2147483647; /* Max Z-Index */
     pointer-events: none;
     
-    /* Darker, stronger backing plate for contrast against any image */
-    background: rgba(0, 0, 0, 0.75); 
-    padding: 8px 12px;
-    border-radius: 20px; /* Pill shape */
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    /* High Contrast Backing Plate */
+    background: rgba(0, 0, 0, 0.85); 
+    padding: 10px 15px;
+    border-radius: 50px; /* Pill shape */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
 }
 
 .hud-box {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%; /* Make them dots/circles for cleaner look */
+    width: 12px;
+    height: 12px;
+    border-radius: 50%; /* Circles are easier to track than squares */
     
     /* Default State (Inactive) */
-    background-color: transparent;
-    border: 2px solid #888; /* Gray is visible on black */
-    box-shadow: 0 0 2px #000; /* Black shadow makes it visible on white */
+    background-color: #444;
+    border: 2px solid #888;
+    box-shadow: 0 0 2px #000;
     
     transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* The "Active" ghost box - THEME ORANGE */
+/* The "Active" ghost box - BRIGHT ORANGE */
 .hud-box.active {
     background-color: #ff8c00; /* Solid Orange Fill */
-    border-color: #fff; /* White rim to separate orange from background */
+    border-color: #fff; /* White rim for contrast */
     
     /* Heavy Orange Glow */
     box-shadow: 
         0 0 0 2px #000, /* Tiny black ring for contrast */
-        0 0 10px #ff8c00, /* Inner Glow */
-        0 0 20px #ff8c00; /* Outer Glow */
+        0 0 10px #ff8c00, 
+        0 0 20px #ff8c00;
         
-    transform: scale(1.5);
+    transform: scale(1.6);
 }
 
 /* Prevent vertical scrolling when touching the preview container */
@@ -222,11 +220,18 @@ label { font-weight: bold; color: #ccc; }
 
 /* --- FLOATING TOOLTIP --- */
 #image-tooltip {
-    display: none; position: fixed; width: 400px; height: 400px;
-    background-color: #222; background-size: contain; background-repeat: no-repeat;
-    background-position: center; border: 2px solid #fff;
-    box-shadow: 0 0 20px rgba(0,0,0,0.7); z-index: 99999; pointer-events: none;
-    opacity: 0; transition: opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* ... existing styles ... */
+    display: none; /* JS toggles this to Flex */
+    
+    /* Flex properties are required to center the HUD at the bottom */
+    flex-direction: column;
+    justify-content: flex-end; /* Pushes HUD to bottom */
+    align-items: center;     /* Centers HUD horizontally */
+    
+    /* Ensure background image doesn't override children */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 /* --- TABULATOR STYLES & OVERRIDES --- */

@@ -98,28 +98,28 @@ function updateHudHighlight(index) {
     }
 }
 
-// 2. Updated: showTooltip now builds the HUD
+// 2. Updated: showTooltip with forced HUD rebuilding
 function showTooltip(imageUrls, startIndex = 0, forceAnimation = false) {
     if (!imageUrls || imageUrls.length === 0) { hideTooltip(); return; }
     
-    // Check if we need to rebuild the HUD (if content changed)
-    const isNewContent = (currentPreviewImages !== imageUrls);
+    // Check if content changed OR if the HUD is missing from the DOM (e.g. cleared by hideTooltip)
+    const isContentDifferent = !currentPreviewImages.length || currentPreviewImages[0] !== imageUrls[0];
+    const isHudMissing = !tooltipEl.querySelector('.tooltip-hud');
 
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
     tooltipEl.style.display = "flex"; 
 
     // --- BUILD THE GHOST HUD ---
-    // Only rebuild if it's a new set of images to save performance
-    let hud = tooltipEl.querySelector('.tooltip-hud');
-    if (isNewContent || !hud) {
-        // Remove old HUD if exists
-        if (hud) hud.remove();
+    if (isContentDifferent || isHudMissing) {
+        // Clear any existing HUD to be safe
+        const oldHud = tooltipEl.querySelector('.tooltip-hud');
+        if (oldHud) oldHud.remove();
         
-        hud = document.createElement('div');
+        const hud = document.createElement('div');
         hud.className = 'tooltip-hud';
         
-        // Create a ghost box for every image in the list
+        // Create a ghost circle for every image
         imageUrls.forEach((_, i) => {
             const box = document.createElement('div');
             box.className = 'hud-box';
