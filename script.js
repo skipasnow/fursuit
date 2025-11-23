@@ -370,7 +370,7 @@ Papa.parse(csvUrl, {
                 pips: {
                     mode: 'count',
                     values: 5, // Shows 5 numbers (2000, 4000, 6000, 8000, 10000)
-                    density: 4,
+                    density: 10, // Reduced density to prevent overlap
                     stepped: true
                 },
                 format: {
@@ -638,7 +638,8 @@ Papa.parse(csvUrl, {
             if(slider && slider.noUiSlider) {
                 slider.noUiSlider.set([2000, 10000]);
                 naCheckbox.checked = true;
-                updateTableFilter(); // Ensure table refreshes
+                // Force update trigger after reset
+                slider.noUiSlider.fireEvent('update'); 
             }
         });
         
