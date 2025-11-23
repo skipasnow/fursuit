@@ -353,7 +353,7 @@ Papa.parse(csvUrl, {
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
 
-        // --- PRICE SLIDER INIT (FIXED) ---
+        // --- PRICE SLIDER INIT (FIXED & ENHANCED) ---
         const slider = document.getElementById('price-slider');
         const priceLabel = document.getElementById('price-values');
         const naCheckbox = document.getElementById('show-na-prices');
@@ -367,10 +367,10 @@ Papa.parse(csvUrl, {
                 step: 500,            
                 tooltips: false, 
                 
-                // --- UPDATED PIPS LOGIC ---
+                // --- PIPS (MARKERS) ---
                 pips: {
-                    mode: 'steps', // Draw a tick for every $500 step
-                    density: 6.25, // (100% / 16 steps) helps align them perfectly
+                    mode: 'steps', // Use Steps to align with $500 increments
+                    density: 6.25, // Spacing calculation
                     
                     // The Filter decides which ticks get numbers vs just lines
                     filter: function (value, type) {
@@ -409,9 +409,11 @@ Papa.parse(csvUrl, {
                 priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
 
                 table.setFilter(function(data){
+                    // 1. Check if Price is Valid Number
                     if (typeof data.price !== 'number') {
                         return showNA; 
                     }
+                    // 2. If it IS a number, check range
                     return data.price >= min && data.price <= max;
                 });
             };
@@ -425,8 +427,6 @@ Papa.parse(csvUrl, {
                 resetPriceBtn.addEventListener('click', function(){
                     slider.noUiSlider.set([2000, 10000]);
                     naCheckbox.checked = true;
-                    // Manually fire update so the table and label reset immediately
-                    // (The 'set' method doesn't always trigger the 'update' event automatically)
                     const values = slider.noUiSlider.get(); 
                     priceLabel.innerText = `$${parseInt(values[0]).toLocaleString()} - $${parseInt(values[1]).toLocaleString()}`;
                     table.recalc(); // Force table refresh
@@ -447,6 +447,24 @@ Papa.parse(csvUrl, {
             placeholder:"No Data Available",
             height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
+            
+            // --- LIVE RESULT COUNTER ---
+            // This event fires whenever filters (Slider, Tags, etc) change
+            dataFiltered: function(filters, rows) {
+                const el = document.getElementById("results-counter");
+                if(el) {
+                    const total = table.getDataCount(); 
+                    const active = rows.length;
+                    el.innerHTML = `Makers matching criteria: <b>${active}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
+                }
+            },
+            
+            // Update count immediately on load
+            tableBuilt: function() {
+                const el = document.getElementById("results-counter");
+                const total = table.getDataCount();
+                if(el) el.innerHTML = `Makers matching criteria: <b>${total}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
+            },
             
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell, cssClass: "text-cell" },
