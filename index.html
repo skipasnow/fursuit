@@ -628,7 +628,7 @@ headerText.addEventListener('mouseleave', () => { clearInterval(starInterval); }
 let table;
 
 Papa.parse(csvUrl, {
-    download: true, header: true, dynamicTyping: true,
+    download: true, header: true, dynamicTyping: false, // Set to false to keep "00" as a string
     complete: function(results) {
         const data = results.data.map(row => ({
             rank: cleanNumber(row['Rank']),
