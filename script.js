@@ -388,6 +388,41 @@ Papa.parse(csvUrl, {
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
 
+// --- PRICE SLIDER INIT ---
+        const slider = document.getElementById('price-slider');
+        const priceLabel = document.getElementById('price-values');
+        
+        // Create the dual slider
+        noUiSlider.create(slider, {
+            start: [2000, 10000], // Initial handles
+            connect: true,        // Color the space between handles
+            range: {
+                'min': 2000,
+                'max': 10000
+            },
+            step: 100,            // Snap to increments of 100
+            tooltips: false,      // We use a static label instead
+        });
+
+        // Event: When slider moves, update the label
+        slider.noUiSlider.on('update', function (values) {
+            const min = Math.round(values[0]);
+            const max = Math.round(values[1]);
+            
+            // Update visual text
+            priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+            
+            // Update Tabulator Filter
+            if (table) {
+                // Custom filter function: checks if row price is between min and max
+                table.setFilter(function(data){
+                    // If price is N/A (null), don't show it (or return true to show N/A rows)
+                    if (data.price === null) return false; 
+                    return data.price >= min && data.price <= max;
+                });
+            }
+        });
+
         table = new Tabulator("#creator-table", {
             data: data,
             layout: "fitData",

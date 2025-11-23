@@ -364,3 +364,55 @@ a { color: darkorange !important; text-decoration: none; transition: all 0.2s; c
 }
 .filter-apply-btn:hover { color: #66bb6a; }
 .tags-area { display: flex; flex-wrap: wrap; gap: 3px; width: 100%; margin-bottom: 4px; }
+/* --- PRICE SLIDER STYLING (noUiSlider Overrides) --- */
+.slider-group {
+    width: 100%;
+    max-width: 300px; /* Keep it contained on desktop */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 15px; /* Room for handle overflow */
+}
+
+/* The Track (Background) */
+.noUi-target {
+    background: #444;
+    border: none;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+    height: 10px;
+    border-radius: 5px;
+}
+
+/* The Connecting Bar (Range Highlight) */
+.noUi-connect {
+    background: darkorange;
+}
+
+/* The Handles (Knobs) */
+.noUi-handle {
+    height: 24px;
+    width: 24px;
+    top: -7px; /* Center vertically on the 10px track */
+    right: -12px;
+    border-radius: 50%;
+    background: #ccc;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    cursor: grab;
+}
+.noUi-handle:before, .noUi-handle:after {
+    display: none; /* Remove the default decoration lines */
+}
+.noUi-handle:active {
+    cursor: grabbing;
+    background: #ff8c00; /* Turn orange when grabbing */
+    transform: scale(1.1);
+}
+
+/* Mobile adjustments for the controls container */
+@media (max-width: 600px) {
+    .slider-group {
+        max-width: 100%; /* Full width on mobile */
+        margin-bottom: 15px;
+    }
+}

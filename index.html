@@ -10,12 +10,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <link rel="stylesheet" href="style.css">
+	
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" rel="stylesheet">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
 </head>
 <body>
 
     <h1><span id="header-text">Kemono Fursuit Makers</span></h1>
 
     <div class="controls-container">
+	  <div class="control-group slider-group">
+		<label>Price Range: <span id="price-values" style="font-weight:normal; color:#ff8c00;">$2,000 - $10,000</span></label>
+		<div id="price-slider"></div>
+	  </div>
       <div class="control-group">
         <label>Quick Sort:</label>
         <select id="sort-field">
