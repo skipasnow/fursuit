@@ -3,10 +3,7 @@
 // ==========================================
 let trailX = 0;
 let trailY = 0;
-let stepCount = 0;
 const stepLength = 30; 
-
-console.log("Initializing Paw Trail...");
 
 document.addEventListener('mousemove', function(e) {
     const dist = Math.hypot(e.clientX - trailX, e.clientY - trailY);
@@ -21,7 +18,10 @@ function createPaw(x, y, lastX, lastY) {
     const paw = document.createElement('div');
     paw.className = 'paw-trail';
     const angle = Math.atan2(y - lastY, x - lastX) * 180 / Math.PI + 90;
+    let stepCount = parseInt(document.body.dataset.stepCount || "0");
     stepCount++;
+    document.body.dataset.stepCount = stepCount;
+    
     const isRightFoot = stepCount % 2 === 0;
     
     paw.style.setProperty('--angle', `${angle}deg`);
@@ -45,11 +45,14 @@ let currentPreviewImages = [];
 let currentImageIndex = 0;
 let slideshowInterval;
 let hideTimeout; 
-let isTooltipCentered = false; 
 
 function displayImageInTooltip(imageUrl, forceAnimation = false) {
     if (!imageUrl) { tooltipEl.style.backgroundImage = 'none'; return; }
-    const baseTransform = isTooltipCentered ? "translate(-50%, -50%)" : "";
+    
+    // Determine if we need to center (mobile/scrubbing) or follow mouse
+    const isCentered = tooltipEl.style.top === "50%"; 
+    const baseTransform = isCentered ? "translate(-50%, -50%)" : "";
+
     if (tooltipEl.style.opacity === '0' || forceAnimation) {
         const startAngle = Math.random() < 0.5 ? -5 : 5;
         tooltipEl.style.transition = 'none';
@@ -60,6 +63,7 @@ function displayImageInTooltip(imageUrl, forceAnimation = false) {
     img.onload = () => {
         if (tooltipEl.style.display !== 'none') {
             tooltipEl.style.backgroundImage = `url('${imageUrl}')`;
+            // Force reflow to restart animation
             void tooltipEl.offsetWidth; 
             tooltipEl.style.transition = 'opacity 0.25s ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
             tooltipEl.style.opacity = '1';
@@ -69,7 +73,6 @@ function displayImageInTooltip(imageUrl, forceAnimation = false) {
     img.src = imageUrl;
 }
 
-// HUD Helper
 function updateHudHighlight(index) {
     const hudContainer = tooltipEl.querySelector('.tooltip-hud');
     if (!hudContainer) return;
@@ -80,12 +83,10 @@ function updateHudHighlight(index) {
     }
 }
 
-// Show Tooltip (with Enable HUD Toggle)
 function showTooltip(imageUrls, startIndex = 0, forceAnimation = false, enableHud = true) {
     if (!imageUrls || imageUrls.length === 0) { hideTooltip(); return; }
     
     const isContentDifferent = !currentPreviewImages.length || currentPreviewImages[0] !== imageUrls[0];
-
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
     tooltipEl.style.display = "flex"; 
@@ -128,34 +129,24 @@ function hideTooltip() {
     }, 50);
 }
 
-function startSlideshow() {
-    clearInterval(slideshowInterval);
-    if (currentPreviewImages.length > 1) {
-        slideshowInterval = setInterval(() => {
-            currentImageIndex = (currentImageIndex + 1) % currentPreviewImages.length;
-            displayImageInTooltip(currentPreviewImages[currentImageIndex], true);
-        }, 2000);
-    }
-}
-
-// Positioning
 function centerTooltip() {
-    isTooltipCentered = true;
     tooltipEl.style.top = "50%";
     tooltipEl.style.left = "50%";
-    tooltipEl.style.width = "80vh"; tooltipEl.style.height = "80vh";
+    tooltipEl.style.width = "80vh"; 
+    tooltipEl.style.height = "80vh";
 }
 function moveTooltip(e) {
-    isTooltipCentered = false;
     const tooltipSize = 200; const offset = 15; 
     const windowHeight = window.innerHeight;
-    tooltipEl.style.width = tooltipSize + "px"; tooltipEl.style.height = tooltipSize + "px";
+    tooltipEl.style.width = tooltipSize + "px"; 
+    tooltipEl.style.height = tooltipSize + "px";
     let left = e.clientX + offset; let top = e.clientY + offset;
     if (top + tooltipSize > windowHeight) { top = e.clientY - tooltipSize - offset; }
-    tooltipEl.style.left = left + "px"; tooltipEl.style.top = top + "px";
+    tooltipEl.style.left = left + "px"; 
+    tooltipEl.style.top = top + "px";
 }
 
-// Specialty Filters
+// --- FILTERS ---
 let pendingSpecialtyFilters = new Set();
 let appliedSpecialtyFilters = new Set();
 
@@ -177,12 +168,12 @@ window.clearSpecialtyFilters = function() {
     appliedSpecialtyFilters.clear(); 
     updateFilterHeader();
     triggerHeaderResize();
-    table.setHeaderFilterValue("specialty", []); 
+    if(table) table.setHeaderFilterValue("specialty", []); 
 }
 
 window.applySpecialtyFilters = function() {
     appliedSpecialtyFilters = new Set(pendingSpecialtyFilters);
-    table.setHeaderFilterValue("specialty", Array.from(appliedSpecialtyFilters));
+    if(table) table.setHeaderFilterValue("specialty", Array.from(appliedSpecialtyFilters));
     triggerHeaderResize();
 }
 
@@ -242,7 +233,7 @@ function updateFilterHeader() {
     }
 }
 
-// Helpers
+// --- HELPERS ---
 function parseImageFormula(formula) {
   if(!formula) return "";
   const match = formula.match(/=IMAGE\("(.+)"\)/);
@@ -302,8 +293,16 @@ function createStar() {
 headerText.addEventListener('mouseenter', () => { starInterval = setInterval(createStar, 50); });
 headerText.addEventListener('mouseleave', () => { clearInterval(starInterval); });
 
-// --- MAIN TABLE LOGIC ---
+// --- MAIN LOGIC ---
 let table;
+
+// Helper to update the results counter text
+function updateResultCounter(activeCount, totalCount) {
+    const el = document.getElementById("results-counter");
+    if(el) {
+        el.innerHTML = `Makers matching criteria: <b>${activeCount}</b> <span style="font-size:0.8em; color:#666;">(of ${totalCount})</span>`;
+    }
+}
 
 Papa.parse(csvUrl, {
     download: true, header: true, dynamicTyping: true,
@@ -346,81 +345,12 @@ Papa.parse(csvUrl, {
 
         if (data.length === 0) { console.warn("Data array is empty."); return; }
 
-        // --- FORCE COUNTER UPDATE IMMEDIATELY ---
-        const initialTotal = data.length;
-        const counterEl = document.getElementById("results-counter");
-        if(counterEl) {
-            counterEl.innerHTML = `Makers matching criteria: <b>${initialTotal}</b> <span style="font-size:0.8em; color:#666;">(of ${initialTotal})</span>`;
-        }
-
         const colMinMax = {};
         const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
         gradientColumns.forEach(col=>{
             const vals = data.map(d=>d[col]).filter(v=>v!==null && v!=="" && !isNaN(v));
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
-
-        // --- PRICE SLIDER INIT ---
-        const slider = document.getElementById('price-slider');
-        const priceLabel = document.getElementById('price-values');
-        const naCheckbox = document.getElementById('show-na-prices');
-        const resetPriceBtn = document.getElementById('reset-price-btn');
-        
-        if (slider && typeof noUiSlider !== 'undefined') {
-            noUiSlider.create(slider, {
-                start: [2000, 10000], 
-                connect: true,        
-                range: { 'min': 2000, 'max': 10000 },
-                step: 500,            
-                tooltips: false, 
-                pips: {
-                    mode: 'steps',
-                    density: 6.25,
-                    filter: function (value, type) {
-                        if (value % 2000 === 0) return 1; 
-                        return 0; 
-                    },
-                    format: {
-                        to: function (value) { return '$' + (value / 1000) + 'k'; }
-                    }
-                },
-                format: {
-                    to: function (value) { return Math.round(value); },
-                    from: function (value) { return Number(value); }
-                }
-            });
-
-            const updateTableFilter = () => {
-                if (!table) return;
-                const values = slider.noUiSlider.get();
-                const min = parseInt(values[0]);
-                const max = parseInt(values[1]);
-                const showNA = naCheckbox.checked;
-
-                priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-
-                table.setFilter(function(data){
-                    if (typeof data.price !== 'number') {
-                        return showNA; 
-                    }
-                    return data.price >= min && data.price <= max;
-                });
-            };
-
-            slider.noUiSlider.on('update', updateTableFilter);
-            naCheckbox.addEventListener('change', updateTableFilter);
-            
-            if(resetPriceBtn) {
-                resetPriceBtn.addEventListener('click', function(){
-                    slider.noUiSlider.set([2000, 10000]);
-                    naCheckbox.checked = true;
-                    const values = slider.noUiSlider.get(); 
-                    priceLabel.innerText = `$${parseInt(values[0]).toLocaleString()} - $${parseInt(values[1]).toLocaleString()}`;
-                    table.recalc(); 
-                    updateTableFilter(); 
-                });
-            }
-        }
 
         // --- TABULATOR INIT ---
         table = new Tabulator("#creator-table", {
@@ -432,15 +362,97 @@ Papa.parse(csvUrl, {
             height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
-            // --- COUNTER LOGIC (FIXED) ---
+            // Update Counter when Filters Change
             dataFiltered: function(filters, rows) {
-                const el = document.getElementById("results-counter");
-                if(el) {
-                    // USE THE RAW 'data' ARRAY FOR TOTAL
-                    // This avoids the crash if 'table' isn't ready
-                    const total = data.length; 
-                    const active = rows.length;
-                    el.innerHTML = `Makers matching criteria: <b>${active}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
+                const total = this.getDataCount(); 
+                const active = rows.length;
+                updateResultCounter(active, total);
+            },
+
+            // --- CRITICAL: INITIALIZE SLIDER ONLY AFTER TABLE IS BUILT ---
+            tableBuilt: function() {
+                // 1. Initial Count Update
+                updateResultCounter(data.length, data.length);
+
+                // 2. Slider Initialization
+                const slider = document.getElementById('price-slider');
+                const priceLabel = document.getElementById('price-values');
+                const naCheckbox = document.getElementById('show-na-prices');
+                const resetPriceBtn = document.getElementById('reset-price-btn');
+
+                if (slider && typeof noUiSlider !== 'undefined') {
+                    noUiSlider.create(slider, {
+                        start: [2000, 10000], 
+                        connect: true,        
+                        range: { 'min': 2000, 'max': 10000 },
+                        step: 500,            
+                        tooltips: false, 
+                        pips: {
+                            mode: 'steps',
+                            density: 6.25,
+                            filter: function (value, type) {
+                                // Large lines for 2k steps
+                                if (value % 2000 === 0) return 1; 
+                                return 0; 
+                            },
+                            format: {
+                                to: function (value) { return '$' + (value / 1000) + 'k'; }
+                            }
+                        },
+                        format: {
+                            to: function (value) { return Math.round(value); },
+                            from: function (value) { return Number(value); }
+                        }
+                    });
+
+                    const updateTableFilter = () => {
+                        const values = slider.noUiSlider.get();
+                        const min = parseInt(values[0]);
+                        const max = parseInt(values[1]);
+                        const showNA = naCheckbox.checked;
+
+                        priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+
+                        table.setFilter(function(row){
+                            // Note: Tabulator v5+ might pass a Row Component or data object
+                            // 'row' here is the data object directly in custom filters
+                            if (typeof row.price !== 'number') {
+                                return showNA; 
+                            }
+                            return row.price >= min && row.price <= max;
+                        });
+                    };
+
+                    // Bind Events
+                    slider.noUiSlider.on('update', updateTableFilter);
+                    naCheckbox.addEventListener('change', updateTableFilter);
+                    
+                    if(resetPriceBtn) {
+                        resetPriceBtn.addEventListener('click', function(){
+                            slider.noUiSlider.set([2000, 10000]);
+                            naCheckbox.checked = true;
+                            // Manually trigger update
+                            const values = slider.noUiSlider.get(); 
+                            priceLabel.innerText = `$${parseInt(values[0]).toLocaleString()} - $${parseInt(values[1]).toLocaleString()}`;
+                            table.recalc(); 
+                            updateTableFilter(); 
+                        });
+                    }
+
+                    // Global Reset Hook
+                    document.getElementById("reset-sort").addEventListener("click", function(){
+                        table.clearSort(); 
+                        table.setSort("rank", "asc"); 
+                        table.clearHeaderFilter(); 
+                        document.getElementById("sort-field").value = "rank";
+                        document.getElementById("sort-dir").value = "asc";
+                        window.clearSpecialtyFilters(); 
+                        
+                        slider.noUiSlider.set([2000, 10000]);
+                        naCheckbox.checked = true;
+                        // Force update logic
+                        updateTableFilter();
+                    });
                 }
             },
 
@@ -643,19 +655,6 @@ Papa.parse(csvUrl, {
             reactiveData:true, virtualDom:true
         });
 
-        // Global Reset (Resets everything including sort and slider)
-        document.getElementById("reset-sort").addEventListener("click", function(){
-            table.clearSort(); table.setSort("rank", "asc"); table.clearHeaderFilter(); 
-            document.getElementById("sort-field").value = "rank";
-            document.getElementById("sort-dir").value = "asc";
-            window.clearSpecialtyFilters(); 
-            
-            if(slider && slider.noUiSlider) {
-                slider.noUiSlider.set([2000, 10000]);
-                naCheckbox.checked = true;
-                slider.noUiSlider.fireEvent('update'); 
-            }
-        });
         
         document.getElementById("sort-field").addEventListener("change", function(){
              const field = this.value; const dir = document.getElementById("sort-dir").value; table.setSort(field, dir);
