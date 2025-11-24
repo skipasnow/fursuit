@@ -3,7 +3,10 @@
 // ==========================================
 let trailX = 0;
 let trailY = 0;
+let stepCount = 0;
 const stepLength = 30; 
+
+console.log("Initializing Paw Trail...");
 
 document.addEventListener('mousemove', function(e) {
     const dist = Math.hypot(e.clientX - trailX, e.clientY - trailY);
@@ -18,10 +21,7 @@ function createPaw(x, y, lastX, lastY) {
     const paw = document.createElement('div');
     paw.className = 'paw-trail';
     const angle = Math.atan2(y - lastY, x - lastX) * 180 / Math.PI + 90;
-    let stepCount = parseInt(document.body.dataset.stepCount || "0");
     stepCount++;
-    document.body.dataset.stepCount = stepCount;
-    
     const isRightFoot = stepCount % 2 === 0;
     
     paw.style.setProperty('--angle', `${angle}deg`);
@@ -43,13 +43,13 @@ const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID
 const tooltipEl = document.getElementById("image-tooltip");
 let currentPreviewImages = [];
 let currentImageIndex = 0;
+let slideshowInterval;
+let hideTimeout; 
+let isTooltipCentered = false; 
 
 function displayImageInTooltip(imageUrl, forceAnimation = false) {
     if (!imageUrl) { tooltipEl.style.backgroundImage = 'none'; return; }
-    
-    const isCentered = tooltipEl.style.top === "50%";
-    const baseTransform = isCentered ? "translate(-50%, -50%)" : "";
-
+    const baseTransform = isTooltipCentered ? "translate(-50%, -50%)" : "";
     if (tooltipEl.style.opacity === '0' || forceAnimation) {
         const startAngle = Math.random() < 0.5 ? -5 : 5;
         tooltipEl.style.transition = 'none';
@@ -69,6 +69,7 @@ function displayImageInTooltip(imageUrl, forceAnimation = false) {
     img.src = imageUrl;
 }
 
+// HUD Helper
 function updateHudHighlight(index) {
     const hudContainer = tooltipEl.querySelector('.tooltip-hud');
     if (!hudContainer) return;
@@ -79,10 +80,12 @@ function updateHudHighlight(index) {
     }
 }
 
+// Show Tooltip (with Enable HUD Toggle)
 function showTooltip(imageUrls, startIndex = 0, forceAnimation = false, enableHud = true) {
     if (!imageUrls || imageUrls.length === 0) { hideTooltip(); return; }
     
     const isContentDifferent = !currentPreviewImages.length || currentPreviewImages[0] !== imageUrls[0];
+
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
     tooltipEl.style.display = "flex"; 
@@ -109,43 +112,50 @@ function showTooltip(imageUrls, startIndex = 0, forceAnimation = false, enableHu
 }
 
 function hideTooltip() {
-    tooltipEl.style.opacity = '0';
-    setTimeout(() => {
-         if(tooltipEl.style.opacity === '0') {
-             tooltipEl.style.display = "none";
-             tooltipEl.style.backgroundImage = 'none';
-             tooltipEl.textContent = ''; 
-             currentPreviewImages = [];
-         }
-    }, 200);
+    clearTimeout(hideTimeout);
+    clearInterval(slideshowInterval);
+    hideTimeout = setTimeout(() => {
+        tooltipEl.style.opacity = '0';
+        setTimeout(() => {
+             if(tooltipEl.style.opacity === '0') {
+                 tooltipEl.style.display = "none";
+                 tooltipEl.style.backgroundImage = 'none';
+                 tooltipEl.textContent = ''; 
+                 currentPreviewImages = [];
+                 currentImageIndex = 0;
+             }
+        }, 200);
+    }, 50);
 }
 
-function centerTooltip() {
-    tooltipEl.style.top = "50%";
-    tooltipEl.style.left = "50%";
-    tooltipEl.style.width = "80vh"; 
-    tooltipEl.style.height = "80vh";
-}
-function moveTooltip(e) {
-    const tooltipSize = 200; const offset = 15; 
-    const windowHeight = window.innerHeight;
-    tooltipEl.style.width = tooltipSize + "px"; 
-    tooltipEl.style.height = tooltipSize + "px";
-    let left = e.clientX + offset; let top = e.clientY + offset;
-    if (top + tooltipSize > windowHeight) { top = e.clientY - tooltipSize - offset; }
-    tooltipEl.style.left = left + "px"; 
-    tooltipEl.style.top = top + "px";
-}
-
-// --- COUNTER HELPER ---
-function updateResultCounter(activeCount, totalCount) {
-    const el = document.getElementById("results-counter");
-    if(el) {
-        el.innerHTML = `Makers matching criteria: <b>${activeCount}</b> <span style="font-size:0.8em; color:#666;">(of ${totalCount})</span>`;
+function startSlideshow() {
+    clearInterval(slideshowInterval);
+    if (currentPreviewImages.length > 1) {
+        slideshowInterval = setInterval(() => {
+            currentImageIndex = (currentImageIndex + 1) % currentPreviewImages.length;
+            displayImageInTooltip(currentPreviewImages[currentImageIndex], true);
+        }, 2000);
     }
 }
 
-// --- FILTERS HELPERS ---
+// Positioning
+function centerTooltip() {
+    isTooltipCentered = true;
+    tooltipEl.style.top = "50%";
+    tooltipEl.style.left = "50%";
+    tooltipEl.style.width = "80vh"; tooltipEl.style.height = "80vh";
+}
+function moveTooltip(e) {
+    isTooltipCentered = false;
+    const tooltipSize = 200; const offset = 15; 
+    const windowHeight = window.innerHeight;
+    tooltipEl.style.width = tooltipSize + "px"; tooltipEl.style.height = tooltipSize + "px";
+    let left = e.clientX + offset; let top = e.clientY + offset;
+    if (top + tooltipSize > windowHeight) { top = e.clientY - tooltipSize - offset; }
+    tooltipEl.style.left = left + "px"; tooltipEl.style.top = top + "px";
+}
+
+// Specialty Filters
 let pendingSpecialtyFilters = new Set();
 let appliedSpecialtyFilters = new Set();
 
@@ -167,12 +177,12 @@ window.clearSpecialtyFilters = function() {
     appliedSpecialtyFilters.clear(); 
     updateFilterHeader();
     triggerHeaderResize();
-    if(table) table.setHeaderFilterValue("specialty", []); 
+    table.setHeaderFilterValue("specialty", []); 
 }
 
 window.applySpecialtyFilters = function() {
     appliedSpecialtyFilters = new Set(pendingSpecialtyFilters);
-    if(table) table.setHeaderFilterValue("specialty", Array.from(appliedSpecialtyFilters));
+    table.setHeaderFilterValue("specialty", Array.from(appliedSpecialtyFilters));
     triggerHeaderResize();
 }
 
@@ -232,7 +242,7 @@ function updateFilterHeader() {
     }
 }
 
-// --- DATA CLEANING ---
+// Helpers
 function parseImageFormula(formula) {
   if(!formula) return "";
   const match = formula.match(/=IMAGE\("(.+)"\)/);
@@ -274,8 +284,34 @@ function formatTextCell(cell) {
     return `<div class="text-wrapper"><span class="text-content">${val}</span></div>`;
 }
 
+const headerText = document.getElementById('header-text');
+let starInterval;
+function createStar() {
+    const star = document.createElement('div');
+    star.className = 'star-particle';
+    star.textContent = '★';
+    const startX = Math.random() * window.innerWidth;
+    const headerRect = headerText.getBoundingClientRect();
+    const startY = headerRect.bottom - 10; 
+    star.style.left = startX + 'px'; star.style.top = startY + 'px';
+    const size = 0.8 + Math.random() * 0.8;
+    star.style.fontSize = size + 'em';
+    document.body.appendChild(star);
+    setTimeout(() => { star.remove(); }, 1500);
+}
+headerText.addEventListener('mouseenter', () => { starInterval = setInterval(createStar, 50); });
+headerText.addEventListener('mouseleave', () => { clearInterval(starInterval); });
+
 // --- MAIN LOGIC ---
 let table;
+
+// Helper to update the results counter text (FIXED TYPO)
+function updateResultCounter(activeCount, totalCount) {
+    const el = document.getElementById("results-counter");
+    if(el) {
+        el.innerHTML = `Makers matching criteria: <b>${activeCount}</b> <span style="font-size:0.8em; color:#666;">(of ${totalCount})</span>`;
+    }
+}
 
 Papa.parse(csvUrl, {
     download: true, header: true, dynamicTyping: true,
@@ -318,9 +354,6 @@ Papa.parse(csvUrl, {
 
         if (data.length === 0) { console.warn("Data array is empty."); return; }
 
-        // 1. Update Counter Immediately
-        updateResultCounter(data.length, data.length);
-
         const colMinMax = {};
         const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
         gradientColumns.forEach(col=>{
@@ -328,7 +361,7 @@ Papa.parse(csvUrl, {
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
 
-        // 2. INIT TABULATOR
+        // --- TABULATOR INIT ---
         table = new Tabulator("#creator-table", {
             data: data,
             layout: "fitData",
@@ -338,15 +371,21 @@ Papa.parse(csvUrl, {
             height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
-            // Counter Event
+            // --- COUNTER EVENTS ---
+            // Updates whenever filters change
             dataFiltered: function(filters, rows) {
-                const total = data.length; // Safe Total
+                // Use the raw data length for total count to allow updates before table is fully rendered
+                const total = data.length; 
                 const active = rows.length;
                 updateResultCounter(active, total);
             },
 
-            // INITIALIZE SLIDER & CONTROLS AFTER TABLE IS BUILT
+            // --- INITIALIZE SLIDER AFTER TABLE IS BUILT ---
             tableBuilt: function() {
+                // 1. Initial Count Update
+                updateResultCounter(data.length, data.length);
+
+                // 2. Slider Initialization
                 const slider = document.getElementById('price-slider');
                 const priceLabel = document.getElementById('price-values');
                 const naCheckbox = document.getElementById('show-na-prices');
@@ -363,6 +402,7 @@ Papa.parse(csvUrl, {
                             mode: 'steps',
                             density: 6.25,
                             filter: function (value, type) {
+                                // Large lines for 2k steps
                                 if (value % 2000 === 0) return 1; 
                                 return 0; 
                             },
@@ -381,25 +421,29 @@ Papa.parse(csvUrl, {
                         const min = parseInt(values[0]);
                         const max = parseInt(values[1]);
                         const showNA = naCheckbox.checked;
+
                         priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
 
                         table.setFilter(function(row){
-                            if (typeof row.price !== 'number') return showNA; 
+                            if (typeof row.price !== 'number') {
+                                return showNA; 
+                            }
                             return row.price >= min && row.price <= max;
                         });
                     };
 
-                    // Bind Filter Events
+                    // Bind Events
                     slider.noUiSlider.on('update', updateTableFilter);
                     naCheckbox.addEventListener('change', updateTableFilter);
                     
-                    // Mini Reset
                     if(resetPriceBtn) {
                         resetPriceBtn.addEventListener('click', function(){
                             slider.noUiSlider.set([2000, 10000]);
                             naCheckbox.checked = true;
+                            // Manually trigger update
                             const values = slider.noUiSlider.get(); 
                             priceLabel.innerText = `$${parseInt(values[0]).toLocaleString()} - $${parseInt(values[1]).toLocaleString()}`;
+                            table.recalc(); 
                             updateTableFilter(); 
                         });
                     }
@@ -415,19 +459,9 @@ Papa.parse(csvUrl, {
                         
                         slider.noUiSlider.set([2000, 10000]);
                         naCheckbox.checked = true;
+                        // Force update logic
                         updateTableFilter();
                     });
-
-                    // NEW: Clear Filters Button (Only clears Tags + Price)
-                    const clearFiltersBtn = document.getElementById("clear-filters");
-                    if(clearFiltersBtn) {
-                        clearFiltersBtn.addEventListener("click", function(){
-                             window.clearSpecialtyFilters();
-                             slider.noUiSlider.set([2000, 10000]);
-                             naCheckbox.checked = true;
-                             updateTableFilter();
-                        });
-                    }
                 }
             },
 
@@ -627,8 +661,10 @@ Papa.parse(csvUrl, {
                 if(row.getIndex()%2===0) el.style.backgroundColor="#383838";
                 else el.style.backgroundColor="#2e2e2e";
             },
+            reactiveData:true, virtualDom:true
         });
 
+        
         document.getElementById("sort-field").addEventListener("change", function(){
              const field = this.value; const dir = document.getElementById("sort-dir").value; table.setSort(field, dir);
         });
@@ -646,6 +682,7 @@ document.addEventListener('mousemove', (e) => {
     const isOverLogo = target.closest('.logo-box'); 
     const isOverTooltip = target.closest('#image-tooltip');
     
+    // PART 1: REACTIVE TILT
     const cell = target.closest('.tabulator-cell');
     if (lastTiltCell && lastTiltCell !== cell) {
         const oldWrapper = lastTiltCell.querySelector('.text-wrapper');
@@ -673,6 +710,7 @@ document.addEventListener('mousemove', (e) => {
         }
     }
 
+    // PART 2: TOOLTIP
     const sourceBox = isOverPreview || isOverLogo;
     if (sourceBox) {
         clearTimeout(hideTimeout);
@@ -698,10 +736,12 @@ document.addEventListener('mousemove', (e) => {
                         if (isLogo) {
                             clearInterval(slideshowInterval); 
                             moveTooltip(e); 
+                            // LOGO: Enable HUD = FALSE
                             if (tooltipEl.style.display === 'none' || isNewContent) { showTooltip(imageUrls, index, true, false); }
                         } else {
                             clearInterval(slideshowInterval); 
                             centerTooltip(); 
+                            // PREVIEW: Enable HUD = TRUE
                             if (isNewContent || currentImageIndex !== index) { 
                                 showTooltip(imageUrls, index, shouldAnimate, true); 
                                 updateHudHighlight(index); 
