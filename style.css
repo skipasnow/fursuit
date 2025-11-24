@@ -94,6 +94,7 @@ button.reset-btn:hover { background: #d32f2f; }
 label { font-weight: bold; color: #ccc; }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 /* --- RESULTS COUNTER --- */
 .results-counter {
     width: 100%;
@@ -110,16 +111,21 @@ label { font-weight: bold; color: #ccc; }
 }
 =======
 >>>>>>> parent of 70f869d (Added hit results feature.)
+=======
+>>>>>>> parent of 70f869d (Added hit results feature.)
 
 /* =========================================
    3. PRICE SLIDER STYLING
    ========================================= */
 .slider-group {
 <<<<<<< HEAD
+<<<<<<< HEAD
     flex: 0 0 100% !important; 
     width: 100% !important; 
     order: -1; 
 =======
+=======
+>>>>>>> parent of 70f869d (Added hit results feature.)
     /* Force full width row inside the flex container */
     flex: 0 0 100%; 
     width: 100%; 
@@ -182,7 +188,13 @@ label { font-weight: bold; color: #ccc; }
     top: 12px;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 .noUi-marker { background: #555; width: 1px; } 
+=======
+/* Small ticks for increments */
+.noUi-marker { background: #555; width: 1px; } 
+/* Large ticks for main numbers */
+>>>>>>> parent of 70f869d (Added hit results feature.)
 =======
 /* Small ticks for increments */
 .noUi-marker { background: #555; width: 1px; } 

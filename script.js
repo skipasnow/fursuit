@@ -360,7 +360,10 @@ Papa.parse(csvUrl, {
         });
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> parent of 70f869d (Added hit results feature.)
         // --- PRICE SLIDER INIT (FIXED) ---
         const slider = document.getElementById('price-slider');
         const priceLabel = document.getElementById('price-values');
@@ -458,6 +461,7 @@ Papa.parse(csvUrl, {
             initialSort:[ {column:"rank", dir:"asc"} ],
             
 <<<<<<< HEAD
+<<<<<<< HEAD
             // --- COUNTER EVENTS (FIXED) ---
             dataFiltered: function(filters, rows) {
                 // We use 'this.getDataCount' to ensure accuracy regardless of Virtual DOM state
@@ -553,6 +557,8 @@ Papa.parse(csvUrl, {
                 }
             },
 
+=======
+>>>>>>> parent of 70f869d (Added hit results feature.)
 =======
 >>>>>>> parent of 70f869d (Added hit results feature.)
             columns: [
