@@ -3,7 +3,6 @@
 // ==========================================
 let trailX = 0;
 let trailY = 0;
-let stepCount = 0;
 const stepLength = 30; 
 console.log("Initializing Paw Trail...");
 
@@ -20,11 +19,13 @@ function createPaw(x, y, lastX, lastY) {
     const paw = document.createElement('div');
     paw.className = 'paw-trail';
     const angle = Math.atan2(y - lastY, x - lastX) * 180 / Math.PI + 90;
-    stepCount++;
-    const isRightFoot = stepCount % 2 === 0;
+    
+    // Simple toggle for left/right foot
+    paw.dataset.foot = (paw.dataset.foot === 'right') ? 'left' : 'right';
+    const flip = paw.dataset.foot === 'right' ? 1 : -1;
     
     paw.style.setProperty('--angle', `${angle}deg`);
-    paw.style.setProperty('--flip', isRightFoot ? 1 : -1);
+    paw.style.setProperty('--flip', flip);
     paw.style.left = (x - 12) + 'px';
     paw.style.top = (y - 12) + 'px';
 
@@ -43,11 +44,14 @@ let currentPreviewImages = [];
 let currentImageIndex = 0;
 let slideshowInterval;
 let hideTimeout; 
-let isTooltipCentered = false; 
 
 function displayImageInTooltip(imageUrl, forceAnimation = false) {
     if (!imageUrl) { tooltipEl.style.backgroundImage = 'none'; return; }
-    const baseTransform = isTooltipCentered ? "translate(-50%, -50%)" : "";
+    
+    // Check if centered for transform logic
+    const isCentered = tooltipEl.style.top === "50%";
+    const baseTransform = isCentered ? "translate(-50%, -50%)" : "";
+
     if (tooltipEl.style.opacity === '0' || forceAnimation) {
         const startAngle = Math.random() < 0.5 ? -5 : 5;
         tooltipEl.style.transition = 'none';
@@ -67,7 +71,6 @@ function displayImageInTooltip(imageUrl, forceAnimation = false) {
     img.src = imageUrl;
 }
 
-// HUD Helper
 function updateHudHighlight(index) {
     const hudContainer = tooltipEl.querySelector('.tooltip-hud');
     if (!hudContainer) return;
@@ -78,12 +81,10 @@ function updateHudHighlight(index) {
     }
 }
 
-// Show Tooltip (with Enable HUD Toggle)
 function showTooltip(imageUrls, startIndex = 0, forceAnimation = false, enableHud = true) {
     if (!imageUrls || imageUrls.length === 0) { hideTooltip(); return; }
     
     const isContentDifferent = !currentPreviewImages.length || currentPreviewImages[0] !== imageUrls[0];
-
     currentPreviewImages = imageUrls;
     currentImageIndex = startIndex;
     tooltipEl.style.display = "flex"; 
@@ -126,34 +127,24 @@ function hideTooltip() {
     }, 50);
 }
 
-function startSlideshow() {
-    clearInterval(slideshowInterval);
-    if (currentPreviewImages.length > 1) {
-        slideshowInterval = setInterval(() => {
-            currentImageIndex = (currentImageIndex + 1) % currentPreviewImages.length;
-            displayImageInTooltip(currentPreviewImages[currentImageIndex], true);
-        }, 2000);
-    }
-}
-
-// Positioning
 function centerTooltip() {
-    isTooltipCentered = true;
     tooltipEl.style.top = "50%";
     tooltipEl.style.left = "50%";
-    tooltipEl.style.width = "80vh"; tooltipEl.style.height = "80vh";
+    tooltipEl.style.width = "80vh"; 
+    tooltipEl.style.height = "80vh";
 }
 function moveTooltip(e) {
-    isTooltipCentered = false;
     const tooltipSize = 200; const offset = 15; 
     const windowHeight = window.innerHeight;
-    tooltipEl.style.width = tooltipSize + "px"; tooltipEl.style.height = tooltipSize + "px";
+    tooltipEl.style.width = tooltipSize + "px"; 
+    tooltipEl.style.height = tooltipSize + "px";
     let left = e.clientX + offset; let top = e.clientY + offset;
     if (top + tooltipSize > windowHeight) { top = e.clientY - tooltipSize - offset; }
-    tooltipEl.style.left = left + "px"; tooltipEl.style.top = top + "px";
+    tooltipEl.style.left = left + "px"; 
+    tooltipEl.style.top = top + "px";
 }
 
-// Specialty Filters
+// --- FILTERS HELPERS ---
 let pendingSpecialtyFilters = new Set();
 let appliedSpecialtyFilters = new Set();
 
@@ -175,12 +166,12 @@ window.clearSpecialtyFilters = function() {
     appliedSpecialtyFilters.clear(); 
     updateFilterHeader();
     triggerHeaderResize();
-    table.setHeaderFilterValue("specialty", []); 
+    if(table) table.setHeaderFilterValue("specialty", []); 
 }
 
 window.applySpecialtyFilters = function() {
     appliedSpecialtyFilters = new Set(pendingSpecialtyFilters);
-    table.setHeaderFilterValue("specialty", Array.from(appliedSpecialtyFilters));
+    if(table) table.setHeaderFilterValue("specialty", Array.from(appliedSpecialtyFilters));
     triggerHeaderResize();
 }
 
@@ -240,7 +231,14 @@ function updateFilterHeader() {
     }
 }
 
-// Helpers
+function updateResultCounter(activeCount, totalCount) {
+    const el = document.getElementById("results-counter");
+    if(el) {
+        el.innerHTML = `Makers matching criteria: <b>${activeCount}</b> <span style="font-size:0.8em; color:#666;">(of ${totalCount})</span>`;
+    }
+}
+
+// --- DATA CLEANING ---
 function parseImageFormula(formula) {
   if(!formula) return "";
   const match = formula.match(/=IMAGE\("(.+)"\)/);
@@ -282,27 +280,10 @@ function formatTextCell(cell) {
     return `<div class="text-wrapper"><span class="text-content">${val}</span></div>`;
 }
 
-const headerText = document.getElementById('header-text');
-let starInterval;
-function createStar() {
-    const star = document.createElement('div');
-    star.className = 'star-particle';
-    star.textContent = '★';
-    const startX = Math.random() * window.innerWidth;
-    const headerRect = headerText.getBoundingClientRect();
-    const startY = headerRect.bottom - 10; 
-    star.style.left = startX + 'px'; star.style.top = startY + 'px';
-    const size = 0.8 + Math.random() * 0.8;
-    star.style.fontSize = size + 'em';
-    document.body.appendChild(star);
-    setTimeout(() => { star.remove(); }, 1500);
-}
-headerText.addEventListener('mouseenter', () => { starInterval = setInterval(createStar, 50); });
-headerText.addEventListener('mouseleave', () => { clearInterval(starInterval); });
-
 // --- MAIN LOGIC ---
 let table;
 
+<<<<<<< HEAD
 // Helper to update the results counter text
 function updateResultCounter(activeCount, totalCount) {
     const el = document.getElementById("results-counter");
@@ -311,6 +292,8 @@ function updateResultCounter(activeCount, totalCount) {
     }
 }
 
+=======
+>>>>>>> parent of d97d9d8 (Update script.js)
 Papa.parse(csvUrl, {
     download: true, header: true, dynamicTyping: true,
     complete: function(results) {
@@ -367,6 +350,7 @@ Papa.parse(csvUrl, {
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -483,6 +467,12 @@ Papa.parse(csvUrl, {
 
 >>>>>>> parent of 70f869d (Added hit results feature.)
         // --- TABULATOR INIT ---
+=======
+        // 1. Update Counter Immediately
+        updateResultCounter(data.length, data.length);
+
+        // 2. Initialize Tabulator
+>>>>>>> parent of d97d9d8 (Update script.js)
         table = new Tabulator("#creator-table", {
             data: data,
             layout: "fitData",
@@ -491,6 +481,7 @@ Papa.parse(csvUrl, {
             placeholder:"No Data Available",
             height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
+<<<<<<< HEAD
             
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -628,6 +619,8 @@ Papa.parse(csvUrl, {
 >>>>>>> parent of 28dcbda (Fixing filter quantity)
 =======
 >>>>>>> parent of 28dcbda (Fixing filter quantity)
+=======
+>>>>>>> parent of d97d9d8 (Update script.js)
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Maker", field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
@@ -653,7 +646,6 @@ Papa.parse(csvUrl, {
                         if (!imageUrls || imageUrls.length === 0) return "";
                         const container = document.createElement('div');
                         container.className = 'preview-container';
-                        
                         imageUrls.forEach((url, index) => {
                             const previewBox = document.createElement('div');
                             previewBox.className = 'preview-box';
@@ -683,7 +675,6 @@ Papa.parse(csvUrl, {
                             const boxes = container.querySelectorAll('.preview-box');
                             boxes.forEach(b => b.style.borderColor = ''); 
                             if(boxes[clampedIndex]) boxes[clampedIndex].style.borderColor = 'darkorange';
-                            
                             updateHudHighlight(clampedIndex); 
                         };
 
@@ -824,9 +815,9 @@ Papa.parse(csvUrl, {
                 if(row.getIndex()%2===0) el.style.backgroundColor="#383838";
                 else el.style.backgroundColor="#2e2e2e";
             },
-            reactiveData:true, virtualDom:true
         });
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
         // Global Reset (Resets everything including sort and slider)
@@ -845,6 +836,89 @@ Papa.parse(csvUrl, {
         });
         
 >>>>>>> parent of 28dcbda (Fixing filter quantity)
+=======
+        // --- POST-TABLE EVENTS ---
+        
+        // A. Attach Filter Listener
+        table.on("dataFiltered", function(filters, rows) {
+            updateResultCounter(rows.length, data.length);
+        });
+
+        // B. Initialize Slider (Safe because 'table' is defined)
+        const slider = document.getElementById('price-slider');
+        const priceLabel = document.getElementById('price-values');
+        const naCheckbox = document.getElementById('show-na-prices');
+        const resetPriceBtn = document.getElementById('reset-price-btn');
+
+        if (slider && typeof noUiSlider !== 'undefined') {
+            noUiSlider.create(slider, {
+                start: [2000, 10000], 
+                connect: true,        
+                range: { 'min': 2000, 'max': 10000 },
+                step: 500,            
+                tooltips: false, 
+                pips: {
+                    mode: 'steps',
+                    density: 6.25,
+                    filter: function (value, type) {
+                        if (value % 2000 === 0) return 1; 
+                        return 0; 
+                    },
+                    format: { to: function (value) { return '$' + (value / 1000) + 'k'; } }
+                },
+                format: {
+                    to: function (value) { return Math.round(value); },
+                    from: function (value) { return Number(value); }
+                }
+            });
+
+            const updateTableFilter = () => {
+                const values = slider.noUiSlider.get();
+                const min = parseInt(values[0]);
+                const max = parseInt(values[1]);
+                const showNA = naCheckbox.checked;
+
+                priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+
+                table.setFilter(function(row){
+                    if (typeof row.price !== 'number') {
+                        return showNA; 
+                    }
+                    return row.price >= min && row.price <= max;
+                });
+            };
+
+            slider.noUiSlider.on('update', updateTableFilter);
+            naCheckbox.addEventListener('change', updateTableFilter);
+            
+            if(resetPriceBtn) {
+                resetPriceBtn.addEventListener('click', function(){
+                    slider.noUiSlider.set([2000, 10000]);
+                    naCheckbox.checked = true;
+                    const values = slider.noUiSlider.get(); 
+                    priceLabel.innerText = `$${parseInt(values[0]).toLocaleString()} - $${parseInt(values[1]).toLocaleString()}`;
+                    table.recalc(); 
+                    updateTableFilter(); 
+                });
+            }
+
+            // Global Reset Hook
+            document.getElementById("reset-sort").addEventListener("click", function(){
+                table.clearSort(); 
+                table.setSort("rank", "asc"); 
+                table.clearHeaderFilter(); 
+                document.getElementById("sort-field").value = "rank";
+                document.getElementById("sort-dir").value = "asc";
+                window.clearSpecialtyFilters(); 
+                
+                slider.noUiSlider.set([2000, 10000]);
+                naCheckbox.checked = true;
+                updateTableFilter();
+            });
+        }
+
+        // Other Controls
+>>>>>>> parent of d97d9d8 (Update script.js)
         document.getElementById("sort-field").addEventListener("change", function(){
              const field = this.value; const dir = document.getElementById("sort-dir").value; table.setSort(field, dir);
         });
@@ -862,7 +936,6 @@ document.addEventListener('mousemove', (e) => {
     const isOverLogo = target.closest('.logo-box'); 
     const isOverTooltip = target.closest('#image-tooltip');
     
-    // PART 1: REACTIVE TILT
     const cell = target.closest('.tabulator-cell');
     if (lastTiltCell && lastTiltCell !== cell) {
         const oldWrapper = lastTiltCell.querySelector('.text-wrapper');
@@ -890,7 +963,6 @@ document.addEventListener('mousemove', (e) => {
         }
     }
 
-    // PART 2: TOOLTIP
     const sourceBox = isOverPreview || isOverLogo;
     if (sourceBox) {
         clearTimeout(hideTimeout);
