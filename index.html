@@ -165,23 +165,40 @@
         }
 
         /* =========================================
-           3. PRICE & SPECIALTY STYLING
+           3. PRICE SLIDER & SPECIALTY STYLING
            ========================================= */
-        /* Shared styling for wide groups (Price & Specialty) */
+        /* Common base for the wider controls */
         .slider-group, .specialty-group {
-            flex: 1 1 100% !important; /* Force full width on small screens, grow on large */
-            width: 100% !important;
+            flex: 1 1 100% !important; 
+            width: 100% !important; 
             max-width: 600px; 
             display: flex;
-            flex-direction: column;
             box-sizing: border-box;
         }
         
-        /* Ordering: Price first (-2), then Specialty (-1) */
-        .slider-group { order: -2; padding: 0 15px; margin-bottom: 40px; }
-        .specialty-group { order: -1; margin-bottom: 20px; }
+        /* Price Slider Group (Vertical stack) */
+        .slider-group { 
+            flex-direction: column;
+            order: -2; 
+            padding: 0 15px; 
+            margin-bottom: 40px; 
+        }
+        
+        /* Specialty Group (Horizontal Layout: Label -> Box -> Buttons) */
+        .specialty-group { 
+            flex-direction: row; /* Horizontal layout */
+            align-items: flex-start; /* Align to top so box can expand */
+            order: -1; 
+            margin-bottom: 20px; 
+            gap: 15px; /* Space between label, box, and buttons */
+        }
 
-        /* The Track */
+        /* Adjust label within specialty group to center vertically with input */
+        .specialty-group > label {
+            margin-top: 8px; /* rough align with input text */
+            white-space: nowrap;
+        }
+
         .noUi-target {
             background: #555;
             border: 1px solid #000;
@@ -314,9 +331,11 @@
 
         .filter-container {
             display: flex; flex-direction: column; gap: 6px; padding: 8px;
-            background: #222; border-radius: 4px; width: 100%; box-sizing: border-box; 
-            min-height: 80px; /* Reduced min-height since it's not in header anymore */
-            padding-bottom: 14px; 
+            background: #222; border-radius: 4px; 
+            width: 100%; /* Occupy remaining flex space */
+            box-sizing: border-box; 
+            min-height: auto; /* Allow it to be smaller */
+            flex-grow: 1; /* Allow it to expand */
         }
         .filter-input {
             background: #333; color: #fff; border: 1px solid #555;
@@ -333,15 +352,21 @@
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
         .filter-remove { cursor: pointer; font-weight: bold; color: #000; font-size: 10px; }
         .filter-remove:hover { color: #fff; }
-        .filter-actions {
-              margin-top: auto; width: 100%; display: flex; justify-content: space-between; align-items: center; 
-              border-top: 1px solid #444; padding-top: 8px; padding-bottom: 4px; line-height: 1.5;
+        
+        /* Specialty Action Buttons (Right side) */
+        .specialty-actions {
+            display: flex; 
+            flex-direction: column; /* Stack buttons or row? User asked for "to the right" */
+            gap: 8px;
+            margin-top: 0; /* Reset */
+            white-space: nowrap;
         }
+        
         .filter-clear-all { font-size: 0.85em; color: #ff6b6b; cursor: pointer; text-decoration: underline; white-space: nowrap; line-height: 1.5; }
         .filter-clear-all:hover { color: #ff4040; }
         .filter-apply-btn { font-size: 0.85em; color: #4caf50; cursor: pointer; text-decoration: underline; white-space: nowrap; font-weight: bold; line-height: 1.5; }
         .filter-apply-btn:hover { color: #66bb6a; }
-        .tags-area { display: flex; flex-wrap: wrap; gap: 3px; width: 100%; margin-bottom: 4px; margin-top: 5px; }
+        .tags-area { display: flex; flex-wrap: wrap; gap: 3px; width: 100%; margin-bottom: 0; margin-top: 4px; min-height: 20px; }
 
         /* =========================================
            6. IMAGES & TOOLTIPS
@@ -449,18 +474,20 @@
         <div id="price-slider"></div>
       </div>
 
-      <!-- SPECIALTY GROUP: Placed between Price and Sort -->
+      <!-- SPECIALTY GROUP: Horizontal Layout -->
       <div class="control-group specialty-group">
          <label>Specialty Tags:</label>
+         
          <div class="filter-container">
              <input type="text" id="specialty-input" class="filter-input" placeholder="+ Type tag (e.g. 'kemono')...">
              <div class="tags-area" id="specialty-tags-area">
                  <span style="color:#666; font-size:0.8em;">No tags selected</span>
              </div>
-             <div class="filter-actions">
-                 <span class="filter-apply-btn" id="specialty-apply-btn">Apply Filter</span>
-                 <span class="filter-clear-all" id="specialty-clear-btn">Clear All</span>
-             </div>
+         </div>
+
+         <div class="specialty-actions">
+             <span class="filter-apply-btn" id="specialty-apply-btn">Apply Filter</span>
+             <span class="filter-clear-all" id="specialty-clear-btn">Clear All</span>
          </div>
       </div>
 
@@ -837,6 +864,7 @@
         // EXPLICIT REFRESH FUNCTION
         function refreshCounter() {
             if(table) {
+                // Get all rows that pass ALL filters (both slider and header filters)
                 const activeRows = table.getData("active");
                 updateResultCounter(activeRows.length, totalDataCount);
             }
@@ -875,26 +903,43 @@
                     }
                 });
 
-                const updateState = () => {
+                // This function now accesses 'table' dynamically from the global scope
+                const updateTableFilter = () => {
                     const values = slider.noUiSlider.get();
-                    filterState.priceMin = parseInt(values[0]);
-                    filterState.priceMax = parseInt(values[1]);
-                    filterState.showNA = naCheckbox.checked;
+                    const min = parseInt(values[0]);
+                    const max = parseInt(values[1]);
+                    const showNA = naCheckbox.checked;
 
-                    priceLabel.innerText = `$${filterState.priceMin.toLocaleString()} - $${filterState.priceMax.toLocaleString()}`;
-                    
-                    updateTableFilters();
+                    priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+
+                    if(table) {
+                        table.setFilter(function(row){
+                            if (typeof row.price !== 'number') {
+                                return showNA; 
+                            }
+                            return row.price >= min && row.price <= max;
+                        });
+                        table.recalc(); 
+                        
+                        // EXPLICIT UPDATE FOR COUNTER
+                        // Wait 1 tick for recalc to finish processing active data
+                        setTimeout(refreshCounter, 10);
+                    }
                 };
 
                 // Bind Events
-                slider.noUiSlider.on('update', updateState);
-                naCheckbox.addEventListener('change', updateState);
+                slider.noUiSlider.on('update', updateTableFilter);
+                naCheckbox.addEventListener('change', updateTableFilter);
                 
                 if(resetPriceBtn) {
                     resetPriceBtn.addEventListener('click', function(){
                         slider.noUiSlider.set([2000, 10000]);
                         naCheckbox.checked = true;
-                        // manually reset UI state will trigger update event
+                        const values = slider.noUiSlider.get(); 
+                        priceLabel.innerText = `$${parseInt(values[0]).toLocaleString()} - $${parseInt(values[1]).toLocaleString()}`;
+                        if(table) {
+                            updateTableFilter();
+                        }
                     });
                 }
 
@@ -904,8 +949,9 @@
                     resetSortBtn.addEventListener("click", function(){
                         slider.noUiSlider.set([2000, 10000]);
                         naCheckbox.checked = true;
-                        clearSpecialtyFilters(); // Also clear tags
-                        // updateTableFilters called inside clear
+                        updateTableFilter();
+                        // Explicit refresh here too
+                        setTimeout(refreshCounter, 50);
                     });
                 }
             }
