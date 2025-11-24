@@ -346,7 +346,7 @@ Papa.parse(csvUrl, {
 
         if (data.length === 0) { console.warn("Data array is empty."); return; }
 
-        // --- UPDATE COUNTER IMMEDIATELY ---
+        // --- FORCE COUNTER UPDATE IMMEDIATELY ---
         const initialTotal = data.length;
         const counterEl = document.getElementById("results-counter");
         if(counterEl) {
@@ -436,8 +436,9 @@ Papa.parse(csvUrl, {
             dataFiltered: function(filters, rows) {
                 const el = document.getElementById("results-counter");
                 if(el) {
-                    // USE 'this' TO AVOID INITIALIZATION CRASH
-                    const total = this.getDataCount(); 
+                    // USE THE RAW 'data' ARRAY FOR TOTAL
+                    // This avoids the crash if 'table' isn't ready
+                    const total = data.length; 
                     const active = rows.length;
                     el.innerHTML = `Makers matching criteria: <b>${active}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
                 }
@@ -652,7 +653,6 @@ Papa.parse(csvUrl, {
             if(slider && slider.noUiSlider) {
                 slider.noUiSlider.set([2000, 10000]);
                 naCheckbox.checked = true;
-                // Force update trigger after reset
                 slider.noUiSlider.fireEvent('update'); 
             }
         });
