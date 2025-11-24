@@ -362,10 +362,14 @@ Papa.parse(csvUrl, {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> parent of 70f869d (Added hit results feature.)
         // --- PRICE SLIDER INIT (FIXED) ---
+=======
+        // --- PRICE SLIDER INIT (FIXED & ENHANCED) ---
+>>>>>>> parent of 28dcbda (Fixing filter quantity)
 =======
         // --- PRICE SLIDER INIT (FIXED & ENHANCED) ---
 >>>>>>> parent of 28dcbda (Fixing filter quantity)
@@ -383,10 +387,17 @@ Papa.parse(csvUrl, {
                 tooltips: false, 
                 
 <<<<<<< HEAD
+<<<<<<< HEAD
                 // --- UPDATED PIPS LOGIC ---
                 pips: {
                     mode: 'steps', // Draw a tick for every $500 step
                     density: 6.25, // (100% / 16 steps) helps align them perfectly
+=======
+                // --- PIPS (MARKERS) ---
+                pips: {
+                    mode: 'steps', // Use Steps to align with $500 increments
+                    density: 6.25, // Spacing calculation
+>>>>>>> parent of 28dcbda (Fixing filter quantity)
 =======
                 // --- PIPS (MARKERS) ---
                 pips: {
@@ -473,6 +484,7 @@ Papa.parse(csvUrl, {
             height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -576,6 +588,8 @@ Papa.parse(csvUrl, {
 =======
 >>>>>>> parent of 70f869d (Added hit results feature.)
 =======
+=======
+>>>>>>> parent of 28dcbda (Fixing filter quantity)
             // --- LIVE RESULT COUNTER ---
             // This event fires whenever filters (Slider, Tags, etc) change
             dataFiltered: function(filters, rows) {
@@ -594,6 +608,9 @@ Papa.parse(csvUrl, {
                 if(el) el.innerHTML = `Makers matching criteria: <b>${total}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
             },
             
+<<<<<<< HEAD
+>>>>>>> parent of 28dcbda (Fixing filter quantity)
+=======
 >>>>>>> parent of 28dcbda (Fixing filter quantity)
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell, cssClass: "text-cell" },
