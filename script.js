@@ -361,10 +361,14 @@ Papa.parse(csvUrl, {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> parent of 70f869d (Added hit results feature.)
         // --- PRICE SLIDER INIT (FIXED) ---
+=======
+        // --- PRICE SLIDER INIT (FIXED & ENHANCED) ---
+>>>>>>> parent of 28dcbda (Fixing filter quantity)
         const slider = document.getElementById('price-slider');
         const priceLabel = document.getElementById('price-values');
         const naCheckbox = document.getElementById('show-na-prices');
@@ -378,10 +382,17 @@ Papa.parse(csvUrl, {
                 step: 500,            
                 tooltips: false, 
                 
+<<<<<<< HEAD
                 // --- UPDATED PIPS LOGIC ---
                 pips: {
                     mode: 'steps', // Draw a tick for every $500 step
                     density: 6.25, // (100% / 16 steps) helps align them perfectly
+=======
+                // --- PIPS (MARKERS) ---
+                pips: {
+                    mode: 'steps', // Use Steps to align with $500 increments
+                    density: 6.25, // Spacing calculation
+>>>>>>> parent of 28dcbda (Fixing filter quantity)
                     
                     // The Filter decides which ticks get numbers vs just lines
                     filter: function (value, type) {
@@ -420,9 +431,11 @@ Papa.parse(csvUrl, {
                 priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
 
                 table.setFilter(function(data){
+                    // 1. Check if Price is Valid Number
                     if (typeof data.price !== 'number') {
                         return showNA; 
                     }
+                    // 2. If it IS a number, check range
                     return data.price >= min && data.price <= max;
                 });
             };
@@ -460,6 +473,7 @@ Papa.parse(csvUrl, {
             height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
             // --- COUNTER EVENTS (FIXED) ---
@@ -561,6 +575,26 @@ Papa.parse(csvUrl, {
 >>>>>>> parent of 70f869d (Added hit results feature.)
 =======
 >>>>>>> parent of 70f869d (Added hit results feature.)
+=======
+            // --- LIVE RESULT COUNTER ---
+            // This event fires whenever filters (Slider, Tags, etc) change
+            dataFiltered: function(filters, rows) {
+                const el = document.getElementById("results-counter");
+                if(el) {
+                    const total = table.getDataCount(); 
+                    const active = rows.length;
+                    el.innerHTML = `Makers matching criteria: <b>${active}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
+                }
+            },
+            
+            // Update count immediately on load
+            tableBuilt: function() {
+                const el = document.getElementById("results-counter");
+                const total = table.getDataCount();
+                if(el) el.innerHTML = `Makers matching criteria: <b>${total}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
+            },
+            
+>>>>>>> parent of 28dcbda (Fixing filter quantity)
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Maker", field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
@@ -760,6 +794,24 @@ Papa.parse(csvUrl, {
             reactiveData:true, virtualDom:true
         });
 
+<<<<<<< HEAD
+=======
+        // Global Reset (Resets everything including sort and slider)
+        document.getElementById("reset-sort").addEventListener("click", function(){
+            table.clearSort(); table.setSort("rank", "asc"); table.clearHeaderFilter(); 
+            document.getElementById("sort-field").value = "rank";
+            document.getElementById("sort-dir").value = "asc";
+            window.clearSpecialtyFilters(); 
+            
+            if(slider && slider.noUiSlider) {
+                slider.noUiSlider.set([2000, 10000]);
+                naCheckbox.checked = true;
+                // Force update trigger after reset
+                slider.noUiSlider.fireEvent('update'); 
+            }
+        });
+        
+>>>>>>> parent of 28dcbda (Fixing filter quantity)
         document.getElementById("sort-field").addEventListener("change", function(){
              const field = this.value; const dir = document.getElementById("sort-dir").value; table.setSort(field, dir);
         });
