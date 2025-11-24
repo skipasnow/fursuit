@@ -106,10 +106,16 @@ label { font-weight: bold; color: #ccc; }
     margin-top: 15px;
     padding-top: 15px;
     border-top: 1px solid #444; /* Separator line */
+    
+    /* CHANGED: Align to left */
+    text-align: left; 
+    
     font-size: 1.1em;
-    text-align: center;
     color: #ccc;
+    font-weight: bold;
 }
+
+/* Style the numbers specifically */
 .results-counter b {
     color: #ff8c00; /* Orange */
     font-size: 1.2em;

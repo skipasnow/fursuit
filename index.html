@@ -18,7 +18,7 @@
 
     <h1><span id="header-text">Kemono Fursuit Makers</span></h1>
 
-    <div class="controls-container">
+<div class="controls-container">
       
       <div class="control-group slider-group">
         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
@@ -54,7 +54,10 @@
         </select>
       </div>
 
-      <button id="reset-sort" class="reset-btn">Reset Sort</button>
+      <div class="control-group" style="flex-direction:row; align-items:flex-end;">
+          <button id="reset-sort" class="reset-btn">Reset Sort</button>
+          <button id="clear-filters" style="background:#444; border:1px solid #666;">Clear Filters</button>
+      </div>
       
       <div style="margin-left: auto; font-size: 0.9em; color: #aaa; width: 100%; margin-top:10px;">
         *Hold <b>Shift</b> and click column headers to sort by multiple columns at once.
