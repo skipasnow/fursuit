@@ -352,6 +352,14 @@ Papa.parse(csvUrl, {
 
         if (data.length === 0) { console.warn("Data array is empty."); return; }
 
+        // --- UPDATE COUNTER IMMEDIATELY (Fix for "Loading Data") ---
+        const initialTotal = data.length;
+        const counterEl = document.getElementById("results-counter");
+        if(counterEl) {
+            counterEl.innerHTML = `Makers matching criteria: <b>${initialTotal}</b> <span style="font-size:0.8em; color:#666;">(of ${initialTotal})</span>`;
+        }
+        // -----------------------------------------------------------
+
         const colMinMax = {};
         const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
         gradientColumns.forEach(col=>{
@@ -488,6 +496,7 @@ Papa.parse(csvUrl, {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             // --- COUNTER EVENTS (FIXED) ---
             dataFiltered: function(filters, rows) {
                 // We use 'this.getDataCount' to ensure accuracy regardless of Virtual DOM state
@@ -595,6 +604,13 @@ Papa.parse(csvUrl, {
             dataFiltered: function(filters, rows) {
                 const el = document.getElementById("results-counter");
                 if(el) {
+=======
+            // UPDATE COUNTER ON FILTER CHANGE
+            dataFiltered: function(filters, rows) {
+                const el = document.getElementById("results-counter");
+                if(el) {
+                    // Tabulator v5+ sometimes counts grouped rows, so we check logic
+>>>>>>> parent of 65c73f7 (Update script.js)
                     const total = table.getDataCount(); 
                     const active = rows.length;
                     el.innerHTML = `Makers matching criteria: <b>${active}</b> <span style="font-size:0.8em; color:#666;">(of ${total})</span>`;
