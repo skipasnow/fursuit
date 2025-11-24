@@ -165,20 +165,23 @@
         }
 
         /* =========================================
-           3. PRICE SLIDER STYLING
+           3. PRICE & SPECIALTY STYLING
            ========================================= */
-        .slider-group {
-            flex: 0 0 100% !important; 
-            width: 100% !important; 
-            order: -1; 
+        /* Shared styling for wide groups (Price & Specialty) */
+        .slider-group, .specialty-group {
+            flex: 1 1 100% !important; /* Force full width on small screens, grow on large */
+            width: 100% !important;
             max-width: 600px; 
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
-            padding: 0 15px; 
-            margin-bottom: 40px;
         }
+        
+        /* Ordering: Price first (-2), then Specialty (-1) */
+        .slider-group { order: -2; padding: 0 15px; margin-bottom: 40px; }
+        .specialty-group { order: -1; margin-bottom: 20px; }
 
+        /* The Track */
         .noUi-target {
             background: #555;
             border: 1px solid #000;
@@ -247,7 +250,6 @@
         .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
         .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
 
-        /* Base Cell */
         .tabulator-row .tabulator-cell {
             transition: transform 0.1s ease-out, filter 0.2s ease, box-shadow 0.2s ease;
             position: relative; background-clip: padding-box; overflow: hidden; cursor: inherit;
@@ -313,13 +315,13 @@
         .filter-container {
             display: flex; flex-direction: column; gap: 6px; padding: 8px;
             background: #222; border-radius: 4px; width: 100%; box-sizing: border-box; 
-            min-height: 100px; padding-bottom: 14px; 
+            min-height: 80px; /* Reduced min-height since it's not in header anymore */
+            padding-bottom: 14px; 
         }
         .filter-input {
             background: #333; color: #fff; border: 1px solid #555;
             padding: 5px 8px; border-radius: 3px; font-size: 0.9em;
             width: 100%; outline: none; box-sizing: border-box; cursor: inherit !important;
-            /* Fix 1: Explicitly inherit font family for inputs to show custom font */
             font-family: inherit;
         }
         .filter-input:focus { border-color: darkorange; }
@@ -339,7 +341,7 @@
         .filter-clear-all:hover { color: #ff4040; }
         .filter-apply-btn { font-size: 0.85em; color: #4caf50; cursor: pointer; text-decoration: underline; white-space: nowrap; font-weight: bold; line-height: 1.5; }
         .filter-apply-btn:hover { color: #66bb6a; }
-        .tags-area { display: flex; flex-wrap: wrap; gap: 3px; width: 100%; margin-bottom: 4px; }
+        .tags-area { display: flex; flex-wrap: wrap; gap: 3px; width: 100%; margin-bottom: 4px; margin-top: 5px; }
 
         /* =========================================
            6. IMAGES & TOOLTIPS
@@ -445,6 +447,21 @@
             </label>
         </div>
         <div id="price-slider"></div>
+      </div>
+
+      <!-- SPECIALTY GROUP: Placed between Price and Sort -->
+      <div class="control-group specialty-group">
+         <label>Specialty Tags:</label>
+         <div class="filter-container">
+             <input type="text" id="specialty-input" class="filter-input" placeholder="+ Type tag (e.g. 'kemono')...">
+             <div class="tags-area" id="specialty-tags-area">
+                 <span style="color:#666; font-size:0.8em;">No tags selected</span>
+             </div>
+             <div class="filter-actions">
+                 <span class="filter-apply-btn" id="specialty-apply-btn">Apply Filter</span>
+                 <span class="filter-clear-all" id="specialty-clear-btn">Clear All</span>
+             </div>
+         </div>
       </div>
 
       <div class="control-group">
@@ -642,91 +659,99 @@
             tooltipEl.style.left = left + "px"; tooltipEl.style.top = top + "px";
         }
 
-        // Specialty Filters
-        let pendingSpecialtyFilters = new Set();
-        let appliedSpecialtyFilters = new Set();
+        // ==========================================
+        // 3. UNIFIED FILTER LOGIC
+        // ==========================================
+        let filterState = {
+            priceMin: 2000,
+            priceMax: 10000,
+            showNA: true,
+            tags: new Set()
+        };
+        let pendingTags = new Set();
 
-        window.addSpecialtyFilter = function(tag) {
+        // Master Filter Function to handle combined logic
+        function masterFilter(row) {
+            // 1. Price Logic
+            const price = row.price;
+            let priceMatch = false;
+            if (typeof price !== 'number') {
+                priceMatch = filterState.showNA;
+            } else {
+                priceMatch = price >= filterState.priceMin && price <= filterState.priceMax;
+            }
+
+            if(!priceMatch) return false; // Optimization
+
+            // 2. Specialty Logic (OR Match)
+            if (filterState.tags.size > 0) {
+                if (!row.specialty) {
+                    return false; // Has tags selected but row has none
+                }
+                const rowTags = row.specialty.split(',').map(t => t.trim());
+                let tagMatch = false;
+                filterState.tags.forEach(tag => {
+                    if (rowTags.includes(tag)) tagMatch = true;
+                });
+                return tagMatch;
+            }
+
+            return true; // Passes price, and no tags selected
+        }
+
+        function updateTableFilters() {
+            if(table) {
+                table.setFilter(masterFilter);
+                setTimeout(refreshCounter, 10); 
+            }
+        }
+
+        // Specialty Tag Functions
+        function initSpecialtyControls() {
+            const input = document.getElementById('specialty-input');
+            const applyBtn = document.getElementById('specialty-apply-btn');
+            const clearBtn = document.getElementById('specialty-clear-btn');
+
+            input.addEventListener("keydown", function(e){
+                if(e.key === "Enter"){
+                    addSpecialtyFilter(this.value);
+                    this.value = "";
+                }
+            });
+
+            applyBtn.onclick = applySpecialtyFilters;
+            clearBtn.onclick = clearSpecialtyFilters;
+        }
+
+        function addSpecialtyFilter(tag) {
             if(!tag) return;
-            pendingSpecialtyFilters.add(tag.trim());
-            updateFilterHeader();
-            triggerHeaderResize(); 
+            pendingTags.add(tag.trim());
+            updateSpecialtyUI();
         }
 
         window.removeSpecialtyFilter = function(tag) {
-            pendingSpecialtyFilters.delete(tag);
-            updateFilterHeader();
-            triggerHeaderResize(); 
+            pendingTags.delete(tag);
+            updateSpecialtyUI();
         }
 
-        window.clearSpecialtyFilters = function() {
-            pendingSpecialtyFilters.clear();
-            appliedSpecialtyFilters.clear(); 
-            updateFilterHeader();
-            triggerHeaderResize();
-            if(table) {
-                table.setHeaderFilterValue("specialty", []); 
-                // EXPLICIT UPDATE FOR COUNTER
-                refreshCounter();
-            }
+        function clearSpecialtyFilters() {
+            pendingTags.clear();
+            filterState.tags.clear();
+            updateSpecialtyUI();
+            updateTableFilters();
         }
 
-        window.applySpecialtyFilters = function() {
-            appliedSpecialtyFilters = new Set(pendingSpecialtyFilters);
-            if(table) {
-                table.setHeaderFilterValue("specialty", Array.from(appliedSpecialtyFilters));
-                triggerHeaderResize();
-                // EXPLICIT UPDATE FOR COUNTER
-                refreshCounter();
-            }
+        function applySpecialtyFilters() {
+            filterState.tags = new Set(pendingTags);
+            updateTableFilters();
         }
 
-        function triggerHeaderResize() {
-            if(table) {
-                setTimeout(() => {
-                     table.columnManager.renderer.renderColumns();
-                     table.redraw(true);
-                }, 50);
-            }
-        }
-
-        function updateFilterHeader() {
-            const container = document.getElementById('specialty-filter-container');
-            if(!container) return;
-            let tagsArea = container.querySelector('.tags-area');
-            if (!tagsArea) {
-                container.innerHTML = '';
-                const input = document.createElement("input");
-                input.type = "text";
-                input.className = "filter-input";
-                input.placeholder = "+ Type tag...";
-                input.addEventListener("keydown", function(e){
-                    if(e.key === "Enter"){
-                        addSpecialtyFilter(this.value);
-                        this.value = "";
-                    }
-                });
-                container.appendChild(input);
-                tagsArea = document.createElement("div");
-                tagsArea.className = "tags-area";
-                container.appendChild(tagsArea);
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'filter-actions';
-                const applyBtn = document.createElement('span');
-                applyBtn.className = 'filter-apply-btn';
-                applyBtn.innerText = 'Apply Filter';
-                applyBtn.onclick = window.applySpecialtyFilters;
-                actionsDiv.appendChild(applyBtn);
-                const clearBtn = document.createElement('span');
-                clearBtn.className = 'filter-clear-all';
-                clearBtn.innerText = 'Clear All';
-                clearBtn.onclick = window.clearSpecialtyFilters;
-                actionsDiv.appendChild(clearBtn);
-                container.appendChild(actionsDiv);
-            } 
+        function updateSpecialtyUI() {
+            const tagsArea = document.getElementById('specialty-tags-area');
+            if(!tagsArea) return;
             tagsArea.innerHTML = '';
-            if (pendingSpecialtyFilters.size > 0) {
-                pendingSpecialtyFilters.forEach(tag => {
+            if (pendingTags.size > 0) {
+                pendingTags.forEach(tag => {
                     const pill = document.createElement('span');
                     pill.className = 'filter-tag';
                     pill.innerHTML = `${tag} <span class="filter-remove" onclick="removeSpecialtyFilter('${tag}')">✕</span>`;
@@ -812,7 +837,6 @@
         // EXPLICIT REFRESH FUNCTION
         function refreshCounter() {
             if(table) {
-                // Get all rows that pass ALL filters (both slider and header filters)
                 const activeRows = table.getData("active");
                 updateResultCounter(activeRows.length, totalDataCount);
             }
@@ -851,43 +875,26 @@
                     }
                 });
 
-                // This function now accesses 'table' dynamically from the global scope
-                const updateTableFilter = () => {
+                const updateState = () => {
                     const values = slider.noUiSlider.get();
-                    const min = parseInt(values[0]);
-                    const max = parseInt(values[1]);
-                    const showNA = naCheckbox.checked;
+                    filterState.priceMin = parseInt(values[0]);
+                    filterState.priceMax = parseInt(values[1]);
+                    filterState.showNA = naCheckbox.checked;
 
-                    priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-
-                    if(table) {
-                        table.setFilter(function(row){
-                            if (typeof row.price !== 'number') {
-                                return showNA; 
-                            }
-                            return row.price >= min && row.price <= max;
-                        });
-                        table.recalc(); 
-                        
-                        // EXPLICIT UPDATE FOR COUNTER
-                        // Wait 1 tick for recalc to finish processing active data
-                        setTimeout(refreshCounter, 10);
-                    }
+                    priceLabel.innerText = `$${filterState.priceMin.toLocaleString()} - $${filterState.priceMax.toLocaleString()}`;
+                    
+                    updateTableFilters();
                 };
 
                 // Bind Events
-                slider.noUiSlider.on('update', updateTableFilter);
-                naCheckbox.addEventListener('change', updateTableFilter);
+                slider.noUiSlider.on('update', updateState);
+                naCheckbox.addEventListener('change', updateState);
                 
                 if(resetPriceBtn) {
                     resetPriceBtn.addEventListener('click', function(){
                         slider.noUiSlider.set([2000, 10000]);
                         naCheckbox.checked = true;
-                        const values = slider.noUiSlider.get(); 
-                        priceLabel.innerText = `$${parseInt(values[0]).toLocaleString()} - $${parseInt(values[1]).toLocaleString()}`;
-                        if(table) {
-                            updateTableFilter();
-                        }
+                        // manually reset UI state will trigger update event
                     });
                 }
 
@@ -897,9 +904,8 @@
                     resetSortBtn.addEventListener("click", function(){
                         slider.noUiSlider.set([2000, 10000]);
                         naCheckbox.checked = true;
-                        updateTableFilter();
-                        // Explicit refresh here too
-                        setTimeout(refreshCounter, 50);
+                        clearSpecialtyFilters(); // Also clear tags
+                        // updateTableFilters called inside clear
                     });
                 }
             }
@@ -908,6 +914,7 @@
         // Initialize Slider IMMEDIATELY 
         document.addEventListener('DOMContentLoaded', function() {
              initSlider();
+             initSpecialtyControls();
         });
 
         Papa.parse(csvUrl, {
@@ -1014,7 +1021,7 @@
                             table.clearHeaderFilter(); 
                             document.getElementById("sort-field").value = "rank";
                             document.getElementById("sort-dir").value = "asc";
-                            window.clearSpecialtyFilters(); 
+                            // Slider & Specialty reset handled by initSlider binding
                         });
                     },
 
@@ -1109,23 +1116,6 @@
                             title:"Specialty", 
                             field:"specialty", 
                             width: 300,
-                            headerFilter: function(cell, onRendered, success, cancel, editorParams){
-                                const container = document.createElement("div");
-                                container.id = "specialty-filter-container";
-                                container.className = "filter-container";
-                                setTimeout(updateFilterHeader, 100); 
-                                return container;
-                            },
-                            headerFilterFunc: function(headerValue, rowValue, rowData, filterParams){
-                                if (!headerValue || headerValue.length === 0) return true;
-                                if (!rowValue) return false;
-                                const rowTags = rowValue.split(',').map(t => t.trim());
-                                let match = false;
-                                headerValue.forEach(filterTag => {
-                                    if (rowTags.includes(filterTag)) match = true;
-                                });
-                                return match;
-                            },
                             formatter: function(cell) {
                                 const val = cell.getValue();
                                 if (!val) return "";
@@ -1138,7 +1128,9 @@
                                     span.textContent = tag;
                                     span.onclick = function(e) {
                                         e.stopPropagation(); 
-                                        window.addSpecialtyFilter(tag);
+                                        addSpecialtyFilter(tag);
+                                        // Explicitly apply filter since we are now outside
+                                        applySpecialtyFilters(); 
                                     };
                                     wrapper.appendChild(span);
                                 });
