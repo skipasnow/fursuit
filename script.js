@@ -359,6 +359,94 @@ Papa.parse(csvUrl, {
             colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
         });
 
+<<<<<<< HEAD
+=======
+        // --- PRICE SLIDER INIT (FIXED) ---
+        const slider = document.getElementById('price-slider');
+        const priceLabel = document.getElementById('price-values');
+        const naCheckbox = document.getElementById('show-na-prices');
+        const resetPriceBtn = document.getElementById('reset-price-btn');
+        
+        if (slider && typeof noUiSlider !== 'undefined') {
+            noUiSlider.create(slider, {
+                start: [2000, 10000], 
+                connect: true,        
+                range: { 'min': 2000, 'max': 10000 },
+                step: 500,            
+                tooltips: false, 
+                
+                // --- UPDATED PIPS LOGIC ---
+                pips: {
+                    mode: 'steps', // Draw a tick for every $500 step
+                    density: 6.25, // (100% / 16 steps) helps align them perfectly
+                    
+                    // The Filter decides which ticks get numbers vs just lines
+                    filter: function (value, type) {
+                        // If it's 2000, 4000, 6000, 8000, 10000 -> Draw Large Line + Number (1)
+                        if (value % 2000 === 0) {
+                            return 1; 
+                        }
+                        // For all other $500 steps -> Draw Small Line (0)
+                        return 0; 
+                    },
+                    
+                    // Format the numbers (e.g., show "4k" instead of "4000")
+                    format: {
+                        to: function (value) { 
+                            return '$' + (value / 1000) + 'k'; 
+                        }
+                    }
+                },
+                
+                format: {
+                    to: function (value) { return Math.round(value); },
+                    from: function (value) { return Number(value); }
+                }
+            });
+
+            // Define the Filter Logic
+            const updateTableFilter = () => {
+                if (!table) return;
+                
+                const values = slider.noUiSlider.get();
+                const min = parseInt(values[0]);
+                const max = parseInt(values[1]);
+                const showNA = naCheckbox.checked;
+
+                // Update the visual label
+                priceLabel.innerText = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+
+                table.setFilter(function(data){
+                    if (typeof data.price !== 'number') {
+                        return showNA; 
+                    }
+                    return data.price >= min && data.price <= max;
+                });
+            };
+
+            // Bind Events
+            slider.noUiSlider.on('update', updateTableFilter);
+            naCheckbox.addEventListener('change', updateTableFilter);
+            
+            // Bind Mini Reset Button
+            if(resetPriceBtn) {
+                resetPriceBtn.addEventListener('click', function(){
+                    slider.noUiSlider.set([2000, 10000]);
+                    naCheckbox.checked = true;
+                    // Manually fire update so the table and label reset immediately
+                    // (The 'set' method doesn't always trigger the 'update' event automatically)
+                    const values = slider.noUiSlider.get(); 
+                    priceLabel.innerText = `$${parseInt(values[0]).toLocaleString()} - $${parseInt(values[1]).toLocaleString()}`;
+                    table.recalc(); // Force table refresh
+                    updateTableFilter(); 
+                });
+            }
+
+        } else {
+            console.error("Slider element missing or noUiSlider library not loaded.");
+        }
+
+>>>>>>> parent of 70f869d (Added hit results feature.)
         // --- TABULATOR INIT ---
         table = new Tabulator("#creator-table", {
             data: data,
@@ -369,6 +457,7 @@ Papa.parse(csvUrl, {
             height:"100%", 
             initialSort:[ {column:"rank", dir:"asc"} ],
             
+<<<<<<< HEAD
             // --- COUNTER EVENTS (FIXED) ---
             dataFiltered: function(filters, rows) {
                 // We use 'this.getDataCount' to ensure accuracy regardless of Virtual DOM state
@@ -464,6 +553,8 @@ Papa.parse(csvUrl, {
                 }
             },
 
+=======
+>>>>>>> parent of 70f869d (Added hit results feature.)
             columns: [
                 { title:"Rank", field:"rank", width:80, hozAlign:"center", sorter:"number", formatter: formatTextCell, cssClass: "text-cell" },
                 { title:"Maker", field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
