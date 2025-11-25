@@ -31,7 +31,7 @@
            1. GLOBAL LAYOUT & DEFAULTS
            ========================================= */
         html {
-            min-height: 100%;
+            height: 100%;
             margin: 0;
             padding: 0;
             background: #2e2e2e;
@@ -40,14 +40,21 @@
         }
 
         body {
-            min-height: 100vh;
+            height: 100vh; /* Fixed viewport height */
+            width: 100vw;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            overflow-x: auto; /* Changed from hidden to auto for scrollbar */
+            overflow: hidden; /* Prevent body scroll, use internal panes */
         }
+
+        /* Scrollbar Styling for Webkit */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #1a1a1a; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: darkorange; }
 
         /* Screen Shake Animation Class */
         body.shake-active {
@@ -61,11 +68,31 @@
             40%, 60% { transform: translate3d(8px, 8px, 0); }
         }
 
+        /* --- LAYOUT PANES --- */
+        #top-pane {
+            flex: 0 0 auto; /* Don't grow, don't shrink, sizing based on content */
+            max-height: 60vh; /* Limit height of map/controls area */
+            overflow-y: auto; /* Scrollable if content is tall */
+            padding: 20px;
+            border-bottom: 2px solid #444;
+            background: #2e2e2e;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        #table-pane {
+            flex: 1 1 auto; /* Take up all remaining vertical space */
+            position: relative; /* Context for absolute child */
+            overflow: hidden; /* Tabulator handles the scrollbars */
+            background: #2e2e2e;
+            width: 100%;
+        }
+
         h1 {
             margin: 0 0 15px 0;
             flex-shrink: 0;
-            min-height: 60px; /* Keep space for layout after explosion */
-            position: relative; /* Anchor for scorch mark */
+            min-height: 60px; 
+            position: relative;
         }
 
         /* --- HEADER ANIMATION --- */
@@ -101,18 +128,16 @@
             right: -20px;
             font-family: 'VCR OSD Mono', monospace;
             font-weight: bold;
-            color: #ff5252; /* Start Red */
+            color: #ff5252; 
             text-shadow: 2px 2px 0px #fff;
             opacity: 0;
             pointer-events: none;
             white-space: nowrap;
             z-index: 100;
-            /* Initial Transform will be overwritten by JS */
             transform: rotate(-25deg) scale(1); 
             transition: opacity 0.2s ease, color 0.2s ease;
         }
 
-        /* Shake Animation */
         @keyframes combo-shake {
             0% { transform: rotate(-25deg) translate(0, 0) scale(var(--scale)); }
             20% { transform: rotate(-25deg) translate(-4px, 4px) scale(var(--scale)); }
@@ -130,7 +155,6 @@
             will-change: transform, opacity;
         }
 
-        /* Debris (Shards) */
         .explosion-particle {
             width: 6px; height: 6px;
             background-color: #fff;
@@ -143,7 +167,6 @@
             100% { transform: translate(var(--tx), var(--ty)) scale(0.5) rotate(720deg); opacity: 0; }
         }
 
-        /* Fire (Soft, Glowing) */
         .flame-particle {
             width: 20px; height: 20px;
             border-radius: 50%;
@@ -158,7 +181,6 @@
             100% { transform: translate(var(--tx), var(--ty)) scale(3); opacity: 0; }
         }
 
-        /* White Flash */
         .blast-flash {
             position: absolute;
             top: 50%; left: 50%;
@@ -177,19 +199,17 @@
             100% { opacity: 0; transform: translate(-50%, -50%) scale(2); }
         }
 
-        /* Scorch Mark (Blast) */
         .scorch-mark {
             position: absolute;
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%) scale(0);
-            width: 90%; /* Changed from fixed 400px to relative width */
-            height: 140px; /* Slightly taller */
-            /* Updated gradient for smoother, transparent edges */
+            width: 90%; 
+            height: 140px; 
             background: radial-gradient(ellipse at center, rgba(0,0,0,0.9) 20%, rgba(34,15,15,0.7) 50%, rgba(0,0,0,0) 85%);
-            border-radius: 50%; /* Rounded edges */
-            filter: blur(8px); /* Smooth, feathered look */
-            z-index: 0; /* Behind where text was */
+            border-radius: 50%; 
+            filter: blur(8px); 
+            z-index: 0;
             pointer-events: none;
             animation: scorch-appear 0.1s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
         }
@@ -197,7 +217,7 @@
             to { transform: translate(-50%, -50%) scale(1); }
         }
 
-        /* --- MAP SECTION STYLES --- */
+        /* --- MAP SECTION --- */
         .map-section {
             width: 100%;
             margin-bottom: 20px;
@@ -206,65 +226,37 @@
             border-radius: 8px;
             background: #1f1f1f;
             display: grid;
-            grid-template-columns: 2fr 1fr; /* 2/3 Map, 1/3 Data */
+            grid-template-columns: 2fr 1fr;
             gap: 20px;
+            box-sizing: border-box;
         }
         
         @media (max-width: 1024px) {
-            .map-section {
-                grid-template-columns: 1fr; /* Stack on smaller screens */
-            }
+            .map-section { grid-template-columns: 1fr; }
         }
 
-        /* Map Container */
-        .map-column {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 5/3;
-            min-height: 400px;
-        }
-
+        .map-column { position: relative; width: 100%; aspect-ratio: 5/3; min-height: 400px; }
         .map-container {
-            position: absolute;
-            inset: 0;
-            background: #000;
-            border: 2px solid #00E676;
-            border-radius: 4px;
-            overflow: hidden;
-            /* Subtle scanline effect */
+            position: absolute; inset: 0; background: #000;
+            border: 2px solid #00E676; border-radius: 4px; overflow: hidden;
             background-image: linear-gradient(transparent 50%, rgba(0, 230, 118, 0.05) 50%);
             background-size: 100% 4px;
         }
 
-        /* Data Column */
         .data-column {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            background: #222;
-            border: 1px solid #555;
-            padding: 15px;
-            border-radius: 4px;
-            height: 100%;
+            display: flex; flex-direction: column; gap: 15px;
+            background: #222; border: 1px solid #555; padding: 15px;
+            border-radius: 4px; height: 100%; box-sizing: border-box;
         }
 
         .data-header-title { font-size: 1.4em; color: darkorange; margin-bottom: 5px; text-transform: uppercase; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .data-header-subtitle { font-size: 0.9em; color: #888; margin-bottom: 15px; }
 
-        /* --- TV STATIC OVERLAY --- */
         .tv-static {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 5;
-            opacity: 0.08;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; opacity: 0.08;
             background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
             animation: staticAnim 0.5s steps(5) infinite;
         }
-
         @keyframes staticAnim {
             0% { transform: translate(0,0); }
             20% { transform: translate(-5%, -5%); }
@@ -276,61 +268,33 @@
 
         .state { fill: transparent; stroke: #00E676; stroke-width: 1px; transition: stroke-width 0.3s ease; }
         .state:hover { stroke-width: 2px; }
-
         .heat-ring { fill: transparent; stroke-width: 1.5px; opacity: 0.7; mix-blend-mode: screen; }
-
-        .airport-marker {
-            fill: transparent; stroke: #D50000; stroke-width: 2px; cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            transform-box: fill-box; transform-origin: center;
-        }
+        .airport-marker { fill: transparent; stroke: #D50000; stroke-width: 2px; cursor: pointer; transition: all 0.3s; transform-box: fill-box; transform-origin: center; }
         .airport-marker:hover { stroke: #FFCDD2; stroke-width: 3px; filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)); }
 
-        /* Map Cost Card */
-        #map-cost-card {
-            display: flex; flex-direction: column; gap: 15px;
-            opacity: 0.3; pointer-events: none; transition: opacity 0.3s ease;
-        }
+        #map-cost-card { display: flex; flex-direction: column; gap: 15px; opacity: 0.3; pointer-events: none; transition: opacity 0.3s ease; }
         #map-cost-card.active { opacity: 1; pointer-events: auto; }
 
-        /* Select Prompt Styles */
         #select-prompt {
             color: #00E676; text-align: center; padding: 20px; border: 1px dashed #00E676;
             animation: blink 1.5s infinite; display: block; font-weight: bold;
         }
-        #select-prompt.inactive {
-            color: #444;
-            border-color: #444;
-            animation: none;
-            background: #2a2a2a;
-        }
+        #select-prompt.inactive { color: #444; border-color: #444; animation: none; background: #2a2a2a; }
         @keyframes blink { 50% { opacity: 0.5; } }
 
         .cost-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #333; padding-bottom: 5px; margin-bottom: 5px; }
         .cost-detail { font-size: 0.9em; color: #aaa; }
         .cost-highlight { font-size: 1.2em; color: #00E676; font-weight: bold; }
         .cost-total-display { font-size: 1.8em; color: darkorange; font-weight: bold; text-align: right; margin-top: 10px; }
-
-        .cost-controls {
-            border-top: 2px solid #444; padding-top: 15px; margin-top: auto;
-            width: 100%; display: flex; flex-direction: column; gap: 12px;
-        }
+        .cost-controls { border-top: 2px solid #444; padding-top: 15px; margin-top: auto; width: 100%; display: flex; flex-direction: column; gap: 12px; }
         .control-label { display: flex; align-items: center; gap: 10px; cursor: pointer; color: #eee; user-select: none; font-size: 0.95em; }
         .control-label:hover { color: #fff; background: #333; border-radius: 4px; }
         .control-label input { accent-color: darkorange; width: 18px; height: 18px; cursor: pointer; }
-        
         .base-costs-list { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.8em; color: #777; margin-top: 10px; border-top: 1px dashed #333; padding-top: 10px; }
         .base-cost-item { display: flex; align-items: center; gap: 4px; }
         .base-cost-item::before { content: ">"; color: #00E676; }
 
-        /* Loader */
-        .loader {
-            border: 4px solid rgba(255, 255, 255, 0.1); border-radius: 50%; border-top: 4px solid white;
-            width: 40px; height: 40px; animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* --- CONTROLS SECTION --- */
+        /* --- CONTROLS --- */
         .controls-container {
             background: #1f1f1f; padding: 20px; border-radius: 8px; margin-bottom: 15px;
             display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap; border: 1px solid #444; flex-shrink: 0; 
@@ -345,102 +309,81 @@
         button.reset-btn:hover { background: #d32f2f; }
         label { font-weight: bold; color: #ccc; }
 
-        .results-counter {
-            width: 100%; margin-top: 15px; padding-top: 15px; border-top: 1px solid #444; 
-            font-size: 1.1em; text-align: center; color: #ccc;
-        }
+        .results-counter { width: 100%; margin-top: 15px; padding-top: 15px; border-top: 1px solid #444; font-size: 1.1em; text-align: center; color: #ccc; }
         .results-counter b { color: #ff8c00; font-size: 1.2em; }
-
-        .controls-footer {
-            width: 100%; display: flex; justify-content: space-between; align-items: center; 
-            margin-top: 15px; padding-top: 15px; border-top: 1px solid #444; flex-wrap: wrap; gap: 10px;
-        }
+        .controls-footer { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #444; flex-wrap: wrap; gap: 10px; }
         .results-counter { text-align: left; border-top: none; margin-top: 0; padding-top: 0; width: auto; }
         .sort-hint { font-size: 0.9em; color: #aaa; text-align: right; }
-
         .slider-group, .specialty-group { flex: 1 1 100% !important; width: 100% !important; max-width: 600px; display: flex; box-sizing: border-box; }
         .slider-group { flex-direction: column; order: -2; padding: 0 15px; margin-bottom: 40px; }
         .specialty-group { flex-direction: row; align-items: flex-start; order: -1; margin-bottom: 20px; gap: 15px; }
         .specialty-group > label { margin-top: 8px; white-space: nowrap; }
 
+        /* Slider & Table Styles */
         .noUi-target { background: #555; border: 1px solid #000; border-radius: 4px; height: 8px; margin-top: 10px; cursor: pointer; }
         .noUi-connect { background: #ff8c00 !important; }
-        .noUi-handle {
-            width: 24px !important; height: 24px !important; border-radius: 50%;
-            top: -9px !important; right: -12px !important; background: #eee;
-            border: 2px solid #ff8c00; box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-            cursor: grab; outline: none;
-        }
+        .noUi-handle { width: 24px; height: 24px; border-radius: 50%; top: -9px; right: -12px; background: #eee; border: 2px solid #ff8c00; box-shadow: 0 2px 6px rgba(0,0,0,0.6); cursor: grab; outline: none; }
         .noUi-handle:before, .noUi-handle:after { display: none; }
         .noUi-pips { font-family: inherit; font-size: 11px; color: #aaa; height: 30px; top: 12px; }
         .noUi-marker { background: #555; width: 1px; } 
         .noUi-marker-large { background: #aaa; height: 10px; width: 2px; } 
         .noUi-value { color: #ccc; margin-top: 5px; }
 
-        /* --- DATA GRID --- */
-        #creator-table { width: 100%; max-width: 100%; flex-grow: 1; border: 1px solid #444; min-height: 500px; }
-        .tabulator .tabulator-header { background-color: #1f1f1f !important; font-weight: bold !important; }
+        /* --- TABLE CONTAINER (FIXED) --- */
+        #creator-table { 
+            position: absolute; /* Crucial for Tabulator filling space */
+            top: 0; left: 0; right: 0; bottom: 0;
+            border: none;
+        }
+        
+        .tabulator .tabulator-header { background-color: #1f1f1f !important; font-weight: bold !important; border-bottom: 1px solid #444; }
         .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; font-size: 16px; }
         .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
         .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
 
         .tabulator-row .tabulator-cell { transition: transform 0.1s ease-out; position: relative; background-clip: padding-box; overflow: hidden; }
-        .tabulator-row .tabulator-cell.active-tilt {
-            z-index: 10000 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.6);
-            border-color: rgba(255,255,255,0.5) !important; filter: brightness(1.2); overflow: visible !important;
-        }
+        .tabulator-row .tabulator-cell.active-tilt { z-index: 10000 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.6); border-color: rgba(255,255,255,0.5) !important; filter: brightness(1.2); overflow: visible !important; }
         .text-wrapper { display: block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: all 0.2s ease; }
-        .tabulator-row .tabulator-cell.active-tilt .text-wrapper {
-            position: absolute; left: 0; top: 50%; min-width: 100%; width: max-content; 
-            background-color: rgba(40, 40, 40, 0.95); padding: 12px 20px; min-height: 45px;
-            display: flex; align-items: center; border-radius: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.7); 
-            z-index: 100; pointer-events: auto; border: 1px solid #ffffff;
-        }
+        .tabulator-row .tabulator-cell.active-tilt .text-wrapper { position: absolute; left: 0; top: 50%; min-width: 100%; width: max-content; background-color: rgba(40, 40, 40, 0.95); padding: 12px 20px; min-height: 45px; display: flex; align-items: center; border-radius: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.7); z-index: 100; pointer-events: auto; border: 1px solid #ffffff; }
         .text-content { color: #fff; font-weight: normal; }
-        .tabulator-row .tabulator-cell.active-tilt .text-content {
-            font-weight: bold; background: linear-gradient(110deg, #ffffff 40%, #ff8c00 50%, #ffffff 60%);
-            background-size: 200% 100%; -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent; color: transparent; animation: shine-sweep 1.5s linear infinite;
-        }
+        .tabulator-row .tabulator-cell.active-tilt .text-content { font-weight: bold; background: linear-gradient(110deg, #ffffff 40%, #ff8c00 50%, #ffffff 60%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; animation: shine-sweep 1.5s linear infinite; }
         @keyframes shine-sweep { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+        
+        /* ANIMATED LINK STYLE */
+        .animated-link {
+            color: darkorange; text-decoration: none; font-weight: bold; transition: all 0.3s;
+        }
+        .animated-link:hover {
+            background-image: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+            background-size: 200% auto;
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow-move 2s linear infinite;
+        }
+        
         a { color: darkorange !important; text-decoration: none; }
 
-        /* --- FILTERS --- */
         .filter-container { background: #222; border-radius: 4px; width: 100%; box-sizing: border-box; flex-grow: 1; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
         .filter-input { background: #333; color: #fff; border: 1px solid #555; padding: 5px 8px; border-radius: 3px; font-family: inherit; width: 100%; box-sizing: border-box; }
         .filter-tag { background-color: darkorange; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 3px; cursor: pointer; }
         .specialty-actions { display: flex; flex-direction: column; gap: 8px; white-space: nowrap; }
         .filter-apply-btn { color: #4caf50; cursor: pointer; text-decoration: underline; font-weight: bold; }
         .filter-clear-all { color: #ff6b6b; cursor: pointer; text-decoration: underline; }
-
         .tag-wrapper { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-        .specialty-tag {
-            display: inline-block; background-color: #333; border: 1px solid #777; 
-            color: #eee; padding: 2px 6px; margin: 2px; border-radius: 4px;
-            font-size: 0.8em; cursor: pointer; transition: all 0.2s ease;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.5); position: relative; z-index: 50;
-        }
+        .specialty-tag { display: inline-block; background-color: #333; border: 1px solid #777; color: #eee; padding: 2px 6px; margin: 2px; border-radius: 4px; font-size: 0.8em; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.5); position: relative; z-index: 50; }
         .specialty-tag:hover { background-color: #ff8c00; color: #000; border-color: #ff8c00; transform: scale(1.05); }
 
-        /* --- IMAGES & CURSORS --- */
         .preview-box, .logo-box { width: 30px; height: 30px; background-color: #444; border: 1px solid #555; border-radius: 4px; cursor: pointer; background-size: cover; background-position: center; display: inline-block; position: relative; z-index: 20; }
         .preview-box:hover, .logo-box:hover { border-color: darkorange; }
+        
         #image-tooltip { 
             display: none; position: fixed; z-index: 99999; 
             width: 60vmin; height: 60vmin; background-color: #222; border: 2px solid #fff; 
             opacity: 0; background-size: contain; background-repeat: no-repeat; background-position: center; 
             pointer-events: none; flex-direction: column; justify-content: flex-end; align-items: center;
         }
-
-        .tooltip-hud {
-            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 8px; background: rgba(0, 0, 0, 0.6); padding: 8px 12px;
-            border-radius: 20px; pointer-events: none;
-        }
-        .hud-box {
-            width: 10px; height: 10px; border-radius: 50%; background: #555; border: 1px solid #888;
-            transition: all 0.2s ease;
-        }
+        .tooltip-hud { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(0, 0, 0, 0.6); padding: 8px 12px; border-radius: 20px; pointer-events: none; }
+        .hud-box { width: 10px; height: 10px; border-radius: 50%; background: #555; border: 1px solid #888; transition: all 0.2s ease; }
         .hud-box.active { background: #ff8c00; border-color: #fff; transform: scale(1.3); box-shadow: 0 0 5px #ff8c00; }
 
         html, body, * { cursor: url('https://skipasnow.github.io/fursuit/images/cursor/pointer.svg') 0 0, auto; }
@@ -449,159 +392,149 @@
         .star-particle { position: fixed; color: gold; pointer-events: none; animation: fall 1.5s linear forwards; }
         @keyframes fall { 0% { transform: translateY(0); opacity:1; } 100% { transform: translateY(300px); opacity:0; } }
         
-        .legend-container {
-            position:absolute; bottom:10px; right:10px; background:rgba(0,0,0,0.8); padding:8px; border:2px solid #00E676; border-radius:4px; font-size:0.7em; z-index: 10;
-        }
+        .legend-container { position:absolute; bottom:10px; right:10px; background:rgba(0,0,0,0.8); padding:8px; border:2px solid #00E676; border-radius:4px; font-size:0.7em; z-index: 10; }
         .legend-title { color: #00E676; margin-bottom:4px; font-weight:bold; }
-        .legend-gradient-retro {
-            height: 10px; width: 100%; margin-bottom: 4px;
-            background: linear-gradient(to right, #00E676 0%, #00E676 20%, #76FF03 20%, #76FF03 40%, #FFEA00 40%, #FFEA00 60%, #FF9100 60%, #FF9100 80%, #D50000 80%, #D50000 100%);
-        }
+        .legend-gradient-retro { height: 10px; width: 100%; margin-bottom: 4px; background: linear-gradient(to right, #00E676 0%, #00E676 20%, #76FF03 20%, #76FF03 40%, #FFEA00 40%, #FFEA00 60%, #FF9100 60%, #FF9100 80%, #D50000 80%, #D50000 100%); }
         .legend-labels { display:flex; justify-content:space-between; color:#00E676; }
     </style>
 </head>
 <body>
 
-    <h1><span id="header-text">Kemono Fursuit Makers</span></h1>
+    <!-- TOP PANE: Scrollable Map & Controls -->
+    <div id="top-pane">
+        <h1><span id="header-text">Kemono Fursuit Makers</span></h1>
 
-    <!-- 1. MAP SECTION (NEW GRID LAYOUT) -->
-    <div class="map-section">
-        <!-- Left: Map -->
-        <div class="map-column">
-            <div class="map-container">
-                <div class="tv-static"></div>
-                <div id="map-loading" style="position:absolute; inset:0; display:flex; justify-content:center; align-items:center;">
-                    <div class="loader"></div>
+        <div class="map-section">
+            <div class="map-column">
+                <div class="map-container">
+                    <div class="tv-static"></div>
+                    <div id="map-loading" style="position:absolute; inset:0; display:flex; justify-content:center; align-items:center;">
+                        <div class="loader"></div>
+                    </div>
+                    <svg id="us-map" width="100%" height="100%" viewBox="0 0 975 610" preserveAspectRatio="xMidYMid meet"></svg>
+                    <div class="legend-container">
+                        <div class="legend-title">FLIGHT COST SIGNAL</div>
+                        <div class="legend-gradient-retro"></div>
+                        <div class="legend-labels"><span>LOW</span><span>HIGH</span></div>
+                    </div>
                 </div>
-                <svg id="us-map" width="100%" height="100%" viewBox="0 0 975 610" preserveAspectRatio="xMidYMid meet"></svg>
-                <div class="legend-container">
-                    <div class="legend-title">FLIGHT COST SIGNAL</div>
-                    <div class="legend-gradient-retro"></div>
-                    <div class="legend-labels"><span>LOW</span><span>HIGH</span></div>
+            </div>
+
+            <div class="data-column">
+                <div class="data-header-title">Trip Estimator (Beijing)</div>
+                <div class="data-header-subtitle">Select Departure Airport</div>
+                
+                <div id="select-prompt">&lt; WAITING FOR SELECTION &gt;</div>
+
+                <div id="map-cost-card" class="map-cost-card">
+                    <div class="cost-header">
+                        <div>
+                            <div id="cost-city" style="font-size:1.3em; font-weight:bold; color:#fff;">City</div>
+                            <div id="cost-airport" style="color:#aaa;">CODE</div>
+                        </div>
+                        <div>
+                            <div class="cost-detail">Roundtrip Flight</div>
+                            <div id="cost-flight" class="cost-highlight">$0</div>
+                        </div>
+                        <div>
+                            <div class="cost-detail">TOTAL ESTIMATED TRAVEL</div>
+                            <div id="cost-total-display" class="cost-total-display">$0</div>
+                        </div>
+                    </div>
+
+                    <div class="cost-controls">
+                        <div style="color:#00E676; font-weight:bold; margin-bottom:5px; border-bottom:1px solid #444; padding-bottom:5px;">CONFIGURATION:</div>
+                        <label class="control-label"><input type="checkbox" id="check-visa" checked> Passport & Visa (+$500)</label>
+                        <label class="control-label"><input type="checkbox" id="check-flight" checked> Domestic Flight (+$400)</label>
+                        <label class="control-label"><input type="checkbox" id="check-tourism" checked> Tourism (+$300)</label>
+                        <div class="base-costs-list">
+                            <span>Base Included:</span>
+                            <span class="base-cost-item">Hotel</span><span class="base-cost-item">Food</span><span class="base-cost-item">Logistics</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right: Data & Controls -->
-        <div class="data-column">
-            <div class="data-header-title">Trip Estimator (Beijing)</div>
-            <div class="data-header-subtitle">Select Departure Airport</div>
-            
-            <!-- PROMPT -->
-            <div id="select-prompt">&lt; WAITING FOR SELECTION &gt;</div>
-
-            <div id="map-cost-card" class="map-cost-card">
-                <div class="cost-header">
-                    <div>
-                        <div id="cost-city" style="font-size:1.3em; font-weight:bold; color:#fff;">City</div>
-                        <div id="cost-airport" style="color:#aaa;">CODE</div>
-                    </div>
-                    <div>
-                        <div class="cost-detail">Roundtrip Flight</div>
-                        <div id="cost-flight" class="cost-highlight">$0</div>
-                    </div>
-                    <div>
-                        <div class="cost-detail">TOTAL ESTIMATED TRAVEL</div>
-                        <div id="cost-total-display" class="cost-total-display">$0</div>
-                    </div>
-                </div>
-
-                <div class="cost-controls">
-                    <div style="color:#00E676; font-weight:bold; margin-bottom:5px; border-bottom:1px solid #444; padding-bottom:5px;">CONFIGURATION:</div>
-                    <label class="control-label"><input type="checkbox" id="check-visa" checked> Passport & Visa (+$500)</label>
-                    <label class="control-label"><input type="checkbox" id="check-flight" checked> Domestic Flight (+$400)</label>
-                    <label class="control-label"><input type="checkbox" id="check-tourism" checked> Tourism (+$300)</label>
-                    <div class="base-costs-list">
-                        <span>Base Included:</span>
-                        <span class="base-cost-item">Hotel</span><span class="base-cost-item">Food</span><span class="base-cost-item">Logistics</span>
-                    </div>
-                </div>
+        <div class="controls-container">
+          <div class="control-group slider-group">
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
+                <label>
+                    Fursuit Price: <span id="price-values" style="color:#ff8c00; font-weight:normal;">$2,000 - $10,000</span>
+                    <button id="reset-price-btn" style="padding:2px 6px; margin-left:5px; font-size:0.8em; background:#444; border:1px solid #666; cursor:pointer;" title="Reset Price">↺</button>
+                </label>
+                <label style="font-size:0.8em; display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none;">
+                    <input type="checkbox" id="show-na-prices" checked> Show N/A
+                </label>
             </div>
+            <div id="price-slider"></div>
+          </div>
+
+          <div class="control-group specialty-group">
+             <label>Specialty Tags:</label>
+             <div class="filter-container">
+                 <input type="text" id="specialty-input" class="filter-input" placeholder="+ Type tag (e.g. 'kemono')...">
+                 <div class="tags-area" id="specialty-tags-area">
+                     <span style="color:#666; font-size:0.8em;">No tags selected</span>
+                 </div>
+             </div>
+             <div class="specialty-actions">
+                 <span class="filter-apply-btn" id="specialty-apply-btn">Apply Filter</span>
+                 <span class="filter-clear-all" id="specialty-clear-btn">Clear All</span>
+             </div>
+          </div>
+
+          <div class="control-group">
+            <label>Quick Sort:</label>
+            <select id="sort-field">
+              <option value="rank">Rank (Default)</option>
+              <option value="price">Price</option>
+              <option value="calculatedTotal">Total Pick Up</option>
+              <option value="calculatedSavings">Pick Up Savings</option>
+              <option value="portfolio">Portfolio Size</option>
+              <option value="followers">Followers</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label>Order:</label>
+            <select id="sort-dir">
+              <option value="asc">Low to High</option>
+              <option value="desc">High to Low</option>
+            </select>
+          </div>
+
+          <button id="reset-sort" class="reset-btn">Reset Sort</button>
+          
+          <div class="controls-footer">
+              <div id="results-counter" class="results-counter">Loading data...</div>
+              <div class="sort-hint">*Hold <b>Shift</b> and click column headers to sort by multiple columns.</div>
+          </div>
         </div>
     </div>
 
-    <!-- 2. CONTROLS SECTION -->
-    <div class="controls-container">
-      <div class="control-group slider-group">
-        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
-            <label>
-                Fursuit Price: <span id="price-values" style="color:#ff8c00; font-weight:normal;">$2,000 - $10,000</span>
-                <button id="reset-price-btn" style="padding:2px 6px; margin-left:5px; font-size:0.8em; background:#444; border:1px solid #666; cursor:pointer;" title="Reset Price">↺</button>
-            </label>
-            <label style="font-size:0.8em; display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none;">
-                <input type="checkbox" id="show-na-prices" checked> Show N/A
-            </label>
-        </div>
-        <div id="price-slider"></div>
-      </div>
-
-      <div class="control-group specialty-group">
-         <label>Specialty Tags:</label>
-         <div class="filter-container">
-             <input type="text" id="specialty-input" class="filter-input" placeholder="+ Type tag (e.g. 'kemono')...">
-             <div class="tags-area" id="specialty-tags-area">
-                 <span style="color:#666; font-size:0.8em;">No tags selected</span>
-             </div>
-         </div>
-         <div class="specialty-actions">
-             <span class="filter-apply-btn" id="specialty-apply-btn">Apply Filter</span>
-             <span class="filter-clear-all" id="specialty-clear-btn">Clear All</span>
-         </div>
-      </div>
-
-      <div class="control-group">
-        <label>Quick Sort:</label>
-        <select id="sort-field">
-          <option value="rank">Rank (Default)</option>
-          <option value="price">Price</option>
-          <option value="calculatedTotal">Total Pick Up</option>
-          <option value="calculatedSavings">Pick Up Savings</option>
-          <option value="portfolio">Portfolio Size</option>
-          <option value="followers">Followers</option>
-        </select>
-      </div>
-
-      <div class="control-group">
-        <label>Order:</label>
-        <select id="sort-dir">
-          <option value="asc">Low to High</option>
-          <option value="desc">High to Low</option>
-        </select>
-      </div>
-
-      <button id="reset-sort" class="reset-btn">Reset Sort</button>
-      
-      <div class="controls-footer">
-          <div id="results-counter" class="results-counter">Loading data...</div>
-          <div class="sort-hint">*Hold <b>Shift</b> and click column headers to sort by multiple columns.</div>
-      </div>
+    <!-- BOTTOM PANE: Table Filling Remaining Space -->
+    <div id="table-pane">
+        <div id="creator-table"></div>
     </div>
 
     <div id="image-tooltip"></div>
-    <div id="creator-table"></div>
 
     <script>
-        // ==========================================
-        // 0. GLOBAL VARIABLES
-        // ==========================================
         let globalTravelCost = 0;
         let currentSelectedFlightCost = 0;
         let table = null;
         let filterState = { priceMin: 2000, priceMax: 10000, showNA: true, tags: new Set() };
         let pendingTags = new Set();
         let totalDataCount = 0;
-        
-        // Costs Configuration
         const costs = { base: 900, visa: 500, flightOption: 400, tourism: 300 };
         
-        // Combo Logic Variables
+        // Combo Vars
         let comboCount = 0;
         let comboTimeout;
-        let isExploded = false; // Permanent state tracking
+        let isExploded = false;
 
-        // ==========================================
-        // 1. FILTER & SPECIALTY LOGIC
-        // ==========================================
+        // --- FILTER LOGIC ---
         function masterFilter(row) {
             const price = row.price;
             let priceMatch = false;
@@ -634,24 +567,20 @@
             pendingTags.add(tag.trim());
             updateSpecialtyUI();
         }
-
         window.removeSpecialtyFilter = function(tag) {
             pendingTags.delete(tag);
             updateSpecialtyUI();
         }
-
         function clearSpecialtyFilters() {
             pendingTags.clear();
             filterState.tags.clear();
             updateSpecialtyUI();
             updateTableFilters();
         }
-
         function applySpecialtyFilters() {
             filterState.tags = new Set(pendingTags);
             updateTableFilters();
         }
-
         function updateSpecialtyUI() {
             const tagsArea = document.getElementById('specialty-tags-area');
             if(!tagsArea) return;
@@ -668,9 +597,7 @@
             }
         }
 
-        // ==========================================
-        // 2. MAP LOGIC
-        // ==========================================
+        // --- MAP LOGIC ---
         const airports = [
             { city: "Honolulu", state: "HI", code: "HNL", cost: 1000, lat: 21.306, lon: -157.858 },
             { city: "Anchorage", state: "AK", code: "ANC", cost: 1000, lat: 61.218, lon: -149.900 },
@@ -711,8 +638,7 @@
                 document.getElementById('map-loading').style.display = 'none';
                 airports.forEach(d => {
                     const coords = projection([d.lon, d.lat]);
-                    if (coords) { d.x = coords[0]; d.y = coords[1]; d.visible = true; } 
-                    else { d.visible = false; }
+                    if (coords) { d.x = coords[0]; d.y = coords[1]; d.visible = true; } else { d.visible = false; }
                 });
                 airports.forEach(d1 => {
                     if (!d1.visible) return;
@@ -756,24 +682,18 @@
             d3.selectAll(".airport-marker").style("stroke", "#D50000");
             d3.select(this).transition().duration(300).style("stroke", "#00E676");
             currentSelectedFlightCost = d.cost;
-            
             const card = document.getElementById('map-cost-card');
             card.classList.add('active');
-
-            // GREY OUT PROMPT
             const prompt = document.getElementById('select-prompt');
             prompt.classList.add('inactive');
             prompt.textContent = "< DATA LINK ACTIVE >";
-
             document.getElementById('cost-city').textContent = `${d.city}, ${d.state}`;
             document.getElementById('cost-airport').textContent = d.code;
             document.getElementById('cost-flight').textContent = `$${d.cost.toLocaleString()}`;
             recalcCosts();
         }
 
-        // ==========================================
-        // 3. TABLE LOGIC
-        // ==========================================
+        // --- TABLE LOGIC ---
         const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
 
         function cleanNumber(val) {
@@ -802,10 +722,15 @@
             return `rgb(${r},${g},0)`;
         }
 
+        // New Wrapper Function for consistent Pop-out style
+        function wrapInTilt(content, style = "") {
+             return `<div class="text-wrapper"><span class="text-content" style="${style}">${content}</span></div>`;
+        }
+
         function formatTextCell(cell) {
             const val = cell.getValue();
             if(val === null || val === undefined) return "";
-            return `<div class="text-wrapper"><span class="text-content">${val}</span></div>`;
+            return wrapInTilt(val);
         }
 
         function updateResultCounter(activeCount, totalCount) {
@@ -838,11 +763,8 @@
             const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
             gradientColumns.forEach(col=>{
                 const vals = data.map(d=>d[col]).filter(v=>v!==null && v!=="" && !isNaN(v));
-                if(vals.length > 0) {
-                    colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)};
-                } else {
-                    colMinMax[col] = {min: 0, max: 1};
-                }
+                if(vals.length > 0) { colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)}; } 
+                else { colMinMax[col] = {min: 0, max: 1}; }
             });
 
             table = new Tabulator("#creator-table", {
@@ -851,7 +773,7 @@
                 movableColumns: true,
                 resizableColumns: true,
                 placeholder:"No Data Available",
-                height:"100%", 
+                height: "100%", // Takes full height of #table-pane
                 initialSort:[ {column:"rank", dir:"asc"} ],
                 dataFiltered: function(filters, rows) {
                     updateResultCounter(rows.length, totalDataCount);
@@ -868,8 +790,13 @@
                     },
                     { title:"Maker Type", field:"makerType", formatter: formatTextCell, cssClass: "text-cell" },
                     { 
-                        title:"Link", field:"link", formatter:"link", hozAlign:"center",
-                        formatterParams:{ labelField:"link", urlField:"link", target:"_blank" }
+                        title:"Link", field:"link", hozAlign:"center",
+                        formatter: function(cell) {
+                            const url = cell.getValue();
+                            if(!url) return "";
+                            const linkHtml = `<a href="${url}" target="_blank" class="animated-link">${url}</a>`;
+                            return wrapInTilt(linkHtml);
+                        }
                     },
                     { 
                         title: "Preview", field: "previewImages", hozAlign: "center", width: 200,
@@ -894,40 +821,21 @@
                         sorterParams:{ alignEmptyValues:"bottom" },
                         formatter:function(cell){
                             const val = cell.getValue();
-                            if(val === null) return "---"; 
-                            // GRADIENT REMOVED - Plain Text Now
-                            cell.getElement().style.backgroundColor = ""; 
-                            cell.getElement().style.color="#fff";
-                            return val.toLocaleString();
+                            return val !== null ? wrapInTilt(val.toLocaleString()) : "---";
                         }
                     },
+                    { title: "$ Freight", field: "shipOrFly", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt("$" + cell.getValue().toLocaleString()) : "---"; } },
+                    { title: "$ Tariff", field: "tariff", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt("$" + cell.getValue().toLocaleString()) : "---"; } },
+                    { title: "$ Ship Total", field: "ship", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt("$" + cell.getValue().toLocaleString()) : "---"; } },
                     {
-                        title: "$ Freight", field: "shipOrFly", hozAlign: "right", sorter: "number",
-                        formatter: function(cell) { return cell.getValue() ? "$" + cell.getValue().toLocaleString() : "---"; }
-                    },
-                    {
-                        title: "$ Tariff", field: "tariff", hozAlign: "right", sorter: "number",
-                        formatter: function(cell) { return cell.getValue() ? "$" + cell.getValue().toLocaleString() : "---"; }
-                    },
-                    {
-                        title: "$ Ship Total", field: "ship", hozAlign: "right", sorter: "number",
-                        formatter: function(cell) { return cell.getValue() ? "$" + cell.getValue().toLocaleString() : "---"; }
-                    },
-                    {
-                        title: "Est. Travel", 
-                        field: "calculatedTravel", 
-                        hozAlign: "right",
+                        title: "Est. Travel", field: "calculatedTravel", hozAlign: "right",
                         formatter: function(cell) {
                             if(globalTravelCost === 0) return "---";
-                            cell.getElement().style.color = "#00E676";
-                            return "$" + globalTravelCost.toLocaleString();
+                            return wrapInTilt("$" + globalTravelCost.toLocaleString(), "color:#00E676");
                         }
                     },
                     {
-                        title: "Total (Pick Up)", 
-                        field: "calculatedTotal", 
-                        hozAlign: "right",
-                        sorter: "number",
+                        title: "Total (Pick Up)", field: "calculatedTotal", hozAlign: "right", sorter: "number",
                         accessor: function(value, data) {
                             const price = data.price || 0;
                             if(globalTravelCost === 0 || price === 0) return 0;
@@ -939,16 +847,11 @@
                             if(globalTravelCost === 0 || price === 0) return "---";
                             const duty = Math.max(0, (price - 800) * 0.03);
                             const total = price + globalTravelCost + duty;
-                            cell.getElement().style.color = "darkorange";
-                            cell.getElement().style.fontWeight = "bold";
-                            return "$" + total.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                            return wrapInTilt("$" + total.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}), "color:darkorange; font-weight:bold");
                         }
                     },
                     {
-                        title: "Pick Up Savings",
-                        field: "calculatedSavings",
-                        hozAlign: "right",
-                        sorter: "number",
+                        title: "Pick Up Savings", field: "calculatedSavings", hozAlign: "right", sorter: "number",
                         accessor: function(value, data) {
                             const ship = data.ship || 0;
                             const price = data.price || 0;
@@ -963,16 +866,13 @@
                             const ship = data.ship || 0;
                             const price = data.price || 0;
                             if(ship === 0 || price === 0) return "---";
-                            
                             const duty = Math.max(0, (price - 800) * 0.03);
                             const totalPickUp = price + globalTravelCost + duty;
                             const savings = ship - totalPickUp;
-                            
                             const el = cell.getElement();
                             el.style.fontWeight = "bold";
-                            if(savings > 0) el.style.color = "#00E676"; 
-                            else el.style.color = "#ff5252"; 
-                            return "$" + savings.toLocaleString();
+                            const color = savings > 0 ? "#00E676" : "#ff5252";
+                            return wrapInTilt("$" + savings.toLocaleString(), `color:${color}; font-weight:bold`);
                         }
                     },
                     { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell, cssClass: "text-cell" },
@@ -986,51 +886,22 @@
                             tags.forEach(tag => {
                                 const span = document.createElement('span'); span.className = 'specialty-tag';
                                 span.textContent = tag;
-                                span.onclick = function(e) {
-                                    e.stopPropagation(); 
-                                    addSpecialtyFilter(tag);
-                                };
+                                span.onclick = function(e) { e.stopPropagation(); addSpecialtyFilter(tag); };
                                 wrapper.appendChild(span);
                             });
                             return wrapper;
                         }
                     },
-                    { 
-                        title:"Partials", field:"partials", hozAlign:"right", sorter:"number",
-                        formatter:function(cell){ 
-                            const val = cell.getValue();
-                            return val !== null ? val : ""; 
-                        } 
-                    },
-                    { 
-                        title:"Fursuits", field:"fursuits", hozAlign:"right", sorter:"number",
-                        formatter:function(cell){ 
-                            const val = cell.getValue();
-                            return val !== null ? val : ""; 
-                        } 
-                    },
-                    { 
-                        title:"Portfolio Size", field:"portfolio", hozAlign:"right", sorter:"number",
-                        formatter:function(cell){ 
-                            const val = cell.getValue();
-                            return val !== null ? val : ""; 
-                        } 
-                    },
+                    { title:"Partials", field:"partials", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title:"Fursuits", field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title:"Portfolio Size", field:"portfolio", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
                     { title:"Country", field:"country", formatter: formatTextCell, cssClass: "text-cell" },
-                    { 
-                        title:"Followers", field:"followers", hozAlign:"right", sorter:"number",
-                        formatter:function(cell){ 
-                            const val = cell.getValue();
-                            return val !== null ? val.toLocaleString() : ""; 
-                        } 
-                    }
+                    { title:"Followers", field:"followers", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } }
                 ]
             });
         }
 
-        // ==========================================
-        // 4. MAIN INIT
-        // ==========================================
+        // --- INIT ---
         document.addEventListener('DOMContentLoaded', function() {
             initMap();
             
@@ -1038,11 +909,8 @@
             document.getElementById('check-flight').addEventListener('change', recalcCosts);
             document.getElementById('check-tourism').addEventListener('change', recalcCosts);
 
-            // Star FX & COMBO LOGIC
             const headerText = document.getElementById('header-text');
-            const h1 = document.querySelector('h1'); // Get H1 for explosions
-            
-            // Create Combo Counter Element
+            const h1 = document.querySelector('h1'); 
             const comboEl = document.createElement('span');
             comboEl.id = 'combo-counter';
             headerText.appendChild(comboEl);
@@ -1059,69 +927,49 @@
                 setTimeout(() => { star.remove(); }, 1500);
             }
 
-            // EXPLOSION FUNCTION
             function createExplosion() {
                 const rect = h1.getBoundingClientRect();
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
-
-                // Create Scorch Mark
                 const scorch = document.createElement('div');
                 scorch.className = 'scorch-mark';
-                h1.appendChild(scorch); // Append to H1, not the span being hidden
-                
-                // 1. Flash
+                h1.appendChild(scorch); 
                 const flash = document.createElement('div');
                 flash.className = 'blast-flash';
                 h1.appendChild(flash);
                 setTimeout(() => flash.remove(), 500);
-
-                // 2. Shake
                 document.body.classList.add('shake-active');
                 setTimeout(() => document.body.classList.remove('shake-active'), 500);
-
-                // Particles
-                for (let i = 0; i < 100; i++) { // Increased count
+                for (let i = 0; i < 100; i++) { 
                     const particle = document.createElement('div');
                     particle.className = 'explosion-particle';
                     particle.style.left = centerX + 'px';
                     particle.style.top = centerY + 'px';
-                    
                     const angle = Math.random() * Math.PI * 2;
-                    const velocity = 100 + Math.random() * 200; // Higher Velocity
+                    const velocity = 100 + Math.random() * 200;
                     const tx = Math.cos(angle) * velocity;
                     const ty = Math.sin(angle) * velocity;
-                    
                     particle.style.setProperty('--tx', `${tx}px`);
                     particle.style.setProperty('--ty', `${ty}px`);
-                    
                     const colors = ['#FFD700', '#FF5252', '#FFFFFF', '#FFA500'];
                     particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                    
-                    // Random Size
                     const size = 4 + Math.random() * 6;
                     particle.style.width = `${size}px`;
                     particle.style.height = `${size}px`;
-
                     document.body.appendChild(particle);
                     setTimeout(() => particle.remove(), 800);
                 }
-
-                // Flames
-                for (let i = 0; i < 40; i++) { // More flames
+                for (let i = 0; i < 40; i++) {
                     const flame = document.createElement('div');
                     flame.className = 'flame-particle';
                     flame.style.left = centerX + 'px';
                     flame.style.top = centerY + 'px';
-
                     const angle = Math.random() * Math.PI * 2;
                     const velocity = 50 + Math.random() * 100;
                     const tx = Math.cos(angle) * velocity;
                     const ty = Math.sin(angle) * velocity;
-
                     flame.style.setProperty('--tx', `${tx}px`);
                     flame.style.setProperty('--ty', `${ty}px`);
-                    
                     document.body.appendChild(flame);
                     setTimeout(() => flame.remove(), 600);
                 }
@@ -1129,12 +977,8 @@
 
             headerText.addEventListener('mouseenter', () => { 
                 if (isExploded) return; 
-
                 starInterval = setInterval(createStar, 50);
-                
                 clearTimeout(comboTimeout);
-
-                // EXPLOSION CHECK
                 if (comboCount >= 99) {
                     createExplosion();
                     comboCount = 0; 
@@ -1143,50 +987,37 @@
                     isExploded = true;
                     return;
                 }
-
                 comboCount++;
-
                 if (comboCount >= 2) {
                     comboEl.textContent = `x${comboCount}`;
                     comboEl.style.opacity = '1';
-                    
                     const scale = 1 + (comboCount * 0.1);
                     const safeScale = Math.min(scale, 4);
                     comboEl.style.setProperty('--scale', safeScale);
-
                     if(comboCount > 50) comboEl.style.color = '#FFD700'; 
                     else if(comboCount > 20) comboEl.style.color = '#00FFFF';
                     else if(comboCount > 10) comboEl.style.color = '#FF00FF';
                     else comboEl.style.color = '#FF5252'; 
-
                     comboEl.style.animation = 'none';
                     comboEl.offsetHeight; 
                     comboEl.style.animation = 'combo-shake 0.3s cubic-bezier(.36,.07,.19,.97) both';
                 }
-
                 comboTimeout = setTimeout(() => {
                     comboCount = 0;
                     comboEl.style.opacity = '0';
                 }, 2000);
             });
-            
             headerText.addEventListener('mouseleave', () => { clearInterval(starInterval); });
 
-            // Specialty Controls Listeners (RESTORED)
             const input = document.getElementById('specialty-input');
             const applyBtn = document.getElementById('specialty-apply-btn');
             const clearBtn = document.getElementById('specialty-clear-btn');
-            
             input.addEventListener("keydown", function(e){
-                if(e.key === "Enter"){
-                    addSpecialtyFilter(this.value);
-                    this.value = "";
-                }
+                if(e.key === "Enter"){ addSpecialtyFilter(this.value); this.value = ""; }
             });
             applyBtn.onclick = applySpecialtyFilters;
             clearBtn.onclick = clearSpecialtyFilters;
 
-            // Fetch CSV with error handling
             try {
                 Papa.parse(csvUrl, {
                     download: true, header: true, dynamicTyping: true,
@@ -1203,11 +1034,9 @@
                             link: row['Link'],
                             previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
                             price: cleanNumber(row['$ Price']),
-                            // Map CSV Columns to new fields with fallbacks
                             shipOrFly: cleanNumber(row['$ Ship or Fly'] || row['$ Freight'] || row['Freight']),
                             tariff: cleanNumber(row['$ Tariff (2025)'] || row['$ Tariff'] || row['Tariff']),
                             ship: cleanNumber(row['$ Ship'] || row['Ship']),
-                            //
                             aesthetic: row['Aesthetic'],
                             status: row['Status'],
                             specialty: row['Specialty'],
@@ -1220,14 +1049,9 @@
                         })).filter(row => row.maker); 
                         
                         totalDataCount = data.length;
-                        
-                        // Initialize Table
                         initTable(data);
-                        
-                        // Force update
                         setTimeout(() => updateResultCounter(data.length, data.length), 100);
                         
-                        // Init Slider
                         const slider = document.getElementById('price-slider');
                         if(slider) {
                             noUiSlider.create(slider, {
@@ -1235,20 +1059,16 @@
                                 step: 500, tooltips: false,
                                 pips: { mode: 'steps', density: 6, format: { to: v => '$' + v/1000 + 'k' } }
                             });
-                            
                             const updateTableFilter = () => {
                                 const values = slider.noUiSlider.get();
                                 filterState.priceMin = parseInt(values[0]);
                                 filterState.priceMax = parseInt(values[1]);
                                 filterState.showNA = document.getElementById('show-na-prices').checked;
-                                
                                 document.getElementById('price-values').innerText = `$${filterState.priceMin.toLocaleString()} - $${filterState.priceMax.toLocaleString()}`;
                                 updateTableFilters();
                             };
-
                             slider.noUiSlider.on('update', updateTableFilter);
                             document.getElementById('show-na-prices').addEventListener('change', updateTableFilter);
-                            
                             document.getElementById('reset-price-btn').addEventListener('click', function(){
                                 slider.noUiSlider.set([2000, 10000]);
                                 document.getElementById('show-na-prices').checked = true;
@@ -1256,58 +1076,39 @@
                         }
                     }
                 });
-            } catch (e) {
-                console.error("Parsing setup error", e);
-            }
+            } catch (e) { console.error("Parsing setup error", e); }
         });
 
-        // Tooltip Logic & Global Hover (COMBINED ROBUST HANDLER)
+        // Tooltip & Hover
         const tooltipEl = document.getElementById("image-tooltip");
         let lastTiltCell = null;
-        // Track current hovered box to avoid re-building HUD on every pixel move
         let currentHoverBox = null; 
 
         document.addEventListener('mousemove', e => {
             const target = e.target;
-
-            // --- 1. TOOLTIP LOGIC ---
             const box = target.closest('.preview-box') || target.closest('.logo-box');
-            
             if(box) {
-                // Determine base size based on type
-                // Default: 60vmin (Preview Boxes)
                 let sizeVmin = 60; 
-                if (box.classList.contains('logo-box')) {
-                    sizeVmin = 48; // 20% smaller for logos
-                }
-
-                // Update Tooltip Dimensions
+                if (box.classList.contains('logo-box')) sizeVmin = 48; 
                 tooltipEl.style.width = sizeVmin + 'vmin';
                 tooltipEl.style.height = sizeVmin + 'vmin';
 
                 if (box !== currentHoverBox) {
                     currentHoverBox = box;
-                    
                     let url = box.getAttribute('data-src'); 
                     if(url) {
                         if(box.classList.contains('preview-box')) {
-                             url = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=600&h=600&output=webp&q=80`; // Increased size
+                             url = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=600&h=600&output=webp&q=80`;
                         }
-                        
                         tooltipEl.style.backgroundImage = `url('${url}')`;
-                        tooltipEl.style.display = 'flex'; // Flex for HUD alignment
+                        tooltipEl.style.display = 'flex';
                         requestAnimationFrame(() => { tooltipEl.style.opacity = '1'; });
-
-                        // --- HUD GENERATION ---
-                        // Clear existing HUD
                         const oldHud = tooltipEl.querySelector('.tooltip-hud');
                         if(oldHud) oldHud.remove();
-
                         if (box.classList.contains('preview-box')) {
                             const index = parseInt(box.getAttribute('data-image-index'));
                             const container = box.parentNode;
                             const total = container.children.length;
-
                             if (total > 1) {
                                 const hud = document.createElement('div');
                                 hud.className = 'tooltip-hud';
@@ -1321,34 +1122,18 @@
                         }
                     }
                 }
-
-                // ALWAYS update position
-                // UPDATED: Use dynamic width based on vmin to flip correctly
                 const tooltipWidth = tooltipEl.offsetWidth;
                 const tooltipHeight = tooltipEl.offsetHeight;
                 const offset = 20;
-
                 let left = e.clientX + offset;
                 let top = e.clientY + offset;
-
-                // Check Right Edge
-                if (left + tooltipWidth > window.innerWidth) {
-                    left = e.clientX - tooltipWidth - offset;
-                }
-                // Check Bottom Edge
-                if (top + tooltipHeight > window.innerHeight) {
-                    top = e.clientY - tooltipHeight - offset;
-                }
-                
-                // Hard Clamp (Safety)
+                if (left + tooltipWidth > window.innerWidth) left = e.clientX - tooltipWidth - offset;
+                if (top + tooltipHeight > window.innerHeight) top = e.clientY - tooltipHeight - offset;
                 if (left < 0) left = 10; 
                 if (top < 0) top = 10;
-
                 tooltipEl.style.left = left + 'px';
                 tooltipEl.style.top = top + 'px';
-
             } else {
-                // Hide logic if we left a box
                 if (currentHoverBox) {
                     currentHoverBox = null;
                     if (tooltipEl.style.opacity !== '0') {
@@ -1356,7 +1141,6 @@
                         setTimeout(() => { 
                             if(tooltipEl.style.opacity === '0') {
                                 tooltipEl.style.display = 'none'; 
-                                // Clear HUD when hiding
                                 const oldHud = tooltipEl.querySelector('.tooltip-hud');
                                 if(oldHud) oldHud.remove();
                             }
@@ -1365,9 +1149,7 @@
                 }
             }
 
-            // --- 2. 3D TILT LOGIC ---
             const cell = target.closest('.tabulator-cell');
-            
             if (lastTiltCell && lastTiltCell !== cell) {
                 const oldWrapper = lastTiltCell.querySelector('.text-wrapper');
                 if (oldWrapper) oldWrapper.style.transform = '';
@@ -1375,10 +1157,8 @@
                 lastTiltCell.classList.remove('active-tilt');
                 lastTiltCell = null;
             }
-
             if (cell) {
-                const isInteractive = cell.querySelector('.tag-wrapper') || cell.querySelector('a');
-                
+                const isInteractive = cell.querySelector('.tag-wrapper');
                 if (!isInteractive) {
                     lastTiltCell = cell;
                     cell.classList.add('active-tilt');
@@ -1387,13 +1167,10 @@
                     const centerY = rect.top + rect.height / 2;
                     const mouseX = e.clientX - centerX;
                     const mouseY = e.clientY - centerY;
-                    
                     const rotateX = -1 * (mouseY / (rect.height / 2)) * 10; 
                     const rotateY = (mouseX / (rect.width / 2)) * 10;
-                    
                     const wrapper = cell.querySelector('.text-wrapper');
                     const transformString = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.15)`;
-                    
                     if (wrapper) { 
                         wrapper.style.transform = `translateY(-50%) ${transformString}`; 
                     } else { 
