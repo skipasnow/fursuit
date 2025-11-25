@@ -40,14 +40,13 @@
         }
 
         body {
-            /* Restore Page Scrolling */
+            /* Restore Page Scrolling - Standard Block Flow */
             min-height: 100vh;
             width: 100%;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
+            display: block; /* Changed from flex to block for reliability */
             overflow-y: auto; 
             overflow-x: hidden;
         }
@@ -82,17 +81,25 @@
         }
 
         #table-pane {
-            /* Fixed viewport height window for data table */
-            /* This forces Tabulator to scroll internally */
+            /* Viewport Window Strategy:
+               Fixed height ensures Tabulator handles internal scrolling properly.
+               85vh ensures header and scrollbar are visible simultaneously on most screens. 
+            */
             height: 85vh; 
             width: 100%;
             position: relative;
             z-index: 1; 
             background: #2e2e2e;
-            margin-bottom: 40px; /* Space at bottom of page */
-            padding-left: 20px; /* Match padding of top pane */
+            margin-bottom: 40px; 
+            padding-left: 20px; 
             padding-right: 20px;
             box-sizing: border-box;
+        }
+        
+        #creator-table {
+            /* Absolute positioning ensures it fills the #table-pane parent exactly */
+            position: absolute; 
+            top: 0; left: 0; right: 0; bottom: 0;
         }
 
         h1 {
@@ -485,7 +492,7 @@
               <option value="price">Price</option>
               <option value="calculatedTotal">Total Pick Up</option>
               <option value="calculatedSavings">Pick Up Savings</option>
-              <option value="portfolio">Portfolio Size</option>
+              <option value="portfolio">Works</option>
               <option value="followers">Followers</option>
             </select>
           </div>
@@ -775,7 +782,9 @@
                     updateResultCounter(rows.length, totalDataCount);
                 },
                 columns: [
-                    { title:"Rank", field:"rank", width:70, hozAlign:"center", sorter:"number", formatter: formatTextCell, cssClass: "text-cell" },
+                    { title:"Rank", field:"rank", visible:false, sorter:"number" },
+                    { title: "$ Freight", field: "shipOrFly", visible:false, sorter: "number" },
+                    { title:"Aesthetic", field:"aesthetic", visible:false },
                     { title:"Maker", field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
                     { 
                         title:"Logo", field:"logo", hozAlign:"center", width:90, 
@@ -784,7 +793,11 @@
                             return val ? `<div class="logo-box" data-src="${val}" style="background-image:url('${val}');"></div>` : "";
                         }
                     },
-                    { title:"Maker Type", field:"makerType", formatter: formatTextCell, cssClass: "text-cell" },
+                    // MOVED: Location (Right of Logo)
+                    { title:"Location", field:"country", formatter: formatTextCell, cssClass: "text-cell" },
+                    
+                    // REMOVED: Maker Type
+                    
                     { 
                         title:"Link", field:"link", hozAlign:"center",
                         formatter: function(cell) {
@@ -812,6 +825,30 @@
                            return container;
                         }
                     },
+                    { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
+                    { 
+                        title:"Specialty", field:"specialty", width: 300,
+                        formatter: function(cell) {
+                            const val = cell.getValue(); if (!val) return "";
+                            const tags = val.split(',').map(t => t.trim()).filter(t => t);
+                            const wrapper = document.createElement('div'); wrapper.className = 'tag-wrapper';
+                            tags.forEach(tag => {
+                                const span = document.createElement('span'); span.className = 'specialty-tag';
+                                span.textContent = tag;
+                                span.onclick = function(e) { e.stopPropagation(); addSpecialtyFilter(tag); };
+                                wrapper.appendChild(span);
+                            });
+                            return wrapper;
+                        }
+                    },
+                    { title:"Partials", field:"partials", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title:"Fursuits", field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title:"Works", field:"portfolio", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    
+                    // MOVED: Followers (Right of Portfolio Size)
+                    { title:"Followers", field:"followers", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
+
+                    // FINANCIAL COLUMNS (Far Right)
                     { 
                         title:"$ Price", field:"price", hozAlign:"right", sorter:"number",
                         sorterParams:{ alignEmptyValues:"bottom" },
@@ -820,7 +857,6 @@
                             return val !== null ? wrapInTilt(val.toLocaleString()) : "---";
                         }
                     },
-                    { title: "$ Freight", field: "shipOrFly", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt("$" + cell.getValue().toLocaleString()) : "---"; } },
                     { title: "$ Tariff", field: "tariff", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt("$" + cell.getValue().toLocaleString()) : "---"; } },
                     { title: "$ Ship Total", field: "ship", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt("$" + cell.getValue().toLocaleString()) : "---"; } },
                     {
@@ -870,30 +906,7 @@
                             const color = savings > 0 ? "#00E676" : "#ff5252";
                             return wrapInTilt("$" + savings.toLocaleString(), `color:${color}; font-weight:bold`);
                         }
-                    },
-                    { title:"Aesthetic", field:"aesthetic", formatter: formatTextCell, cssClass: "text-cell" },
-                    { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
-                    { 
-                        title:"Specialty", field:"specialty", width: 300,
-                        formatter: function(cell) {
-                            const val = cell.getValue(); if (!val) return "";
-                            const tags = val.split(',').map(t => t.trim()).filter(t => t);
-                            const wrapper = document.createElement('div'); wrapper.className = 'tag-wrapper';
-                            tags.forEach(tag => {
-                                const span = document.createElement('span'); span.className = 'specialty-tag';
-                                span.textContent = tag;
-                                span.onclick = function(e) { e.stopPropagation(); addSpecialtyFilter(tag); };
-                                wrapper.appendChild(span);
-                            });
-                            return wrapper;
-                        }
-                    },
-                    // PLAIN COLUMNS (Gradients Removed)
-                    { title:"Partials", field:"partials", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
-                    { title:"Fursuits", field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
-                    { title:"Portfolio Size", field:"portfolio", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
-                    { title:"Country", field:"country", formatter: formatTextCell, cssClass: "text-cell" },
-                    { title:"Followers", field:"followers", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } }
+                    }
                 ]
             });
         }
@@ -1039,8 +1052,8 @@
                             specialty: row['Specialty'],
                             partials: cleanNumber(row['Partials']),
                             fursuits: cleanNumber(row['Fursuits']),
-                            portfolio: cleanNumber(row['Portfolio Size']),
-                            country: row['Country'],
+                            portfolio: cleanNumber(row['Works']),
+                            country: row['Location'],
                             followers: cleanNumber(row['Followers']),
                             acctAge: cleanNumber(row['Acct Age']),
                         })).filter(row => row.maker); 
@@ -1155,7 +1168,7 @@
                 lastTiltCell = null;
             }
             if (cell) {
-                const isInteractive = cell.querySelector('.tag-wrapper');
+                const isInteractive = cell.querySelector('.tag-wrapper') || cell.querySelector('a');
                 if (!isInteractive) {
                     lastTiltCell = cell;
                     cell.classList.add('active-tilt');
