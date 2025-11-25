@@ -46,7 +46,7 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden; 
+            overflow-x: auto; /* Changed from hidden to auto for scrollbar */
         }
 
         /* Screen Shake Animation Class */
@@ -998,35 +998,22 @@
                     { 
                         title:"Partials", field:"partials", hozAlign:"right", sorter:"number",
                         formatter:function(cell){ 
-                            // SAFETY CHECK: If colMinMax not ready, return plain value
                             const val = cell.getValue();
-                            if(val === null || !colMinMax['partials']) return "";
-                            const c = getGradientColor(val, colMinMax['partials'].min, colMinMax['partials'].max, false);
-                            cell.getElement().style.backgroundColor = c;
-                            cell.getElement().style.color="#fff";
-                            return val; 
+                            return val !== null ? val : ""; 
                         } 
                     },
                     { 
                         title:"Fursuits", field:"fursuits", hozAlign:"right", sorter:"number",
                         formatter:function(cell){ 
                             const val = cell.getValue();
-                            if(val === null || !colMinMax['fursuits']) return "";
-                            const c = getGradientColor(val, colMinMax['fursuits'].min, colMinMax['fursuits'].max, false);
-                            cell.getElement().style.backgroundColor = c;
-                            cell.getElement().style.color="#fff";
-                            return val; 
+                            return val !== null ? val : ""; 
                         } 
                     },
                     { 
                         title:"Portfolio Size", field:"portfolio", hozAlign:"right", sorter:"number",
                         formatter:function(cell){ 
                             const val = cell.getValue();
-                            if(val === null || !colMinMax['portfolio']) return "";
-                            const c = getGradientColor(val, colMinMax['portfolio'].min, colMinMax['portfolio'].max, false);
-                            cell.getElement().style.backgroundColor = c;
-                            cell.getElement().style.color="#fff";
-                            return val; 
+                            return val !== null ? val : ""; 
                         } 
                     },
                     { title:"Country", field:"country", formatter: formatTextCell, cssClass: "text-cell" },
@@ -1034,11 +1021,7 @@
                         title:"Followers", field:"followers", hozAlign:"right", sorter:"number",
                         formatter:function(cell){ 
                             const val = cell.getValue();
-                            if(val === null || !colMinMax['followers']) return "";
-                            const c = getGradientColor(val, colMinMax['followers'].min, colMinMax['followers'].max, false);
-                            cell.getElement().style.backgroundColor = c;
-                            cell.getElement().style.color="#fff";
-                            return val.toLocaleString(); 
+                            return val !== null ? val.toLocaleString() : ""; 
                         } 
                     }
                 ]
@@ -1220,9 +1203,11 @@
                             link: row['Link'],
                             previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
                             price: cleanNumber(row['$ Price']),
+                            // Map CSV Columns to new fields with fallbacks
                             shipOrFly: cleanNumber(row['$ Ship or Fly'] || row['$ Freight'] || row['Freight']),
                             tariff: cleanNumber(row['$ Tariff (2025)'] || row['$ Tariff'] || row['Tariff']),
                             ship: cleanNumber(row['$ Ship'] || row['Ship']),
+                            //
                             aesthetic: row['Aesthetic'],
                             status: row['Status'],
                             specialty: row['Specialty'],
