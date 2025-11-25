@@ -31,7 +31,7 @@
            1. GLOBAL LAYOUT & DEFAULTS
            ========================================= */
         html {
-            height: 100%;
+            min-height: 100%;
             margin: 0;
             padding: 0;
             background: #2e2e2e;
@@ -40,14 +40,17 @@
         }
 
         body {
-            height: 100vh; /* Fixed viewport height */
+            /* Restore Page Scrolling */
+            height: auto;
+            min-height: 100vh;
             width: 100vw;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Prevent body scroll, use internal panes */
+            overflow-y: auto; 
+            overflow-x: hidden;
         }
 
         /* Scrollbar Styling for Webkit */
@@ -70,22 +73,21 @@
 
         /* --- LAYOUT PANES --- */
         #top-pane {
-            flex: 0 0 auto; /* Don't grow, don't shrink, sizing based on content */
-            max-height: 60vh; /* Limit height of map/controls area */
-            overflow-y: auto; /* Scrollable if content is tall */
+            /* Normal Block Flow, High Z-Index to cover table rows when scrolling */
+            position: relative;
+            z-index: 50; 
+            background: #2e2e2e;
             padding: 20px;
             border-bottom: 2px solid #444;
-            background: #2e2e2e;
-            z-index: 10;
-            box-sizing: border-box;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5); /* Shadow to show depth over table */
         }
 
         #table-pane {
-            flex: 1 1 auto; /* Take up all remaining vertical space */
-            position: relative; /* Context for absolute child */
-            overflow: hidden; /* Tabulator handles the scrollbars */
-            background: #2e2e2e;
+            /* Fixed height relative to viewport to ensure internal scrollbars work */
+            height: 85vh; 
             width: 100%;
+            position: relative;
+            z-index: 1; /* Below top pane */
         }
 
         h1 {
@@ -892,6 +894,7 @@
                             return wrapper;
                         }
                     },
+                    // PLAIN COLUMNS (Gradients Removed)
                     { title:"Partials", field:"partials", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
                     { title:"Fursuits", field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
                     { title:"Portfolio Size", field:"portfolio", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
