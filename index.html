@@ -49,9 +49,23 @@
             overflow-x: hidden; 
         }
 
+        /* Screen Shake Animation Class */
+        body.shake-active {
+            animation: screen-shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes screen-shake {
+            10%, 90% { transform: translate3d(-2px, -2px, 0); }
+            20%, 80% { transform: translate3d(4px, 4px, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, -8px, 0); }
+            40%, 60% { transform: translate3d(8px, 8px, 0); }
+        }
+
         h1 {
             margin: 0 0 15px 0;
             flex-shrink: 0;
+            min-height: 60px; /* Keep space for layout after explosion */
+            position: relative; /* Anchor for scorch mark */
         }
 
         /* --- HEADER ANIMATION --- */
@@ -108,22 +122,79 @@
             100% { transform: rotate(-25deg) translate(0, 0) scale(var(--scale)); }
         }
 
-        /* Explosion Particle */
-        .explosion-particle {
+        /* Explosion & Flame Particles */
+        .explosion-particle, .flame-particle {
             position: fixed;
-            width: 8px;
-            height: 8px;
-            background-color: #fff;
             pointer-events: none;
             z-index: 9999;
-            /* Animating using CSS variables set in JS */
-            animation: explode-anim 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); /* Diamond shape */
+            will-change: transform, opacity;
         }
 
-        @keyframes explode-anim {
+        /* Debris (Shards) */
+        .explosion-particle {
+            width: 6px; height: 6px;
+            background-color: #fff;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            animation: explode-debris 0.8s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes explode-debris {
             0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0.5) rotate(720deg); opacity: 0; }
+        }
+
+        /* Fire (Soft, Glowing) */
+        .flame-particle {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #fff 0%, #ffeb3b 30%, #ff9800 60%, transparent 100%);
+            mix-blend-mode: screen;
+            filter: blur(4px);
+            animation: explode-flame 0.6s ease-out forwards;
+        }
+
+        @keyframes explode-flame {
+            0% { transform: translate(0, 0) scale(0.5); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(3); opacity: 0; }
+        }
+
+        /* White Flash */
+        .blast-flash {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 150%; height: 200%;
+            transform: translate(-50%, -50%);
+            background: white;
+            opacity: 0;
+            z-index: 200;
+            pointer-events: none;
+            border-radius: 50%;
+            filter: blur(20px);
+            animation: flash-bang 0.3s ease-out forwards;
+        }
+        @keyframes flash-bang {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(2); }
+        }
+
+        /* Scorch Mark (Blast) */
+        .scorch-mark {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 90%; /* Changed from fixed 400px to relative width */
+            height: 140px; /* Slightly taller */
+            /* Updated gradient for smoother, transparent edges */
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.9) 20%, rgba(34,15,15,0.7) 50%, rgba(0,0,0,0) 85%);
+            border-radius: 50%; /* Rounded edges */
+            filter: blur(8px); /* Smooth, feathered look */
+            z-index: 0; /* Behind where text was */
+            pointer-events: none;
+            animation: scorch-appear 0.1s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+        }
+        @keyframes scorch-appear {
+            to { transform: translate(-50%, -50%) scale(1); }
         }
 
         /* --- MAP SECTION STYLES --- */
@@ -526,6 +597,7 @@
         // Combo Logic Variables
         let comboCount = 0;
         let comboTimeout;
+        let isExploded = false; // Permanent state tracking
 
         // ==========================================
         // 1. FILTER & SPECIALTY LOGIC
@@ -985,6 +1057,7 @@
 
             // Star FX & COMBO LOGIC
             const headerText = document.getElementById('header-text');
+            const h1 = document.querySelector('h1'); // Get H1 for explosions
             
             // Create Combo Counter Element
             const comboEl = document.createElement('span');
@@ -1005,18 +1078,34 @@
 
             // EXPLOSION FUNCTION
             function createExplosion() {
-                const rect = comboEl.getBoundingClientRect();
+                const rect = h1.getBoundingClientRect();
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
+
+                // Create Scorch Mark
+                const scorch = document.createElement('div');
+                scorch.className = 'scorch-mark';
+                h1.appendChild(scorch); // Append to H1, not the span being hidden
                 
-                for (let i = 0; i < 30; i++) {
+                // 1. Flash
+                const flash = document.createElement('div');
+                flash.className = 'blast-flash';
+                h1.appendChild(flash);
+                setTimeout(() => flash.remove(), 500);
+
+                // 2. Shake
+                document.body.classList.add('shake-active');
+                setTimeout(() => document.body.classList.remove('shake-active'), 500);
+
+                // Particles
+                for (let i = 0; i < 100; i++) { // Increased count
                     const particle = document.createElement('div');
                     particle.className = 'explosion-particle';
                     particle.style.left = centerX + 'px';
                     particle.style.top = centerY + 'px';
                     
                     const angle = Math.random() * Math.PI * 2;
-                    const velocity = 50 + Math.random() * 100;
+                    const velocity = 100 + Math.random() * 200; // Higher Velocity
                     const tx = Math.cos(angle) * velocity;
                     const ty = Math.sin(angle) * velocity;
                     
@@ -1026,12 +1115,38 @@
                     const colors = ['#FFD700', '#FF5252', '#FFFFFF', '#FFA500'];
                     particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                     
+                    // Random Size
+                    const size = 4 + Math.random() * 6;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+
                     document.body.appendChild(particle);
                     setTimeout(() => particle.remove(), 800);
+                }
+
+                // Flames
+                for (let i = 0; i < 40; i++) { // More flames
+                    const flame = document.createElement('div');
+                    flame.className = 'flame-particle';
+                    flame.style.left = centerX + 'px';
+                    flame.style.top = centerY + 'px';
+
+                    const angle = Math.random() * Math.PI * 2;
+                    const velocity = 50 + Math.random() * 100;
+                    const tx = Math.cos(angle) * velocity;
+                    const ty = Math.sin(angle) * velocity;
+
+                    flame.style.setProperty('--tx', `${tx}px`);
+                    flame.style.setProperty('--ty', `${ty}px`);
+                    
+                    document.body.appendChild(flame);
+                    setTimeout(() => flame.remove(), 600);
                 }
             }
 
             headerText.addEventListener('mouseenter', () => { 
+                if (isExploded) return; 
+
                 starInterval = setInterval(createStar, 50);
                 
                 clearTimeout(comboTimeout);
@@ -1040,8 +1155,9 @@
                 if (comboCount >= 99) {
                     createExplosion();
                     comboCount = 0; 
-                    comboEl.style.opacity = '0';
-                    comboEl.textContent = '';
+                    comboEl.style.display = 'none';
+                    headerText.style.visibility = 'hidden'; 
+                    isExploded = true;
                     return;
                 }
 
@@ -1088,74 +1204,76 @@
             clearBtn.onclick = clearSpecialtyFilters;
 
             // Fetch CSV with error handling
-            Papa.parse(csvUrl, {
-                download: true, header: true, dynamicTyping: true,
-                error: function(err) {
-                    console.error("CSV Error:", err);
-                    document.getElementById("results-counter").innerHTML = "<span style='color:red'>Error loading data.</span>";
-                },
-                complete: function(results) {
-                    const data = results.data.map(row => ({
-                        rank: cleanNumber(row['Rank']),
-                        maker: row['Maker'],
-                        logo: (row['Logo'] && row['Logo'].match(/=IMAGE\("(.+)"\)/)) ? row['Logo'].match(/=IMAGE\("(.+)"\)/)[1] : row['Logo'],
-                        makerType: row['Maker Type'],
-                        link: row['Link'],
-                        previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
-                        price: cleanNumber(row['$ Price']),
-                        // Map CSV Columns to new fields with fallbacks
-                        shipOrFly: cleanNumber(row['$ Ship or Fly'] || row['$ Freight'] || row['Freight']),
-                        tariff: cleanNumber(row['$ Tariff (2025)'] || row['$ Tariff'] || row['Tariff']),
-                        ship: cleanNumber(row['$ Ship'] || row['Ship']),
-                        //
-                        aesthetic: row['Aesthetic'],
-                        status: row['Status'],
-                        specialty: row['Specialty'],
-                        partials: cleanNumber(row['Partials']),
-                        fursuits: cleanNumber(row['Fursuits']),
-                        portfolio: cleanNumber(row['Portfolio Size']),
-                        country: row['Country'],
-                        followers: cleanNumber(row['Followers']),
-                        acctAge: cleanNumber(row['Acct Age']),
-                    })).filter(row => row.maker); 
-                    
-                    totalDataCount = data.length;
-                    
-                    // Initialize Table
-                    initTable(data);
-                    
-                    // Force update
-                    setTimeout(() => updateResultCounter(data.length, data.length), 100);
-                    
-                    // Init Slider
-                    const slider = document.getElementById('price-slider');
-                    if(slider) {
-                        noUiSlider.create(slider, {
-                            start: [2000, 10000], connect: true, range: { 'min': 2000, 'max': 10000 },
-                            step: 500, tooltips: false,
-                            pips: { mode: 'steps', density: 6, format: { to: v => '$' + v/1000 + 'k' } }
-                        });
+            try {
+                Papa.parse(csvUrl, {
+                    download: true, header: true, dynamicTyping: true,
+                    error: function(err) {
+                        console.error("CSV Error:", err);
+                        document.getElementById("results-counter").innerHTML = "<span style='color:red'>Error loading data.</span>";
+                    },
+                    complete: function(results) {
+                        const data = results.data.map(row => ({
+                            rank: cleanNumber(row['Rank']),
+                            maker: row['Maker'],
+                            logo: (row['Logo'] && row['Logo'].match(/=IMAGE\("(.+)"\)/)) ? row['Logo'].match(/=IMAGE\("(.+)"\)/)[1] : row['Logo'],
+                            makerType: row['Maker Type'],
+                            link: row['Link'],
+                            previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
+                            price: cleanNumber(row['$ Price']),
+                            shipOrFly: cleanNumber(row['$ Ship or Fly'] || row['$ Freight'] || row['Freight']),
+                            tariff: cleanNumber(row['$ Tariff (2025)'] || row['$ Tariff'] || row['Tariff']),
+                            ship: cleanNumber(row['$ Ship'] || row['Ship']),
+                            aesthetic: row['Aesthetic'],
+                            status: row['Status'],
+                            specialty: row['Specialty'],
+                            partials: cleanNumber(row['Partials']),
+                            fursuits: cleanNumber(row['Fursuits']),
+                            portfolio: cleanNumber(row['Portfolio Size']),
+                            country: row['Country'],
+                            followers: cleanNumber(row['Followers']),
+                            acctAge: cleanNumber(row['Acct Age']),
+                        })).filter(row => row.maker); 
                         
-                        const updateTableFilter = () => {
-                            const values = slider.noUiSlider.get();
-                            filterState.priceMin = parseInt(values[0]);
-                            filterState.priceMax = parseInt(values[1]);
-                            filterState.showNA = document.getElementById('show-na-prices').checked;
+                        totalDataCount = data.length;
+                        
+                        // Initialize Table
+                        initTable(data);
+                        
+                        // Force update
+                        setTimeout(() => updateResultCounter(data.length, data.length), 100);
+                        
+                        // Init Slider
+                        const slider = document.getElementById('price-slider');
+                        if(slider) {
+                            noUiSlider.create(slider, {
+                                start: [2000, 10000], connect: true, range: { 'min': 2000, 'max': 10000 },
+                                step: 500, tooltips: false,
+                                pips: { mode: 'steps', density: 6, format: { to: v => '$' + v/1000 + 'k' } }
+                            });
                             
-                            document.getElementById('price-values').innerText = `$${filterState.priceMin.toLocaleString()} - $${filterState.priceMax.toLocaleString()}`;
-                            updateTableFilters();
-                        };
+                            const updateTableFilter = () => {
+                                const values = slider.noUiSlider.get();
+                                filterState.priceMin = parseInt(values[0]);
+                                filterState.priceMax = parseInt(values[1]);
+                                filterState.showNA = document.getElementById('show-na-prices').checked;
+                                
+                                document.getElementById('price-values').innerText = `$${filterState.priceMin.toLocaleString()} - $${filterState.priceMax.toLocaleString()}`;
+                                updateTableFilters();
+                            };
 
-                        slider.noUiSlider.on('update', updateTableFilter);
-                        document.getElementById('show-na-prices').addEventListener('change', updateTableFilter);
-                        
-                        document.getElementById('reset-price-btn').addEventListener('click', function(){
-                            slider.noUiSlider.set([2000, 10000]);
-                            document.getElementById('show-na-prices').checked = true;
-                        });
+                            slider.noUiSlider.on('update', updateTableFilter);
+                            document.getElementById('show-na-prices').addEventListener('change', updateTableFilter);
+                            
+                            document.getElementById('reset-price-btn').addEventListener('click', function(){
+                                slider.noUiSlider.set([2000, 10000]);
+                                document.getElementById('show-na-prices').checked = true;
+                            });
+                        }
                     }
-                }
-            });
+                });
+            } catch (e) {
+                console.error("Parsing setup error", e);
+            }
         });
 
         // Tooltip Logic & Global Hover (COMBINED ROBUST HANDLER)
@@ -1184,6 +1302,7 @@
 
                 if (box !== currentHoverBox) {
                     currentHoverBox = box;
+                    
                     let url = box.getAttribute('data-src'); 
                     if(url) {
                         if(box.classList.contains('preview-box')) {
