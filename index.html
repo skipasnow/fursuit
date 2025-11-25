@@ -80,6 +80,52 @@
 
         @keyframes rainbow-move { to { background-position: 200% center; } }
 
+        /* --- COMBO MULTIPLIER STYLES --- */
+        #combo-counter {
+            position: absolute;
+            top: -15px;
+            right: -20px;
+            font-family: 'VCR OSD Mono', monospace;
+            font-weight: bold;
+            color: #ff5252; /* Start Red */
+            text-shadow: 2px 2px 0px #fff;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 100;
+            /* Initial Transform will be overwritten by JS */
+            transform: rotate(-25deg) scale(1); 
+            transition: opacity 0.2s ease, color 0.2s ease;
+        }
+
+        /* Shake Animation */
+        @keyframes combo-shake {
+            0% { transform: rotate(-25deg) translate(0, 0) scale(var(--scale)); }
+            20% { transform: rotate(-25deg) translate(-4px, 4px) scale(var(--scale)); }
+            40% { transform: rotate(-25deg) translate(4px, -4px) scale(var(--scale)); }
+            60% { transform: rotate(-25deg) translate(-4px, 4px) scale(var(--scale)); }
+            80% { transform: rotate(-25deg) translate(4px, -4px) scale(var(--scale)); }
+            100% { transform: rotate(-25deg) translate(0, 0) scale(var(--scale)); }
+        }
+
+        /* Explosion Particle */
+        .explosion-particle {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background-color: #fff;
+            pointer-events: none;
+            z-index: 9999;
+            /* Animating using CSS variables set in JS */
+            animation: explode-anim 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); /* Diamond shape */
+        }
+
+        @keyframes explode-anim {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; }
+        }
+
         /* --- MAP SECTION STYLES --- */
         .map-section {
             width: 100%;
@@ -473,9 +519,13 @@
         let filterState = { priceMin: 2000, priceMax: 10000, showNA: true, tags: new Set() };
         let pendingTags = new Set();
         let totalDataCount = 0;
-
+        
         // Costs Configuration
         const costs = { base: 900, visa: 500, flightOption: 400, tourism: 300 };
+        
+        // Combo Logic Variables
+        let comboCount = 0;
+        let comboTimeout;
 
         // ==========================================
         // 1. FILTER & SPECIALTY LOGIC
@@ -933,8 +983,14 @@
             document.getElementById('check-flight').addEventListener('change', recalcCosts);
             document.getElementById('check-tourism').addEventListener('change', recalcCosts);
 
-            // Star FX
+            // Star FX & COMBO LOGIC
             const headerText = document.getElementById('header-text');
+            
+            // Create Combo Counter Element
+            const comboEl = document.createElement('span');
+            comboEl.id = 'combo-counter';
+            headerText.appendChild(comboEl);
+
             let starInterval;
             function createStar() {
                 const star = document.createElement('div'); star.className = 'star-particle';
@@ -946,16 +1002,87 @@
                 document.body.appendChild(star);
                 setTimeout(() => { star.remove(); }, 1500);
             }
-            headerText.addEventListener('mouseenter', () => { starInterval = setInterval(createStar, 50); });
+
+            // EXPLOSION FUNCTION
+            function createExplosion() {
+                const rect = comboEl.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                for (let i = 0; i < 30; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'explosion-particle';
+                    particle.style.left = centerX + 'px';
+                    particle.style.top = centerY + 'px';
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const velocity = 50 + Math.random() * 100;
+                    const tx = Math.cos(angle) * velocity;
+                    const ty = Math.sin(angle) * velocity;
+                    
+                    particle.style.setProperty('--tx', `${tx}px`);
+                    particle.style.setProperty('--ty', `${ty}px`);
+                    
+                    const colors = ['#FFD700', '#FF5252', '#FFFFFF', '#FFA500'];
+                    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    document.body.appendChild(particle);
+                    setTimeout(() => particle.remove(), 800);
+                }
+            }
+
+            headerText.addEventListener('mouseenter', () => { 
+                starInterval = setInterval(createStar, 50);
+                
+                clearTimeout(comboTimeout);
+
+                // EXPLOSION CHECK
+                if (comboCount >= 99) {
+                    createExplosion();
+                    comboCount = 0; 
+                    comboEl.style.opacity = '0';
+                    comboEl.textContent = '';
+                    return;
+                }
+
+                comboCount++;
+
+                if (comboCount >= 2) {
+                    comboEl.textContent = `x${comboCount}`;
+                    comboEl.style.opacity = '1';
+                    
+                    const scale = 1 + (comboCount * 0.1);
+                    const safeScale = Math.min(scale, 4);
+                    comboEl.style.setProperty('--scale', safeScale);
+
+                    if(comboCount > 50) comboEl.style.color = '#FFD700'; 
+                    else if(comboCount > 20) comboEl.style.color = '#00FFFF';
+                    else if(comboCount > 10) comboEl.style.color = '#FF00FF';
+                    else comboEl.style.color = '#FF5252'; 
+
+                    comboEl.style.animation = 'none';
+                    comboEl.offsetHeight; 
+                    comboEl.style.animation = 'combo-shake 0.3s cubic-bezier(.36,.07,.19,.97) both';
+                }
+
+                comboTimeout = setTimeout(() => {
+                    comboCount = 0;
+                    comboEl.style.opacity = '0';
+                }, 2000);
+            });
+            
             headerText.addEventListener('mouseleave', () => { clearInterval(starInterval); });
 
-            // Specialty Controls
+            // Specialty Controls Listeners (RESTORED)
             const input = document.getElementById('specialty-input');
             const applyBtn = document.getElementById('specialty-apply-btn');
             const clearBtn = document.getElementById('specialty-clear-btn');
             
             input.addEventListener("keydown", function(e){
-                if(e.key === "Enter"){ addSpecialtyFilter(this.value); this.value = ""; }
+                if(e.key === "Enter"){
+                    addSpecialtyFilter(this.value);
+                    this.value = "";
+                }
             });
             applyBtn.onclick = applySpecialtyFilters;
             clearBtn.onclick = clearSpecialtyFilters;
@@ -976,9 +1103,11 @@
                         link: row['Link'],
                         previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
                         price: cleanNumber(row['$ Price']),
+                        // Map CSV Columns to new fields with fallbacks
                         shipOrFly: cleanNumber(row['$ Ship or Fly'] || row['$ Freight'] || row['Freight']),
                         tariff: cleanNumber(row['$ Tariff (2025)'] || row['$ Tariff'] || row['Tariff']),
                         ship: cleanNumber(row['$ Ship'] || row['Ship']),
+                        //
                         aesthetic: row['Aesthetic'],
                         status: row['Status'],
                         specialty: row['Specialty'],
@@ -1006,16 +1135,20 @@
                             step: 500, tooltips: false,
                             pips: { mode: 'steps', density: 6, format: { to: v => '$' + v/1000 + 'k' } }
                         });
+                        
                         const updateTableFilter = () => {
                             const values = slider.noUiSlider.get();
                             filterState.priceMin = parseInt(values[0]);
                             filterState.priceMax = parseInt(values[1]);
                             filterState.showNA = document.getElementById('show-na-prices').checked;
+                            
                             document.getElementById('price-values').innerText = `$${filterState.priceMin.toLocaleString()} - $${filterState.priceMax.toLocaleString()}`;
                             updateTableFilters();
                         };
+
                         slider.noUiSlider.on('update', updateTableFilter);
                         document.getElementById('show-na-prices').addEventListener('change', updateTableFilter);
+                        
                         document.getElementById('reset-price-btn').addEventListener('click', function(){
                             slider.noUiSlider.set([2000, 10000]);
                             document.getElementById('show-na-prices').checked = true;
@@ -1025,20 +1158,27 @@
             });
         });
 
-        // Tooltip & Hover Logic
+        // Tooltip Logic & Global Hover (COMBINED ROBUST HANDLER)
         const tooltipEl = document.getElementById("image-tooltip");
         let lastTiltCell = null;
+        // Track current hovered box to avoid re-building HUD on every pixel move
         let currentHoverBox = null; 
 
         document.addEventListener('mousemove', e => {
             const target = e.target;
 
-            // Tooltip
+            // --- 1. TOOLTIP LOGIC ---
             const box = target.closest('.preview-box') || target.closest('.logo-box');
+            
             if(box) {
+                // Determine base size based on type
+                // Default: 60vmin (Preview Boxes)
                 let sizeVmin = 60; 
-                if (box.classList.contains('logo-box')) sizeVmin = 48; 
+                if (box.classList.contains('logo-box')) {
+                    sizeVmin = 48; // 20% smaller for logos
+                }
 
+                // Update Tooltip Dimensions
                 tooltipEl.style.width = sizeVmin + 'vmin';
                 tooltipEl.style.height = sizeVmin + 'vmin';
 
@@ -1047,12 +1187,15 @@
                     let url = box.getAttribute('data-src'); 
                     if(url) {
                         if(box.classList.contains('preview-box')) {
-                             url = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=600&h=600&output=webp&q=80`;
+                             url = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=600&h=600&output=webp&q=80`; // Increased size
                         }
+                        
                         tooltipEl.style.backgroundImage = `url('${url}')`;
-                        tooltipEl.style.display = 'flex';
+                        tooltipEl.style.display = 'flex'; // Flex for HUD alignment
                         requestAnimationFrame(() => { tooltipEl.style.opacity = '1'; });
 
+                        // --- HUD GENERATION ---
+                        // Clear existing HUD
                         const oldHud = tooltipEl.querySelector('.tooltip-hud');
                         if(oldHud) oldHud.remove();
 
@@ -1060,6 +1203,7 @@
                             const index = parseInt(box.getAttribute('data-image-index'));
                             const container = box.parentNode;
                             const total = container.children.length;
+
                             if (total > 1) {
                                 const hud = document.createElement('div');
                                 hud.className = 'tooltip-hud';
@@ -1074,14 +1218,25 @@
                     }
                 }
 
+                // ALWAYS update position
+                // UPDATED: Use dynamic width based on vmin to flip correctly
                 const tooltipWidth = tooltipEl.offsetWidth;
                 const tooltipHeight = tooltipEl.offsetHeight;
                 const offset = 20;
+
                 let left = e.clientX + offset;
                 let top = e.clientY + offset;
 
-                if (left + tooltipWidth > window.innerWidth) left = e.clientX - tooltipWidth - offset;
-                if (top + tooltipHeight > window.innerHeight) top = e.clientY - tooltipHeight - offset;
+                // Check Right Edge
+                if (left + tooltipWidth > window.innerWidth) {
+                    left = e.clientX - tooltipWidth - offset;
+                }
+                // Check Bottom Edge
+                if (top + tooltipHeight > window.innerHeight) {
+                    top = e.clientY - tooltipHeight - offset;
+                }
+                
+                // Hard Clamp (Safety)
                 if (left < 0) left = 10; 
                 if (top < 0) top = 10;
 
@@ -1089,6 +1244,7 @@
                 tooltipEl.style.top = top + 'px';
 
             } else {
+                // Hide logic if we left a box
                 if (currentHoverBox) {
                     currentHoverBox = null;
                     if (tooltipEl.style.opacity !== '0') {
@@ -1096,6 +1252,7 @@
                         setTimeout(() => { 
                             if(tooltipEl.style.opacity === '0') {
                                 tooltipEl.style.display = 'none'; 
+                                // Clear HUD when hiding
                                 const oldHud = tooltipEl.querySelector('.tooltip-hud');
                                 if(oldHud) oldHud.remove();
                             }
@@ -1104,8 +1261,9 @@
                 }
             }
 
-            // Tilt
+            // --- 2. 3D TILT LOGIC ---
             const cell = target.closest('.tabulator-cell');
+            
             if (lastTiltCell && lastTiltCell !== cell) {
                 const oldWrapper = lastTiltCell.querySelector('.text-wrapper');
                 if (oldWrapper) oldWrapper.style.transform = '';
@@ -1113,8 +1271,10 @@
                 lastTiltCell.classList.remove('active-tilt');
                 lastTiltCell = null;
             }
+
             if (cell) {
                 const isInteractive = cell.querySelector('.tag-wrapper') || cell.querySelector('a');
+                
                 if (!isInteractive) {
                     lastTiltCell = cell;
                     cell.classList.add('active-tilt');
@@ -1123,10 +1283,13 @@
                     const centerY = rect.top + rect.height / 2;
                     const mouseX = e.clientX - centerX;
                     const mouseY = e.clientY - centerY;
+                    
                     const rotateX = -1 * (mouseY / (rect.height / 2)) * 10; 
                     const rotateY = (mouseX / (rect.width / 2)) * 10;
+                    
                     const wrapper = cell.querySelector('.text-wrapper');
                     const transformString = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.15)`;
+                    
                     if (wrapper) { 
                         wrapper.style.transform = `translateY(-50%) ${transformString}`; 
                     } else { 
