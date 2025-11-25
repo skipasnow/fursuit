@@ -41,9 +41,8 @@
 
         body {
             /* Restore Page Scrolling */
-            height: auto;
             min-height: 100vh;
-            width: 100vw;
+            width: 100%;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -73,21 +72,27 @@
 
         /* --- LAYOUT PANES --- */
         #top-pane {
-            /* Normal Block Flow, High Z-Index to cover table rows when scrolling */
             position: relative;
-            z-index: 50; 
+            z-index: 20; 
             background: #2e2e2e;
             padding: 20px;
             border-bottom: 2px solid #444;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5); /* Shadow to show depth over table */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
         }
 
         #table-pane {
-            /* Fixed height relative to viewport to ensure internal scrollbars work */
+            /* Fixed viewport height window for data table */
+            /* This forces Tabulator to scroll internally */
             height: 85vh; 
             width: 100%;
             position: relative;
-            z-index: 1; /* Below top pane */
+            z-index: 1; 
+            background: #2e2e2e;
+            margin-bottom: 40px; /* Space at bottom of page */
+            padding-left: 20px; /* Match padding of top pane */
+            padding-right: 20px;
+            box-sizing: border-box;
         }
 
         h1 {
@@ -333,8 +338,8 @@
 
         /* --- TABLE CONTAINER (FIXED) --- */
         #creator-table { 
-            position: absolute; /* Crucial for Tabulator filling space */
-            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; 
+            height: 100%; /* Fill #table-pane */
             border: none;
         }
         
@@ -350,19 +355,6 @@
         .text-content { color: #fff; font-weight: normal; }
         .tabulator-row .tabulator-cell.active-tilt .text-content { font-weight: bold; background: linear-gradient(110deg, #ffffff 40%, #ff8c00 50%, #ffffff 60%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; animation: shine-sweep 1.5s linear infinite; }
         @keyframes shine-sweep { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
-        
-        /* ANIMATED LINK STYLE */
-        .animated-link {
-            color: darkorange; text-decoration: none; font-weight: bold; transition: all 0.3s;
-        }
-        .animated-link:hover {
-            background-image: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-            background-size: 200% auto;
-            -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: rainbow-move 2s linear infinite;
-        }
-        
         a { color: darkorange !important; text-decoration: none; }
 
         .filter-container { background: #222; border-radius: 4px; width: 100%; box-sizing: border-box; flex-grow: 1; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
@@ -761,6 +753,8 @@
         }
 
         function initTable(data) {
+            // Note: colMinMax logic is preserved for future use or other cols, 
+            // even though we removed gradients from requested columns.
             const colMinMax = {};
             const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
             gradientColumns.forEach(col=>{
