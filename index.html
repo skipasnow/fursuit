@@ -79,7 +79,6 @@
         }
 
         #table-pane {
-            /* Viewport Window Strategy */
             height: 85vh; 
             width: 100%;
             position: relative;
@@ -252,6 +251,12 @@
         button.reset-btn:hover { background: #d32f2f; }
         label { font-weight: bold; color: #ccc; }
 
+        /* DATASET TOGGLE STYLES */
+        .dataset-toggle { display: flex; gap: 0; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
+        .dataset-toggle button { border: none; border-radius: 0; background: #333; color: #888; flex: 1; transition: all 0.2s; }
+        .dataset-toggle button.active { background: #ff8c00; color: #000; font-weight: bold; }
+        .dataset-toggle button:hover:not(.active) { background: #444; color: #fff; }
+
         .results-counter { width: 100%; margin-top: 15px; padding-top: 15px; border-top: 1px solid #444; font-size: 1.1em; text-align: center; color: #ccc; }
         .results-counter b { color: #ff8c00; font-size: 1.2em; }
         .controls-footer { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #444; flex-wrap: wrap; gap: 10px; }
@@ -272,13 +277,18 @@
         .noUi-marker-large { background: #aaa; height: 10px; width: 2px; } 
         .noUi-value { color: #ccc; margin-top: 5px; }
 
-        /* --- TABLE STYLES --- */
+        /* --- TABLE CONTAINER (FIXED) --- */
+        #creator-table { 
+            width: 100%; 
+            height: 100%; /* Fill #table-pane */
+            border: none;
+        }
+        
         .tabulator .tabulator-header { background-color: #1f1f1f !important; font-weight: bold !important; border-bottom: 1px solid #444; }
         .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; font-size: 16px; }
         .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
         .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
 
-        /* 3D Tilt */
         .tabulator-row .tabulator-cell { transition: transform 0.1s ease-out; position: relative; background-clip: padding-box; overflow: hidden; }
         .tabulator-row .tabulator-cell.active-tilt { z-index: 10000 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.6); border-color: rgba(255,255,255,0.5) !important; filter: brightness(1.2); overflow: visible !important; }
         .text-wrapper { display: block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: all 0.2s ease; }
@@ -350,7 +360,7 @@
             </div>
 
             <div class="data-column">
-                <div class="data-header-title">Trip Estimator (Asia)</div>
+                <div class="data-header-title">Trip Estimator (Beijing)</div>
                 <div class="data-header-subtitle">Select Departure Airport</div>
                 
                 <div id="select-prompt">&lt; WAITING FOR SELECTION &gt;</div>
@@ -386,6 +396,16 @@
         </div>
 
         <div class="controls-container">
+          
+          <!-- NEW DATASET TOGGLE -->
+          <div class="control-group">
+              <label>Dataset:</label>
+              <div class="dataset-toggle">
+                  <button id="btn-full" class="active">Full Suits</button>
+                  <button id="btn-partial">Partial Suits</button>
+              </div>
+          </div>
+
           <div class="control-group slider-group">
             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
                 <label>
@@ -420,7 +440,7 @@
               <option value="price">Price</option>
               <option value="calculatedTotal">Total Pick Up</option>
               <option value="calculatedSavings">Pick Up Savings</option>
-              <option value="portfolio">Fursuits</option>
+              <option value="fursuits">Fursuits</option>
               <option value="followers">Followers</option>
             </select>
           </div>
@@ -458,6 +478,10 @@
         let totalDataCount = 0;
         const costs = { base: 900, visa: 500, flightOption: 400, tourism: 300 };
         
+        // URLs
+        const csvUrlFull = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv"; // INSERT FULL SUITS CSV LINK HERE
+        const csvUrlPartial = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=38637980&single=true&output=csv"; // INSERT PARTIAL SUITS CSV LINK HERE
+
         // Combo Vars
         let comboCount = 0;
         let comboTimeout;
@@ -623,8 +647,6 @@
         }
 
         // --- TABLE LOGIC ---
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
-
         function cleanNumber(val) {
             if (val === null || val === undefined || val === "") return null;
             if (typeof val === 'string') {
@@ -682,6 +704,11 @@
                 if(vals.length > 0) { colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)}; } 
                 else { colMinMax[col] = {min: 0, max: 1}; }
             });
+            
+            // Clear if existing
+            if(table) {
+                table.destroy();
+            }
 
             table = new Tabulator("#creator-table", {
                 data: data,
@@ -756,7 +783,8 @@
                     },
                     { title:"Partials", field:"partials", visible:false, hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
                     { title:"Full Suits", field:"fullSuits", visible:false, hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
-                    { title:"Fursuits", field:"portfolio", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title:"Fursuits", field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title:"Portfolio Size", field:"portfolio", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
                     
                     // MOVED: Followers (Right of Portfolio Size)
                     { title:"Followers", field:"followers", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
@@ -770,9 +798,8 @@
                             return val !== null ? wrapInTilt(val.toLocaleString()) : "---";
                         }
                     },
-                    { title: "Tariff", field: "tariff", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt(cell.getValue().toLocaleString()) : "---"; } },
-                    { title: "Total (Ship)", field: "ship", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt(cell.getValue().toLocaleString()) : "---"; } },
-                    // Hidden but available for calculations/logic
+                    { title: "Tariff", field: "tariff", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt("$" + cell.getValue().toLocaleString()) : "---"; } },
+                    { title: "Total (Ship)", field: "ship", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt("$" + cell.getValue().toLocaleString()) : "---"; } },
                     {
                         title: "Est. Travel", field: "calculatedTravel", visible:false, hozAlign: "right",
                         formatter: function(cell) {
@@ -793,7 +820,7 @@
                             if(globalTravelCost === 0 || price === 0) return "---";
                             const duty = Math.max(0, (price - 800) * 0.03);
                             const total = price + globalTravelCost + duty;
-                            return wrapInTilt(total.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}), "color:darkorange; font-weight:bold");
+                            return wrapInTilt("$" + total.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}), "color:darkorange; font-weight:bold");
                         }
                     },
                     {
@@ -818,10 +845,56 @@
                             const el = cell.getElement();
                             el.style.fontWeight = "bold";
                             const color = savings > 0 ? "#00E676" : "#ff5252";
-                            return wrapInTilt(savings.toLocaleString(), `color:${color}; font-weight:bold`);
+                            return wrapInTilt("$" + savings.toLocaleString(), `color:${color}; font-weight:bold`);
                         }
                     }
                 ]
+            });
+        }
+
+        // NEW: Reusable Data Loader
+        function loadTableData(url) {
+             document.getElementById("results-counter").innerHTML = "Loading data...";
+             Papa.parse(url, {
+                download: true, header: true, dynamicTyping: true,
+                error: function(err) {
+                    console.error("CSV Error:", err);
+                    document.getElementById("results-counter").innerHTML = "<span style='color:red'>Error loading data.</span>";
+                },
+                complete: function(results) {
+                    const data = results.data.map(row => ({
+                        rank: cleanNumber(row['Rank']),
+                        maker: row['Maker'],
+                        logo: (row['Logo'] && row['Logo'].match(/=IMAGE\("(.+)"\)/)) ? row['Logo'].match(/=IMAGE\("(.+)"\)/)[1] : row['Logo'],
+                        makerType: row['Maker Type'],
+                        link: row['Link'],
+                        previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
+                        price: cleanNumber(row['$ Price']),
+                        shipOrFly: cleanNumber(row['$ Ship or Fly'] || row['$ Freight'] || row['Freight']),
+                        tariff: cleanNumber(row['$ Tariff (2025)'] || row['$ Tariff'] || row['Tariff']),
+                        ship: cleanNumber(row['$ Ship'] || row['Ship']),
+                        aesthetic: row['Aesthetic'],
+                        status: row['Status'],
+                        specialty: row['Specialty'],
+                        partials: cleanNumber(row['Partials']),
+                        fullSuits: cleanNumber(row['Full Suits']), 
+                        portfolio: cleanNumber(row['Fursuits']), // Changed 'Works' to 'Fursuits' as per user instruction
+                        fursuits: cleanNumber(row['Fursuits']),
+                        country: row['Location'], // Renamed in prompt
+                        followers: cleanNumber(row['Followers']),
+                        acctAge: cleanNumber(row['Acct Age']),
+                    })).filter(row => row.maker); 
+                    
+                    totalDataCount = data.length;
+                    initTable(data);
+                    setTimeout(() => updateResultCounter(data.length, data.length), 100);
+
+                    // Re-attach slider logic if needed, or reset slider
+                    const slider = document.getElementById('price-slider');
+                    if(slider && slider.noUiSlider) {
+                         slider.noUiSlider.set([2000, 10000]);
+                    }
+                }
             });
         }
 
@@ -829,6 +902,26 @@
         document.addEventListener('DOMContentLoaded', function() {
             initMap();
             
+            // Buttons
+            const btnFull = document.getElementById('btn-full');
+            const btnPartial = document.getElementById('btn-partial');
+            
+            btnFull.addEventListener('click', () => {
+                btnFull.classList.add('active');
+                btnPartial.classList.remove('active');
+                loadTableData(csvUrlFull);
+            });
+            
+            btnPartial.addEventListener('click', () => {
+                if (!csvUrlPartial) {
+                    alert("Please configure the Partial Suits CSV Link in the code!");
+                    return;
+                }
+                btnPartial.classList.add('active');
+                btnFull.classList.remove('active');
+                loadTableData(csvUrlPartial);
+            });
+
             document.getElementById('check-visa').addEventListener('change', recalcCosts);
             document.getElementById('check-flight').addEventListener('change', recalcCosts);
             document.getElementById('check-tourism').addEventListener('change', recalcCosts);
@@ -836,7 +929,6 @@
             const headerText = document.getElementById('header-text');
             const h1 = document.querySelector('h1'); 
             
-            // FIX: Check if combo counter exists, if not create it
             let comboEl = document.getElementById('combo-counter');
             if (!comboEl) {
                 comboEl = document.createElement('span');
@@ -867,37 +959,22 @@
                 document.body.classList.add('shake-active');
                 setTimeout(() => document.body.classList.remove('shake-active'), 500);
                 for (let i = 0; i < 100; i++) { 
-                    const particle = document.createElement('div');
-                    particle.className = 'explosion-particle';
-                    particle.style.left = centerX + 'px';
-                    particle.style.top = centerY + 'px';
-                    const angle = Math.random() * Math.PI * 2;
-                    const velocity = 100 + Math.random() * 200;
-                    const tx = Math.cos(angle) * velocity;
-                    const ty = Math.sin(angle) * velocity;
-                    particle.style.setProperty('--tx', `${tx}px`);
-                    particle.style.setProperty('--ty', `${ty}px`);
-                    const colors = ['#FFD700', '#FF5252', '#FFFFFF', '#FFA500'];
-                    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                    const size = 4 + Math.random() * 6;
-                    particle.style.width = `${size}px`;
-                    particle.style.height = `${size}px`;
-                    document.body.appendChild(particle);
-                    setTimeout(() => particle.remove(), 800);
+                    const particle = document.createElement('div'); particle.className = 'explosion-particle';
+                    particle.style.left = centerX + 'px'; particle.style.top = centerY + 'px';
+                    const angle = Math.random() * Math.PI * 2; const velocity = 100 + Math.random() * 200;
+                    const tx = Math.cos(angle) * velocity; const ty = Math.sin(angle) * velocity;
+                    particle.style.setProperty('--tx', `${tx}px`); particle.style.setProperty('--ty', `${ty}px`);
+                    particle.style.backgroundColor = ['#FFD700', '#FF5252', '#FFFFFF', '#FFA500'][Math.floor(Math.random() * 4)];
+                    const size = 4 + Math.random() * 6; particle.style.width = `${size}px`; particle.style.height = `${size}px`;
+                    document.body.appendChild(particle); setTimeout(() => particle.remove(), 800);
                 }
                 for (let i = 0; i < 40; i++) {
-                    const flame = document.createElement('div');
-                    flame.className = 'flame-particle';
-                    flame.style.left = centerX + 'px';
-                    flame.style.top = centerY + 'px';
-                    const angle = Math.random() * Math.PI * 2;
-                    const velocity = 50 + Math.random() * 100;
-                    const tx = Math.cos(angle) * velocity;
-                    const ty = Math.sin(angle) * velocity;
-                    flame.style.setProperty('--tx', `${tx}px`);
-                    flame.style.setProperty('--ty', `${ty}px`);
-                    document.body.appendChild(flame);
-                    setTimeout(() => flame.remove(), 600);
+                    const flame = document.createElement('div'); flame.className = 'flame-particle';
+                    flame.style.left = centerX + 'px'; flame.style.top = centerY + 'px';
+                    const angle = Math.random() * Math.PI * 2; const velocity = 50 + Math.random() * 100;
+                    const tx = Math.cos(angle) * velocity; const ty = Math.sin(angle) * velocity;
+                    flame.style.setProperty('--tx', `${tx}px`); flame.style.setProperty('--ty', `${ty}px`);
+                    document.body.appendChild(flame); setTimeout(() => flame.remove(), 600);
                 }
             }
 
@@ -931,66 +1008,32 @@
             applyBtn.onclick = applySpecialtyFilters;
             clearBtn.onclick = clearSpecialtyFilters;
 
-            try {
-                Papa.parse(csvUrl, {
-                    download: true, header: true, dynamicTyping: true,
-                    error: function(err) {
-                        console.error("CSV Error:", err);
-                        document.getElementById("results-counter").innerHTML = "<span style='color:red'>Error loading data.</span>";
-                    },
-                    complete: function(results) {
-                        const data = results.data.map(row => ({
-                            rank: cleanNumber(row['Rank']),
-                            maker: row['Maker'],
-                            logo: (row['Logo'] && row['Logo'].match(/=IMAGE\("(.+)"\)/)) ? row['Logo'].match(/=IMAGE\("(.+)"\)/)[1] : row['Logo'],
-                            makerType: row['Maker Type'],
-                            link: row['Link'],
-                            previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
-                            price: cleanNumber(row['$ Price']),
-                            shipOrFly: cleanNumber(row['$ Ship or Fly'] || row['$ Freight'] || row['Freight']),
-                            tariff: cleanNumber(row['$ Tariff (2025)'] || row['$ Tariff'] || row['Tariff']),
-                            ship: cleanNumber(row['$ Ship'] || row['Ship']),
-                            aesthetic: row['Aesthetic'],
-                            status: row['Status'],
-                            specialty: row['Specialty'],
-                            partials: cleanNumber(row['Partials']),
-                            fullSuits: cleanNumber(row['Full Suits']), 
-                            portfolio: cleanNumber(row['Portfolio Size']) || cleanNumber(row['Works']) || cleanNumber(row['Fursuits']), // Fallback logic for variable naming
-                            fursuits: cleanNumber(row['Portfolio Size']) || cleanNumber(row['Works']) || cleanNumber(row['Fursuits']), // Mapping 'Fursuits' column to portfolio data
-                            country: row['Location'] || row['Country'], 
-                            followers: cleanNumber(row['Followers']),
-                            acctAge: cleanNumber(row['Acct Age']),
-                        })).filter(row => row.maker); 
-                        
-                        totalDataCount = data.length;
-                        initTable(data);
-                        setTimeout(() => updateResultCounter(data.length, data.length), 100);
-                        
-                        const slider = document.getElementById('price-slider');
-                        if(slider) {
-                            noUiSlider.create(slider, {
-                                start: [2000, 10000], connect: true, range: { 'min': 2000, 'max': 10000 },
-                                step: 500, tooltips: false,
-                                pips: { mode: 'steps', density: 6, format: { to: v => '$' + v/1000 + 'k' } }
-                            });
-                            const updateTableFilter = () => {
-                                const values = slider.noUiSlider.get();
-                                filterState.priceMin = parseInt(values[0]);
-                                filterState.priceMax = parseInt(values[1]);
-                                filterState.showNA = document.getElementById('show-na-prices').checked;
-                                document.getElementById('price-values').innerText = `$${filterState.priceMin.toLocaleString()} - $${filterState.priceMax.toLocaleString()}`;
-                                updateTableFilters();
-                            };
-                            slider.noUiSlider.on('update', updateTableFilter);
-                            document.getElementById('show-na-prices').addEventListener('change', updateTableFilter);
-                            document.getElementById('reset-price-btn').addEventListener('click', function(){
-                                slider.noUiSlider.set([2000, 10000]);
-                                document.getElementById('show-na-prices').checked = true;
-                            });
-                        }
-                    }
+            // Initial Load
+            loadTableData(csvUrlFull);
+            
+            // Init Slider (Once)
+            const slider = document.getElementById('price-slider');
+            if(slider) {
+                noUiSlider.create(slider, {
+                    start: [2000, 10000], connect: true, range: { 'min': 2000, 'max': 10000 },
+                    step: 500, tooltips: false,
+                    pips: { mode: 'steps', density: 6, format: { to: v => '$' + v/1000 + 'k' } }
                 });
-            } catch (e) { console.error("Parsing setup error", e); }
+                const updateTableFilter = () => {
+                    const values = slider.noUiSlider.get();
+                    filterState.priceMin = parseInt(values[0]);
+                    filterState.priceMax = parseInt(values[1]);
+                    filterState.showNA = document.getElementById('show-na-prices').checked;
+                    document.getElementById('price-values').innerText = `$${filterState.priceMin.toLocaleString()} - $${filterState.priceMax.toLocaleString()}`;
+                    updateTableFilters();
+                };
+                slider.noUiSlider.on('update', updateTableFilter);
+                document.getElementById('show-na-prices').addEventListener('change', updateTableFilter);
+                document.getElementById('reset-price-btn').addEventListener('click', function(){
+                    slider.noUiSlider.set([2000, 10000]);
+                    document.getElementById('show-na-prices').checked = true;
+                });
+            }
         });
 
         // Tooltip & Hover Logic (COMBINED ROBUST HANDLER)
