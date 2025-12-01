@@ -40,26 +40,28 @@
         }
 
         body {
-            /* Restore Page Scrolling */
+            /* Restore Page Scrolling - Standard Block Flow */
             min-height: 100vh;
             width: 100%;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
+            display: block; /* Changed from flex to block for reliability */
             overflow-y: auto; 
             overflow-x: hidden;
         }
 
-        /* Scrollbar Styling */
+        /* Scrollbar Styling for Webkit */
         ::-webkit-scrollbar { width: 10px; height: 10px; }
         ::-webkit-scrollbar-track { background: #1a1a1a; }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; }
         ::-webkit-scrollbar-thumb:hover { background: darkorange; }
 
-        /* Screen Shake Animation */
-        body.shake-active { animation: screen-shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        /* Screen Shake Animation Class */
+        body.shake-active {
+            animation: screen-shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
         @keyframes screen-shake {
             10%, 90% { transform: translate3d(-2px, -2px, 0); }
             20%, 80% { transform: translate3d(4px, 4px, 0); }
@@ -79,6 +81,10 @@
         }
 
         #table-pane {
+            /* Viewport Window Strategy:
+               Fixed height ensures Tabulator handles internal scrolling properly.
+               85vh ensures header and scrollbar are visible simultaneously on most screens. 
+            */
             height: 85vh; 
             width: 100%;
             position: relative;
@@ -90,13 +96,19 @@
             box-sizing: border-box;
         }
         
-        #creator-table { 
-            width: 100%; 
-            height: 100%; 
+        #creator-table {
+            /* Absolute positioning ensures it fills the #table-pane parent exactly */
+            position: absolute; 
+            top: 0; left: 0; right: 0; bottom: 0;
             border: none;
         }
 
-        h1 { margin: 0 0 15px 0; flex-shrink: 0; min-height: 60px; position: relative; }
+        h1 {
+            margin: 0 0 15px 0;
+            flex-shrink: 0;
+            min-height: 60px; 
+            position: relative;
+        }
 
         /* --- HEADER ANIMATION --- */
         #header-text {
@@ -106,24 +118,41 @@
             transform-origin: left center;
             cursor: inherit;
         }
+
         #header-text:hover {
             transform: scale(1.15);
-            background-image: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000);
+            background-image: linear-gradient(
+                to right, 
+                #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, 
+                #ff0000, #ff7f00, #ffff00
+            );
             background-size: 200% auto;
-            -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent; color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
             animation: rainbow-move 2s linear infinite;
         }
+
         @keyframes rainbow-move { to { background-position: 200% center; } }
 
-        /* --- COMBO MULTIPLIER --- */
+        /* --- COMBO MULTIPLIER STYLES --- */
         #combo-counter {
-            position: absolute; top: -15px; right: -20px;
-            font-family: 'VCR OSD Mono', monospace; font-weight: bold;
-            color: #ff5252; text-shadow: 2px 2px 0px #fff;
-            opacity: 0; pointer-events: none; white-space: nowrap; z-index: 100;
-            transform: rotate(-25deg) scale(1); transition: opacity 0.2s ease, color 0.2s ease;
+            position: absolute;
+            top: -15px;
+            right: -20px;
+            font-family: 'VCR OSD Mono', monospace;
+            font-weight: bold;
+            color: #ff5252; 
+            text-shadow: 2px 2px 0px #fff;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 100;
+            transform: rotate(-25deg) scale(1); 
+            transition: opacity 0.2s ease, color 0.2s ease;
         }
+
         @keyframes combo-shake {
             0% { transform: rotate(-25deg) translate(0, 0) scale(var(--scale)); }
             20% { transform: rotate(-25deg) translate(-4px, 4px) scale(var(--scale)); }
@@ -133,63 +162,108 @@
             100% { transform: rotate(-25deg) translate(0, 0) scale(var(--scale)); }
         }
 
-        /* Explosion FX */
-        .explosion-particle {
-            position: fixed; width: 6px; height: 6px; background-color: #fff; pointer-events: none; z-index: 9999;
-            animation: explode-debris 0.8s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        /* Explosion & Flame Particles */
+        .explosion-particle, .flame-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            will-change: transform, opacity;
         }
-        @keyframes explode-debris { to { transform: translate(var(--tx), var(--ty)) scale(0.5) rotate(720deg); opacity: 0; } }
+
+        .explosion-particle {
+            width: 6px; height: 6px;
+            background-color: #fff;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            animation: explode-debris 0.8s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes explode-debris {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0.5) rotate(720deg); opacity: 0; }
+        }
 
         .flame-particle {
-            width: 20px; height: 20px; border-radius: 50%;
+            width: 20px; height: 20px;
+            border-radius: 50%;
             background: radial-gradient(circle, #fff 0%, #ffeb3b 30%, #ff9800 60%, transparent 100%);
-            mix-blend-mode: screen; filter: blur(4px); position: fixed; pointer-events: none; z-index: 9999;
+            mix-blend-mode: screen;
+            filter: blur(4px);
             animation: explode-flame 0.6s ease-out forwards;
         }
-        @keyframes explode-flame { to { transform: translate(var(--tx), var(--ty)) scale(3); opacity: 0; } }
+
+        @keyframes explode-flame {
+            0% { transform: translate(0, 0) scale(0.5); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(3); opacity: 0; }
+        }
 
         .blast-flash {
-            position: absolute; top: 50%; left: 50%; width: 150%; height: 200%; transform: translate(-50%, -50%);
-            background: white; opacity: 0; z-index: 200; pointer-events: none; border-radius: 50%; filter: blur(20px);
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 150%; height: 200%;
+            transform: translate(-50%, -50%);
+            background: white;
+            opacity: 0;
+            z-index: 200;
+            pointer-events: none;
+            border-radius: 50%;
+            filter: blur(20px);
             animation: flash-bang 0.3s ease-out forwards;
         }
-        @keyframes flash-bang { 0% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes flash-bang {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(2); }
+        }
 
         .scorch-mark {
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0);
-            width: 90%; height: 140px; border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 90%; 
+            height: 140px; 
             background: radial-gradient(ellipse at center, rgba(0,0,0,0.9) 20%, rgba(34,15,15,0.7) 50%, rgba(0,0,0,0) 85%);
-            filter: blur(8px); z-index: 0; pointer-events: none;
+            border-radius: 50%; 
+            filter: blur(8px); 
+            z-index: 0;
+            pointer-events: none;
             animation: scorch-appear 0.1s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
         }
-        @keyframes scorch-appear { to { transform: translate(-50%, -50%) scale(1); } }
-
-        /* Star Particle */
-        .star-particle { position: fixed; color: gold; pointer-events: none; animation: fall 1.5s linear forwards; z-index: 9999; }
-        @keyframes fall { 0% { transform: translateY(0); opacity:1; } 100% { transform: translateY(300px); opacity:0; } }
-        
-        /* Legend */
-        .legend-container { position:absolute; bottom:10px; right:10px; background:rgba(0,0,0,0.8); padding:8px; border:2px solid #00E676; border-radius:4px; font-size:0.7em; z-index: 10; }
-        .legend-title { color: #00E676; margin-bottom:4px; font-weight:bold; }
-        .legend-gradient-retro { height: 10px; width: 100%; margin-bottom: 4px; background: linear-gradient(to right, #00E676 0%, #00E676 20%, #76FF03 20%, #76FF03 40%, #FFEA00 40%, #FFEA00 60%, #FF9100 60%, #FF9100 80%, #D50000 80%, #D50000 100%); }
-        .legend-labels { display:flex; justify-content:space-between; color:#00E676; }
+        @keyframes scorch-appear {
+            to { transform: translate(-50%, -50%) scale(1); }
+        }
 
         /* --- MAP SECTION --- */
         .map-section {
-            width: 100%; margin-bottom: 20px; padding: 15px; border: 1px solid #444;
-            border-radius: 8px; background: #1f1f1f;
-            display: grid; grid-template-columns: 2fr 1fr; gap: 20px; box-sizing: border-box;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: #1f1f1f;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            box-sizing: border-box;
         }
-        @media (max-width: 1024px) { .map-section { grid-template-columns: 1fr; } }
+        
+        @media (max-width: 1024px) {
+            .map-section { grid-template-columns: 1fr; }
+        }
 
         .map-column { position: relative; width: 100%; aspect-ratio: 5/3; min-height: 400px; }
         .map-container {
-            position: absolute; inset: 0; background: #000; border: 2px solid #00E676; border-radius: 4px; overflow: hidden;
-            background-image: linear-gradient(transparent 50%, rgba(0, 230, 118, 0.05) 50%); background-size: 100% 4px;
+            position: absolute; inset: 0; background: #000;
+            border: 2px solid #00E676; border-radius: 4px; overflow: hidden;
+            background-image: linear-gradient(transparent 50%, rgba(0, 230, 118, 0.05) 50%);
+            background-size: 100% 4px;
         }
 
-        .data-column { display: flex; flex-direction: column; gap: 15px; background: #222; border: 1px solid #555; padding: 15px; border-radius: 4px; height: 100%; box-sizing: border-box; }
+        .data-column {
+            display: flex; flex-direction: column; gap: 15px;
+            background: #222; border: 1px solid #555; padding: 15px;
+            border-radius: 4px; height: 100%; box-sizing: border-box;
+        }
+
         .data-header-title { font-size: 1.4em; color: darkorange; margin-bottom: 5px; text-transform: uppercase; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .data-header-subtitle { font-size: 0.9em; color: #888; margin-bottom: 15px; }
 
@@ -227,7 +301,6 @@
         .cost-detail { font-size: 0.9em; color: #aaa; }
         .cost-highlight { font-size: 1.2em; color: #00E676; font-weight: bold; }
         .cost-total-display { font-size: 1.8em; color: darkorange; font-weight: bold; text-align: right; margin-top: 10px; }
-
         .cost-controls { border-top: 2px solid #444; padding-top: 15px; margin-top: auto; width: 100%; display: flex; flex-direction: column; gap: 12px; }
         .control-label { display: flex; align-items: center; gap: 10px; cursor: pointer; color: #eee; user-select: none; font-size: 0.95em; }
         .control-label:hover { background: #333; border-radius: 4px; }
@@ -253,7 +326,10 @@
 
         /* DATASET TOGGLE STYLES */
         .dataset-toggle { display: flex; gap: 0; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
-        .dataset-toggle button { border: none; border-radius: 0; background: #333; color: #888; flex: 1; transition: all 0.2s; }
+        .dataset-toggle button { 
+            border: none; border-radius: 0; background: #333; color: #888; flex: 1; transition: all 0.2s; 
+            white-space: nowrap; /* Prevents text wrapping */
+        }
         .dataset-toggle button.active { background: #ff8c00; color: #000; font-weight: bold; }
         .dataset-toggle button:hover:not(.active) { background: #444; color: #fff; }
 
@@ -360,7 +436,7 @@
             </div>
 
             <div class="data-column">
-                <div class="data-header-title">Trip Estimator (Beijing)</div>
+                <div class="data-header-title">US/Asia Cost Map</div>
                 <div class="data-header-subtitle">Select Departure Airport</div>
                 
                 <div id="select-prompt">&lt; WAITING FOR SELECTION &gt;</div>
@@ -402,7 +478,7 @@
               <label>Dataset:</label>
               <div class="dataset-toggle">
                   <button id="btn-full" class="active">Full Suits</button>
-                  <button id="btn-partial">Partials</button>
+                  <button id="btn-partial">Partial Suits</button>
               </div>
           </div>
 
@@ -479,8 +555,8 @@
         const costs = { base: 900, visa: 500, flightOption: 400, tourism: 300 };
         
         // URLs
-        const csvUrlFull = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv"; // INSERT FULL SUITS CSV LINK HERE
-        const csvUrlPartial = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=38637980&single=true&output=csv"; // INSERT PARTIAL SUITS CSV LINK HERE
+        const csvUrlFull = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv";
+        const csvUrlPartial = ""; // INSERT PARTIAL SUITS CSV LINK HERE
 
         // Combo Vars
         let comboCount = 0;
@@ -798,8 +874,8 @@
                             return val !== null ? wrapInTilt(val.toLocaleString()) : "---";
                         }
                     },
-                    { title: "Tariff", field: "tariff", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt("$" + cell.getValue().toLocaleString()) : "---"; } },
-                    { title: "Total (Ship)", field: "ship", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt("$" + cell.getValue().toLocaleString()) : "---"; } },
+                    { title: "Tariff", field: "tariff", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt(cell.getValue().toLocaleString()) : "---"; } },
+                    { title: "Total (Ship)", field: "ship", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt(cell.getValue().toLocaleString()) : "---"; } },
                     {
                         title: "Est. Travel", field: "calculatedTravel", visible:false, hozAlign: "right",
                         formatter: function(cell) {
@@ -820,7 +896,7 @@
                             if(globalTravelCost === 0 || price === 0) return "---";
                             const duty = Math.max(0, (price - 800) * 0.03);
                             const total = price + globalTravelCost + duty;
-                            return wrapInTilt("$" + total.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}), "color:darkorange; font-weight:bold");
+                            return wrapInTilt(total.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}), "color:darkorange; font-weight:bold");
                         }
                     },
                     {
@@ -845,7 +921,7 @@
                             const el = cell.getElement();
                             el.style.fontWeight = "bold";
                             const color = savings > 0 ? "#00E676" : "#ff5252";
-                            return wrapInTilt("$" + savings.toLocaleString(), `color:${color}; font-weight:bold`);
+                            return wrapInTilt(savings.toLocaleString(), `color:${color}; font-weight:bold`);
                         }
                     }
                 ]
