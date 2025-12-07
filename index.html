@@ -5,14 +5,12 @@
     <title>Kemono Fursuit Makers & Trip Estimator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- External Libraries -->
     <link href="https://unpkg.com/tabulator-tables@5.6.0/dist/css/tabulator_midnight.min.css" rel="stylesheet">
     <script src="https://unpkg.com/tabulator-tables@5.6.0/dist/js/tabulator.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     
-    <!-- Map Libraries -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3"></script>
 
@@ -46,7 +44,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            display: block; /* Changed from flex to block for reliability */
+            display: block; 
             overflow-y: auto; 
             overflow-x: hidden;
         }
@@ -81,10 +79,6 @@
         }
 
         #table-pane {
-            /* Viewport Window Strategy:
-               Fixed height ensures Tabulator handles internal scrolling properly.
-               85vh ensures header and scrollbar are visible simultaneously on most screens. 
-            */
             height: 85vh; 
             width: 100%;
             position: relative;
@@ -97,7 +91,6 @@
         }
         
         #creator-table {
-            /* Absolute positioning ensures it fills the #table-pane parent exactly */
             position: absolute; 
             top: 0; left: 0; right: 0; bottom: 0;
             border: none;
@@ -415,7 +408,6 @@
 </head>
 <body>
 
-    <!-- TOP PANE: Scrollable Map & Controls -->
     <div id="top-pane">
         <h1><span id="header-text">Kemono Fursuit Makers</span></h1>
 
@@ -473,7 +465,6 @@
 
         <div class="controls-container">
           
-          <!-- NEW DATASET TOGGLE -->
           <div class="control-group">
               <label>Dataset:</label>
               <div class="dataset-toggle">
@@ -510,27 +501,24 @@
           </div>
 
           <div class="control-group">
-            <label>Quick Sort:</label>
-            <select id="sort-field">
-              <option value="rank">Rank (Default)</option>
-              <option value="price">Price</option>
-              <option value="calculatedTotal">Total Pick Up</option>
-              <option value="calculatedSavings">Pick Up Savings</option>
-              <option value="fursuits">Fursuits</option>
-              <option value="followers">Followers</option>
+            <label>Location:</label>
+            <select id="filter-location">
+                <option value="">All Locations</option>
+                <option value="China">China</option>
+                <option value="Japan">Japan</option>
+                <option value="Korea">Korea</option>
             </select>
           </div>
 
           <div class="control-group">
-            <label>Order:</label>
-            <select id="sort-dir">
-              <option value="asc">Low to High</option>
-              <option value="desc">High to Low</option>
+            <label>Status:</label>
+            <select id="filter-status">
+                <option value="">All Statuses</option>
+                <option value="Open">Open</option>
+                <option value="Closed">Closed</option>
             </select>
           </div>
 
-          <button id="reset-sort" class="reset-btn">Reset Sort</button>
-          
           <div class="controls-footer">
               <div id="results-counter" class="results-counter">Loading data...</div>
               <div class="sort-hint">*Hold <b>Shift</b> and click column headers to sort by multiple columns.</div>
@@ -538,7 +526,6 @@
         </div>
     </div>
 
-    <!-- BOTTOM PANE: Table Filling Remaining Space -->
     <div id="table-pane">
         <div id="creator-table"></div>
     </div>
@@ -549,14 +536,15 @@
         let globalTravelCost = 0;
         let currentSelectedFlightCost = 0;
         let table = null;
-        let filterState = { priceMin: 2000, priceMax: 10000, showNA: true, tags: new Set() };
+        // UPDATED FILTER STATE to include location and status
+        let filterState = { priceMin: 2000, priceMax: 10000, showNA: true, tags: new Set(), location: "", status: "" };
         let pendingTags = new Set();
         let totalDataCount = 0;
         const costs = { base: 900, visa: 500, flightOption: 400, tourism: 300 };
         
         // URLs
-        const csvUrlFull = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv"; // INSERT FULL SUITS CSV LINK HERE
-        const csvUrlPartial = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=38637980&single=true&output=csv"; // INSERT PARTIAL SUITS CSV LINK HERE
+        const csvUrlFull = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv"; 
+        const csvUrlPartial = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=38637980&single=true&output=csv"; 
 
         // Combo Vars
         let comboCount = 0;
@@ -573,6 +561,18 @@
                 priceMatch = price >= filterState.priceMin && price <= filterState.priceMax;
             }
             if(!priceMatch) return false;
+
+            // Location Filter
+            if (filterState.location !== "" && row.country !== filterState.location) {
+                return false;
+            }
+
+            // Status Filter
+            if (filterState.status !== "" && row.status !== filterState.status) {
+                // Optional: Loose matching if data isn't exact (e.g., "Open (Sept)" vs "Open")
+                // For now, using exact match based on your dropdown request.
+                return false;
+            }
 
             if (filterState.tags.size > 0) {
                 if (!row.specialty) return false; 
@@ -1110,6 +1110,17 @@
                     document.getElementById('show-na-prices').checked = true;
                 });
             }
+
+            // NEW LISTENERS FOR LOCATION AND STATUS
+            document.getElementById('filter-location').addEventListener('change', function() {
+                filterState.location = this.value;
+                updateTableFilters();
+            });
+
+            document.getElementById('filter-status').addEventListener('change', function() {
+                filterState.status = this.value;
+                updateTableFilters();
+            });
         });
 
         // Tooltip & Hover Logic (COMBINED ROBUST HANDLER)
@@ -1249,16 +1260,6 @@
                     }
                 }
             }
-        });
-
-        document.getElementById('reset-sort').addEventListener('click', () => {
-             if(table) { table.clearSort(); table.setSort("rank", "asc"); }
-        });
-        document.getElementById('sort-field').addEventListener('change', function() {
-             if(table) table.setSort(this.value, document.getElementById('sort-dir').value);
-        });
-        document.getElementById('sort-dir').addEventListener('change', function() {
-             if(table) table.setSort(document.getElementById('sort-field').value, this.value);
         });
 
     </script>
