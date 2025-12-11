@@ -34,11 +34,11 @@
             padding: 0;
             background: #2e2e2e;
             color: #fff;
-            font-family: 'VCR OSD Mono', monospace, sans-serif;
+            /* Added CJK Font Fallbacks */
+            font-family: 'VCR OSD Mono', 'Noto Sans TC', 'Noto Sans JP', 'Malgun Gothic', monospace, sans-serif;
         }
 
         body {
-            /* Restore Page Scrolling - Standard Block Flow */
             min-height: 100vh;
             width: 100%;
             margin: 0;
@@ -49,17 +49,14 @@
             overflow-x: hidden;
         }
 
-        /* Scrollbar Styling for Webkit */
+        /* Scrollbar Styling */
         ::-webkit-scrollbar { width: 10px; height: 10px; }
         ::-webkit-scrollbar-track { background: #1a1a1a; }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; }
         ::-webkit-scrollbar-thumb:hover { background: darkorange; }
 
-        /* Screen Shake Animation Class */
-        body.shake-active {
-            animation: screen-shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
-
+        /* Screen Shake Animation */
+        body.shake-active { animation: screen-shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes screen-shake {
             10%, 90% { transform: translate3d(-2px, -2px, 0); }
             20%, 80% { transform: translate3d(4px, 4px, 0); }
@@ -96,152 +93,99 @@
             border: none;
         }
 
-        h1 {
-            margin: 0 0 15px 0;
-            flex-shrink: 0;
-            min-height: 60px; 
-            position: relative;
-        }
+        h1 { margin: 0 0 15px 0; flex-shrink: 0; min-height: 60px; position: relative; }
 
         /* --- HEADER ANIMATION --- */
         #header-text {
-            display: inline-block;
-            position: relative;
+            display: inline-block; position: relative;
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform-origin: left center;
-            cursor: inherit;
+            transform-origin: left center; cursor: inherit;
         }
-
         #header-text:hover {
             transform: scale(1.15);
-            background-image: linear-gradient(
-                to right, 
-                #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, 
-                #ff0000, #ff7f00, #ffff00
-            );
+            background-image: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000, #ff7f00, #ffff00);
             background-size: 200% auto;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            color: transparent;
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent; color: transparent;
             animation: rainbow-move 2s linear infinite;
         }
-
         @keyframes rainbow-move { to { background-position: 200% center; } }
 
-        /* --- COMBO MULTIPLIER STYLES --- */
+        /* --- COMBO COUNTER --- */
         #combo-counter {
-            position: absolute;
-            top: -15px;
-            right: -20px;
-            font-family: 'VCR OSD Mono', monospace;
-            font-weight: bold;
-            color: #ff5252; 
-            text-shadow: 2px 2px 0px #fff;
-            opacity: 0;
-            pointer-events: none;
-            white-space: nowrap;
-            z-index: 100;
-            transform: rotate(-25deg) scale(1); 
+            position: absolute; top: -15px; right: -20px;
+            font-family: 'VCR OSD Mono', monospace; font-weight: bold;
+            color: #ff5252; text-shadow: 2px 2px 0px #fff; opacity: 0; pointer-events: none;
+            white-space: nowrap; z-index: 100; transform: rotate(-25deg) scale(1); 
             transition: opacity 0.2s ease, color 0.2s ease;
         }
-
         @keyframes combo-shake {
-            0% { transform: rotate(-25deg) translate(0, 0) scale(var(--scale)); }
+            0%, 100% { transform: rotate(-25deg) translate(0, 0) scale(var(--scale)); }
             20% { transform: rotate(-25deg) translate(-4px, 4px) scale(var(--scale)); }
             40% { transform: rotate(-25deg) translate(4px, -4px) scale(var(--scale)); }
             60% { transform: rotate(-25deg) translate(-4px, 4px) scale(var(--scale)); }
             80% { transform: rotate(-25deg) translate(4px, -4px) scale(var(--scale)); }
-            100% { transform: rotate(-25deg) translate(0, 0) scale(var(--scale)); }
         }
 
-        /* Explosion & Flame Particles */
-        .explosion-particle, .flame-particle {
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-            will-change: transform, opacity;
-        }
-
+        /* --- PARTICLES --- */
+        .explosion-particle, .flame-particle { position: fixed; pointer-events: none; z-index: 9999; will-change: transform, opacity; }
         .explosion-particle {
-            width: 6px; height: 6px;
-            background-color: #fff;
+            width: 6px; height: 6px; background-color: #fff;
             clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
             animation: explode-debris 0.8s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
         }
-
         @keyframes explode-debris {
             0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
             100% { transform: translate(var(--tx), var(--ty)) scale(0.5) rotate(720deg); opacity: 0; }
         }
-
         .flame-particle {
-            width: 20px; height: 20px;
-            border-radius: 50%;
+            width: 20px; height: 20px; border-radius: 50%;
             background: radial-gradient(circle, #fff 0%, #ffeb3b 30%, #ff9800 60%, transparent 100%);
-            mix-blend-mode: screen;
-            filter: blur(4px);
+            mix-blend-mode: screen; filter: blur(4px);
             animation: explode-flame 0.6s ease-out forwards;
         }
-
         @keyframes explode-flame {
             0% { transform: translate(0, 0) scale(0.5); opacity: 1; }
             100% { transform: translate(var(--tx), var(--ty)) scale(3); opacity: 0; }
         }
-
         .blast-flash {
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 150%; height: 200%;
-            transform: translate(-50%, -50%);
-            background: white;
-            opacity: 0;
-            z-index: 200;
-            pointer-events: none;
-            border-radius: 50%;
-            filter: blur(20px);
+            position: absolute; top: 50%; left: 50%; width: 150%; height: 200%;
+            transform: translate(-50%, -50%); background: white; opacity: 0; z-index: 200;
+            pointer-events: none; border-radius: 50%; filter: blur(20px);
             animation: flash-bang 0.3s ease-out forwards;
         }
         @keyframes flash-bang {
             0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
             100% { opacity: 0; transform: translate(-50%, -50%) scale(2); }
         }
-
         .scorch-mark {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            width: 90%; 
-            height: 140px; 
-            background: radial-gradient(ellipse at center, rgba(0,0,0,0.9) 20%, rgba(34,15,15,0.7) 50%, rgba(0,0,0,0) 85%);
-            border-radius: 50%; 
-            filter: blur(8px); 
-            z-index: 0;
-            pointer-events: none;
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0);
+            width: 90%; height: 140px; background: radial-gradient(ellipse at center, rgba(0,0,0,0.9) 20%, rgba(34,15,15,0.7) 50%, rgba(0,0,0,0) 85%);
+            border-radius: 50%; filter: blur(8px); z-index: 0; pointer-events: none;
             animation: scorch-appear 0.1s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
         }
-        @keyframes scorch-appear {
-            to { transform: translate(-50%, -50%) scale(1); }
+        @keyframes scorch-appear { to { transform: translate(-50%, -50%) scale(1); } }
+
+        /* --- COLLAPSIBLE SECTIONS --- */
+        .collapsible-section {
+            width: 100%; margin-bottom: 20px; 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            max-height: 1000px;
+            opacity: 1;
+        }
+        .collapsible-section.minimized {
+            max-height: 0 !important;
+            padding-top: 0 !important; padding-bottom: 0 !important; margin-bottom: 0 !important;
+            border: none !important; opacity: 0 !important;
         }
 
         /* --- MAP SECTION --- */
         .map-section {
-            width: 100%;
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #444;
-            border-radius: 8px;
-            background: #1f1f1f;
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            box-sizing: border-box;
+            padding: 15px; border: 1px solid #444; border-radius: 8px; background: #1f1f1f;
+            display: grid; grid-template-columns: 2fr 1fr; gap: 20px; box-sizing: border-box;
         }
-        
-        @media (max-width: 1024px) {
-            .map-section { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 1024px) { .map-section { grid-template-columns: 1fr; } }
 
         .map-column { position: relative; width: 100%; aspect-ratio: 5/3; min-height: 400px; }
         .map-container {
@@ -250,13 +194,11 @@
             background-image: linear-gradient(transparent 50%, rgba(0, 230, 118, 0.05) 50%);
             background-size: 100% 4px;
         }
-
         .data-column {
             display: flex; flex-direction: column; gap: 15px;
             background: #222; border: 1px solid #555; padding: 15px;
             border-radius: 4px; height: 100%; box-sizing: border-box;
         }
-
         .data-header-title { font-size: 1.4em; color: darkorange; margin-bottom: 5px; text-transform: uppercase; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .data-header-subtitle { font-size: 0.9em; color: #888; margin-bottom: 15px; }
 
@@ -266,12 +208,9 @@
             animation: staticAnim 0.5s steps(5) infinite;
         }
         @keyframes staticAnim {
-            0% { transform: translate(0,0); }
-            20% { transform: translate(-5%, -5%); }
-            40% { transform: translate(-5%, 5%); }
-            60% { transform: translate(5%, -5%); }
-            80% { transform: translate(5%, 5%); }
-            100% { transform: translate(0,0); }
+            0% { transform: translate(0,0); } 20% { transform: translate(-5%, -5%); }
+            40% { transform: translate(-5%, 5%); } 60% { transform: translate(5%, -5%); }
+            80% { transform: translate(5%, 5%); } 100% { transform: translate(0,0); }
         }
 
         .state { fill: transparent; stroke: #00E676; stroke-width: 1px; transition: stroke-width 0.3s ease; }
@@ -282,14 +221,13 @@
 
         #map-cost-card { display: flex; flex-direction: column; gap: 15px; opacity: 0.3; pointer-events: none; transition: opacity 0.3s ease; }
         #map-cost-card.active { opacity: 1; pointer-events: auto; }
-
         #select-prompt {
             color: #00E676; text-align: center; padding: 20px; border: 1px dashed #00E676;
             animation: blink 1.5s infinite; display: block; font-weight: bold;
         }
         #select-prompt.inactive { color: #444; border-color: #444; animation: none; background: #2a2a2a; }
         @keyframes blink { 50% { opacity: 0.5; } }
-
+        
         .cost-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #333; padding-bottom: 5px; margin-bottom: 5px; }
         .cost-detail { font-size: 0.9em; color: #aaa; }
         .cost-highlight { font-size: 1.2em; color: #00E676; font-weight: bold; }
@@ -301,6 +239,69 @@
         .base-costs-list { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.8em; color: #777; margin-top: 10px; border-top: 1px dashed #333; padding-top: 10px; }
         .base-cost-item { display: flex; align-items: center; gap: 4px; }
         .base-cost-item::before { content: ">"; color: #00E676; }
+
+        /* --- PROMO STATS SECTION --- */
+        .analytics-section {
+            display: flex; gap: 20px; margin-bottom: 20px;
+            padding: 0; border-radius: 8px; flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        
+        .promo-card {
+            flex: 1; min-width: 300px;
+            background: #1f1f1f;
+            border: 2px solid;
+            border-radius: 6px;
+            padding: 20px;
+            display: flex; flex-direction: column;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative; overflow: hidden;
+            height: 220px;
+        }
+
+        /* Themes for Boxes */
+        .theme-china { border-color: #ff8c00; box-shadow: inset 0 0 20px rgba(255, 140, 0, 0.1); }
+        .theme-china .promo-title { color: #ff8c00; }
+        .theme-china .promo-stat-large { color: #fff; text-shadow: 0 0 10px rgba(255, 140, 0, 0.5); }
+        .theme-china .promo-bg-curve { fill: #ff8c00; }
+        .theme-china .peak-range { color: #ff8c00; }
+
+        .theme-japan { border-color: #00E676; box-shadow: inset 0 0 20px rgba(0, 230, 118, 0.1); }
+        .theme-japan .promo-title { color: #00E676; }
+        .theme-japan .promo-stat-large { color: #fff; text-shadow: 0 0 10px rgba(0, 230, 118, 0.5); }
+        .theme-japan .promo-bg-curve { fill: #00E676; }
+        .theme-japan .peak-range { color: #00E676; }
+
+        .theme-korea { border-color: #00d4ff; box-shadow: inset 0 0 20px rgba(0, 212, 255, 0.1); }
+        .theme-korea .promo-title { color: #00d4ff; }
+        .theme-korea .promo-stat-large { color: #fff; text-shadow: 0 0 10px rgba(0, 212, 255, 0.5); }
+        .theme-korea .promo-bg-curve { fill: #00d4ff; }
+        .theme-korea .peak-range { color: #00d4ff; }
+
+        .promo-bg-curve-container {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 60%;
+            pointer-events: none; z-index: 0; opacity: 0.25;
+        }
+        
+        .promo-content-layer {
+            position: relative; z-index: 1;
+            display: flex; height: 100%;
+            justify-content: space-between;
+        }
+
+        .promo-left { flex: 1.2; display: flex; flex-direction: column; justify-content: space-between; padding-right: 15px; }
+        .promo-right { 
+            flex: 0.8; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; text-align: right;
+            border-left: 2px dashed #444; padding-left: 15px;
+        }
+
+        .promo-title { font-size: 1.5em; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 5px; }
+        .promo-stat-large { font-size: 2.2em; font-weight: bold; line-height: 1; margin-top: 5px;}
+        .promo-sub { font-size: 0.75em; color: #aaa; line-height: 1.3; }
+        .promo-divider { height: 1px; background: #444; margin: 8px 0; border: none; width:100%; }
+
+        .peak-label { font-size: 0.8em; color: #ccc; text-transform: uppercase; margin-bottom: 2px; }
+        .peak-range { font-size: 1.3em; font-weight: bold; }
 
         /* --- CONTROLS --- */
         .controls-container {
@@ -315,13 +316,20 @@
         select:hover, button:hover { background: #444; border-color: darkorange; }
         button.reset-btn { background: #c62828; border-color: #e53935; }
         button.reset-btn:hover { background: #d32f2f; }
-        label { font-weight: bold; color: #ccc; }
+        
+        /* Toggle Buttons Style */
+        .toggle-btn {
+            background: #444; color: #fff; font-weight: bold; border-color: #666;
+            min-width: 120px; transition: all 0.2s;
+        }
+        .toggle-btn.on { background: #00E676; color: #000; border-color: #00E676; }
+        .toggle-btn.off { background: #333; color: #aaa; border-color: #555; }
 
         /* DATASET TOGGLE STYLES */
         .dataset-toggle { display: flex; gap: 0; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
         .dataset-toggle button { 
             border: none; border-radius: 0; background: #333; color: #888; flex: 1; transition: all 0.2s; 
-            white-space: nowrap; /* Prevents text wrapping */
+            white-space: nowrap; 
         }
         .dataset-toggle button.active { background: #ff8c00; color: #000; font-weight: bold; }
         .dataset-toggle button:hover:not(.active) { background: #444; color: #fff; }
@@ -331,6 +339,7 @@
         .controls-footer { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #444; flex-wrap: wrap; gap: 10px; }
         .results-counter { text-align: left; border-top: none; margin-top: 0; padding-top: 0; width: auto; }
         .sort-hint { font-size: 0.9em; color: #aaa; text-align: right; }
+        
         .slider-group, .specialty-group { flex: 1 1 100% !important; width: 100% !important; max-width: 600px; display: flex; box-sizing: border-box; }
         .slider-group { flex-direction: column; order: -2; padding: 0 15px; margin-bottom: 40px; }
         .specialty-group { flex-direction: row; align-items: flex-start; order: -1; margin-bottom: 20px; gap: 15px; }
@@ -347,11 +356,7 @@
         .noUi-value { color: #ccc; margin-top: 5px; }
 
         /* --- TABLE CONTAINER (FIXED) --- */
-        #creator-table { 
-            width: 100%; 
-            height: 100%; /* Fill #table-pane */
-            border: none;
-        }
+        #creator-table { width: 100%; height: 100%; border: none; }
         
         .tabulator .tabulator-header { background-color: #1f1f1f !important; font-weight: bold !important; border-bottom: 1px solid #444; }
         .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; font-size: 16px; }
@@ -366,7 +371,6 @@
         .tabulator-row .tabulator-cell.active-tilt .text-content { font-weight: bold; background: linear-gradient(110deg, #ffffff 40%, #ff8c00 50%, #ffffff 60%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; animation: shine-sweep 1.5s linear infinite; }
         @keyframes shine-sweep { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
         
-        /* Animated Link Style */
         .animated-link { color: darkorange; text-decoration: none; font-weight: bold; transition: all 0.3s; }
         .animated-link:hover {
             background-image: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
@@ -411,7 +415,7 @@
     <div id="top-pane">
         <h1><span id="header-text">Kemono Fursuit Makers</span></h1>
 
-        <div class="map-section">
+        <div id="interactive-map-area" class="map-section collapsible-section">
             <div class="map-column">
                 <div class="map-container">
                     <div class="tv-static"></div>
@@ -428,8 +432,8 @@
             </div>
 
             <div class="data-column">
-                <div class="data-header-title">US/Asia Cost Map</div>
-                <div class="data-header-subtitle">Select Departure Airport</div>
+                <div class="data-header-title" id="t-map-title">US/Asia Cost Map</div>
+                <div class="data-header-subtitle" id="t-select-airport">Select Departure Airport</div>
                 
                 <div id="select-prompt">&lt; WAITING FOR SELECTION &gt;</div>
 
@@ -440,23 +444,23 @@
                             <div id="cost-airport" style="color:#aaa;">CODE</div>
                         </div>
                         <div>
-                            <div class="cost-detail">Roundtrip Flight</div>
+                            <div class="cost-detail" id="t-flight">Roundtrip Flight</div>
                             <div id="cost-flight" class="cost-highlight">$0</div>
                         </div>
                         <div>
-                            <div class="cost-detail">TOTAL ESTIMATED TRAVEL</div>
+                            <div class="cost-detail" id="t-total-travel">TOTAL ESTIMATED TRAVEL</div>
                             <div id="cost-total-display" class="cost-total-display">$0</div>
                         </div>
                     </div>
 
                     <div class="cost-controls">
-                        <div style="color:#00E676; font-weight:bold; margin-bottom:5px; border-bottom:1px solid #444; padding-bottom:5px;">CONFIGURATION:</div>
-                        <label class="control-label"><input type="checkbox" id="check-visa" checked> Passport & Visa (+$500)</label>
-                        <label class="control-label"><input type="checkbox" id="check-flight" checked> Domestic Flight (+$400)</label>
-                        <label class="control-label"><input type="checkbox" id="check-tourism" checked> Tourism (+$300)</label>
+                        <div style="color:#00E676; font-weight:bold; margin-bottom:5px; border-bottom:1px solid #444; padding-bottom:5px;" id="t-config">CONFIGURATION:</div>
+                        <label class="control-label"><input type="checkbox" id="check-visa" checked> <span id="t-visa">Passport & Visa</span></label>
+                        <label class="control-label"><input type="checkbox" id="check-flight" checked> <span id="t-dom-flight">Domestic Flight</span></label>
+                        <label class="control-label"><input type="checkbox" id="check-tourism" checked> <span id="t-tourism">Tourism</span></label>
                         <div class="base-costs-list">
-                            <span>Base Included:</span>
-                            <span class="base-cost-item">Hotel</span><span class="base-cost-item">Food</span><span class="base-cost-item">Logistics</span>
+                            <span id="t-base-incl">Base Included:</span>
+                            <span class="base-cost-item" id="t-hotel">Hotel</span><span class="base-cost-item" id="t-food">Food</span><span class="base-cost-item" id="t-logistics">Logistics</span>
                         </div>
                     </div>
                 </div>
@@ -466,7 +470,25 @@
         <div class="controls-container">
           
           <div class="control-group">
-              <label>Dataset:</label>
+            <label id="t-lang-label">Language:</label>
+            <select id="language-selector">
+                <option value="en">English (USD)</option>
+                <option value="zh-TW">繁體中文 (CNY)</option>
+                <option value="ja">日本語 (JPY)</option>
+                <option value="ko">한국어 (KRW)</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label id="t-interface">Interface:</label>
+            <div style="display:flex; gap:5px;">
+                <button id="map-toggle-btn" class="toggle-btn on">Map: ENABLED</button>
+                <button id="stats-toggle-btn" class="toggle-btn on">Stats: ENABLED</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+              <label id="t-dataset">Dataset:</label>
               <div class="dataset-toggle">
                   <button id="btn-full" class="active">Full Suits</button>
                   <button id="btn-partial">Partial Suits</button>
@@ -476,22 +498,22 @@
           <div class="control-group slider-group">
             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
                 <label>
-                    Fursuit Price: <span id="price-values" style="color:#ff8c00; font-weight:normal;">$2,000 - $10,000</span>
+                    <span id="t-price-label">Fursuit Price:</span> <span id="price-values" style="color:#ff8c00; font-weight:normal;">$2,000 - $10,000</span>
                     <button id="reset-price-btn" style="padding:2px 6px; margin-left:5px; font-size:0.8em; background:#444; border:1px solid #666; cursor:pointer;" title="Reset Price">↺</button>
                 </label>
                 <label style="font-size:0.8em; display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none;">
-                    <input type="checkbox" id="show-na-prices" checked> Show N/A Prices
+                    <input type="checkbox" id="show-na-prices" checked> <span id="t-show-na">Show N/A Prices</span>
                 </label>
             </div>
             <div id="price-slider"></div>
           </div>
 
           <div class="control-group specialty-group">
-             <label>Specialty Tags:</label>
+             <label id="t-specialty">Specialty Tags:</label>
              <div class="filter-container">
                  <input type="text" id="specialty-input" class="filter-input" placeholder="+ Type tag (e.g. 'kemono')...">
                  <div class="tags-area" id="specialty-tags-area">
-                     <span style="color:#666; font-size:0.8em;">No tags selected</span>
+                     <span style="color:#666; font-size:0.8em;" id="t-no-tags">No tags selected</span>
                  </div>
              </div>
              <div class="specialty-actions">
@@ -501,29 +523,33 @@
           </div>
 
           <div class="control-group">
-            <label>Location:</label>
+            <label id="t-location">Location:</label>
             <select id="filter-location">
-                <option value="">All Locations</option>
-                <option value="China">China</option>
-                <option value="Japan">Japan</option>
-                <option value="Korea">Korea</option>
+                <option value="" id="t-all-loc">All Locations</option>
+                <option value="China" id="t-china">China</option>
+                <option value="Japan" id="t-japan">Japan</option>
+                <option value="Korea" id="t-korea">Korea</option>
             </select>
           </div>
 
           <div class="control-group">
-            <label>Status:</label>
+            <label id="t-status">Status:</label>
             <select id="filter-status">
-                <option value="">All Statuses</option>
-                <option value="Open">Open</option>
-                <option value="Closed">Closed</option>
+                <option value="" id="t-all-stats">All Statuses</option>
+                <option value="Open" id="t-open">Open</option>
+                <option value="Closed" id="t-closed">Closed</option>
             </select>
           </div>
 
           <div class="controls-footer">
               <div id="results-counter" class="results-counter">Loading data...</div>
-              <div class="sort-hint">*Hold <b>Shift</b> and click column headers to sort by multiple columns.</div>
+              <div class="sort-hint" id="t-sort-hint">*Hold <b>Shift</b> and click column headers to sort by multiple columns.</div>
           </div>
         </div>
+
+        <div id="analytics-area" class="analytics-section collapsible-section">
+            </div>
+
     </div>
 
     <div id="table-pane">
@@ -533,15 +559,202 @@
     <div id="image-tooltip"></div>
 
     <script>
+        let currentLang = 'en';
         let globalTravelCost = 0;
         let currentSelectedFlightCost = 0;
         let table = null;
-        // UPDATED FILTER STATE to include location and status
         let filterState = { priceMin: 2000, priceMax: 10000, showNA: true, tags: new Set(), location: "", status: "" };
         let pendingTags = new Set();
         let totalDataCount = 0;
+        let loadedData = []; // Store raw data for language switching
         const costs = { base: 900, visa: 500, flightOption: 400, tourism: 300 };
         
+        // Approximate Exchange Rates (Base USD)
+        const exchangeRates = {
+            'en': { rate: 1, symbol: '$' },
+            'zh-TW': { rate: 7.2, symbol: '¥' }, // CNY
+            'ja': { rate: 155, symbol: '¥' }, // JPY
+            'ko': { rate: 1400, symbol: '₩' } // KRW
+        };
+
+        // --- TRANSLATION DICTIONARY ---
+        const translations = {
+            'en': {
+                title: "Kemono Fursuit Makers",
+                mapTitle: "US/Asia Cost Map",
+                selectAirport: "Select Departure Airport",
+                flight: "Roundtrip Flight",
+                totalTravel: "TOTAL ESTIMATED TRAVEL",
+                config: "CONFIGURATION:",
+                visa: "Passport & Visa",
+                domFlight: "Domestic Flight",
+                tourism: "Tourism",
+                baseIncl: "Base Included:",
+                hotel: "Hotel", food: "Food", logistics: "Logistics",
+                langLabel: "Language:",
+                interface: "Interface:",
+                mapEnabled: "Map: ENABLED", mapDisabled: "Map: DISABLED",
+                statsEnabled: "Stats: ENABLED", statsDisabled: "Stats: DISABLED",
+                dataset: "Dataset:",
+                fullSuits: "Full Suits", partialSuits: "Partial Suits",
+                priceLabel: "Fursuit Price:",
+                showNA: "Show N/A Prices",
+                specialty: "Specialty Tags:",
+                placeholder: "+ Type tag (e.g. 'kemono')...",
+                noTags: "No tags selected",
+                apply: "Apply Filter", clear: "Clear All",
+                location: "Location:", allLoc: "All Locations", china: "China", japan: "Japan", korea: "Korea",
+                status: "Status:", allStats: "All Statuses", open: "Open", closed: "Closed",
+                sortHint: "*Hold <b>Shift</b> and click column headers to sort by multiple columns.",
+                loading: "Loading data...",
+                
+                // Analytics
+                avgPrice: "Average Price",
+                basedOn: "Based on",
+                recorded: "recorded costumes",
+                avgFollowers: "Average Followers",
+                mostCommon: "Most Common Range",
+                majority: "Majority of pricing falls here",
+
+                // Table Columns
+                colRow: "Row", colFreight: "Freight", colAesthetic: "Aesthetic", colMaker: "Maker",
+                colLogo: "Logo", colLoc: "Location", colLink: "Link", colPreview: "Preview",
+                colStatus: "Status", colSpecialty: "Specialty", colPartials: "Partials", colFull: "Full Suits",
+                colFursuits: "Fursuits", colPort: "Portfolio Size", colFollowers: "Followers",
+                colPrice: "Price", colTariff: "Tariff", colTotalShip: "Total (Ship)",
+                colEstTravel: "Est. Travel", colTotalPick: "Total (Pick Up)", colSavings: "Pick Up Savings"
+            },
+            'zh-TW': {
+                title: "獸裝製作師名錄 (Kemono)",
+                mapTitle: "美亞旅行成本地圖",
+                selectAirport: "選擇出發機場",
+                flight: "往返機票",
+                totalTravel: "預計旅行總費用",
+                config: "配置:",
+                visa: "護照與簽證",
+                domFlight: "國內航班",
+                tourism: "旅遊觀光",
+                baseIncl: "基本包含:",
+                hotel: "酒店", food: "餐飲", logistics: "物流",
+                langLabel: "語言:",
+                interface: "介面:",
+                mapEnabled: "地圖: 啟用", mapDisabled: "地圖: 禁用",
+                statsEnabled: "統計: 啟用", statsDisabled: "統計: 禁用",
+                dataset: "數據集:",
+                fullSuits: "全套獸裝", partialSuits: "半套獸裝",
+                priceLabel: "獸裝價格:",
+                showNA: "顯示 N/A 價格",
+                specialty: "特長標籤:",
+                placeholder: "+ 輸入標籤 (例: kemono)...",
+                noTags: "未選擇標籤",
+                apply: "應用篩選", clear: "清除全部",
+                location: "地點:", allLoc: "所有地點", china: "中國", japan: "日本", korea: "韓國",
+                status: "狀態:", allStats: "所有狀態", open: "開放", closed: "關閉",
+                sortHint: "*按住 <b>Shift</b> 並點擊列標題可進行多列排序。",
+                loading: "正在加載數據...",
+                
+                avgPrice: "平均價格",
+                basedOn: "基於",
+                recorded: "套記錄的服裝",
+                avgFollowers: "平均關注者",
+                mostCommon: "最常見範圍",
+                majority: "多數定價落在此處",
+
+                colRow: "行", colFreight: "運費", colAesthetic: "美學", colMaker: "製作師",
+                colLogo: "標誌", colLoc: "地點", colLink: "連結", colPreview: "預覽",
+                colStatus: "狀態", colSpecialty: "特長", colPartials: "半套", colFull: "全套",
+                colFursuits: "獸裝數量", colPort: "作品集", colFollowers: "關注者",
+                colPrice: "價格", colTariff: "關稅", colTotalShip: "總計 (郵寄)",
+                colEstTravel: "預計旅行", colTotalPick: "總計 (自取)", colSavings: "自取節省"
+            },
+            'ja': {
+                title: "ケモノ着ぐるみメーカー",
+                mapTitle: "米・アジア渡航費マップ",
+                selectAirport: "出発空港を選択",
+                flight: "往復航空券",
+                totalTravel: "推定渡航総額",
+                config: "設定:",
+                visa: "パスポートとビザ",
+                domFlight: "国内線",
+                tourism: "観光",
+                baseIncl: "基本込み:",
+                hotel: "ホテル", food: "食事", logistics: "物流",
+                langLabel: "言語:",
+                interface: "インターフェース:",
+                mapEnabled: "地図: 有効", mapDisabled: "地図: 無効",
+                statsEnabled: "統計: 有効", statsDisabled: "統計: 無効",
+                dataset: "データセット:",
+                fullSuits: "フルスーツ", partialSuits: "パートスーツ",
+                priceLabel: "着ぐるみ価格:",
+                showNA: "価格不明を表示",
+                specialty: "専門タグ:",
+                placeholder: "+ タグを入力 (例: kemono)...",
+                noTags: "タグ未選択",
+                apply: "フィルター適用", clear: "すべてクリア",
+                location: "場所:", allLoc: "すべての場所", china: "中国", japan: "日本", korea: "韓国",
+                status: "ステータス:", allStats: "すべてのステータス", open: "受付中", closed: "停止中",
+                sortHint: "*<b>Shift</b> を押しながら列ヘッダーをクリックすると複数列でソートできます。",
+                loading: "データを読み込んでいます...",
+                
+                avgPrice: "平均価格",
+                basedOn: "記録された",
+                recorded: "着に基づく",
+                avgFollowers: "平均フォロワー数",
+                mostCommon: "最頻価格帯",
+                majority: "価格の大部分はここに該当",
+
+                colRow: "行", colFreight: "貨物", colAesthetic: "美学", colMaker: "メーカー",
+                colLogo: "ロゴ", colLoc: "場所", colLink: "リンク", colPreview: "プレビュー",
+                colStatus: "ステータス", colSpecialty: "専門", colPartials: "パート", colFull: "フル",
+                colFursuits: "着ぐるみ数", colPort: "ポートフォリオ", colFollowers: "フォロワー",
+                colPrice: "価格", colTariff: "関税", colTotalShip: "合計 (配送)",
+                colEstTravel: "推定渡航費", colTotalPick: "合計 (受取)", colSavings: "受取節約額"
+            },
+            'ko': {
+                title: "케모노 퍼슈트 제작자",
+                mapTitle: "미국/아시아 여행 비용 지도",
+                selectAirport: "출발 공항 선택",
+                flight: "왕복 항공권",
+                totalTravel: "총 예상 여행 비용",
+                config: "구성:",
+                visa: "여권 및 비자",
+                domFlight: "국내선",
+                tourism: "관광",
+                baseIncl: "기본 포함:",
+                hotel: "호텔", food: "식사", logistics: "물류",
+                langLabel: "언어:",
+                interface: "인터페이스:",
+                mapEnabled: "지도: 활성", mapDisabled: "지도: 비활성",
+                statsEnabled: "통계: 활성", statsDisabled: "통계: 비활성",
+                dataset: "데이터셋:",
+                fullSuits: "풀슈트", partialSuits: "파셜슈트",
+                priceLabel: "퍼슈트 가격:",
+                showNA: "N/A 가격 표시",
+                specialty: "전문 태그:",
+                placeholder: "+ 태그 입력 (예: kemono)...",
+                noTags: "태그 선택 안 됨",
+                apply: "필터 적용", clear: "모두 지우기",
+                location: "위치:", allLoc: "모든 위치", china: "중국", japan: "일본", korea: "한국",
+                status: "상태:", allStats: "모든 상태", open: "오픈", closed: "마감",
+                sortHint: "*<b>Shift</b> 키를 누른 채 열 헤더를 클릭하여 다중 열 정렬을 하세요.",
+                loading: "데이터 로딩 중...",
+                
+                avgPrice: "평균 가격",
+                basedOn: "기록된",
+                recorded: "벌 기준",
+                avgFollowers: "평균 팔로워",
+                mostCommon: "가장 흔한 범위",
+                majority: "대부분의 가격이 여기에 해당",
+
+                colRow: "행", colFreight: "화물", colAesthetic: "미학", colMaker: "제작자",
+                colLogo: "로고", colLoc: "위치", colLink: "링크", colPreview: "미리보기",
+                colStatus: "상태", colSpecialty: "전문", colPartials: "파셜", colFull: "풀",
+                colFursuits: "퍼슈트 수", colPort: "포트폴리오", colFollowers: "팔로워",
+                colPrice: "가격", colTariff: "관세", colTotalShip: "총계 (배송)",
+                colEstTravel: "예상 여행", colTotalPick: "총계 (픽업)", colSavings: "픽업 절약"
+            }
+        };
+
         // URLs
         const csvUrlFull = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=131139777&single=true&output=csv"; 
         const csvUrlPartial = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQesC2Kuwk-4S3ID4cCsCvOGM4U0DstvIoewGKQn4pZII8mkoa6fxcN18ozOO3_EkISGIkKNVngLYdN/pub?gid=38637980&single=true&output=csv"; 
@@ -550,6 +763,90 @@
         let comboCount = 0;
         let comboTimeout;
         let isExploded = false;
+
+        function formatCurrency(usdValue) {
+            if (usdValue === null || isNaN(usdValue)) return "---";
+            const info = exchangeRates[currentLang];
+            const converted = usdValue * info.rate;
+            return info.symbol + converted.toLocaleString(undefined, { maximumFractionDigits: 0 });
+        }
+
+        function applyLanguage() {
+            const t = translations[currentLang];
+            
+            // Update Text Content
+            const ids = {
+                'header-text': t.title, 't-map-title': t.mapTitle, 't-select-airport': t.selectAirport,
+                't-flight': t.flight, 't-total-travel': t.totalTravel, 't-config': t.config,
+                't-visa': t.visa, 't-dom-flight': t.domFlight, 't-tourism': t.tourism,
+                't-base-incl': t.baseIncl, 't-hotel': t.hotel, 't-food': t.food, 't-logistics': t.logistics,
+                't-lang-label': t.langLabel, 't-interface': t.interface, 't-dataset': t.dataset,
+                'btn-full': t.fullSuits, 'btn-partial': t.partialSuits, 't-price-label': t.priceLabel,
+                't-show-na': t.showNA, 't-specialty': t.specialty, 't-no-tags': t.noTags,
+                'specialty-apply-btn': t.apply, 'specialty-clear-btn': t.clear,
+                't-location': t.location, 't-all-loc': t.allLoc, 't-china': t.china, 't-japan': t.japan, 't-korea': t.korea,
+                't-status': t.status, 't-all-stats': t.allStats, 't-open': t.open, 't-closed': t.closed,
+                't-sort-hint': t.sortHint
+            };
+
+            for (const [id, text] of Object.entries(ids)) {
+                const el = document.getElementById(id);
+                if(el) el.innerHTML = text; // InnerHTML to allow bold tags
+            }
+
+            document.getElementById('specialty-input').placeholder = t.placeholder;
+
+            // Update Toggle Buttons Text (preserving state)
+            const mapBtn = document.getElementById('map-toggle-btn');
+            mapBtn.textContent = mapBtn.classList.contains('on') ? t.mapEnabled : t.mapDisabled;
+            
+            const statsBtn = document.getElementById('stats-toggle-btn');
+            statsBtn.textContent = statsBtn.classList.contains('on') ? t.statsEnabled : t.statsDisabled;
+
+            // Re-render Table (for Headers & Currency)
+            if(loadedData.length > 0) initTable(loadedData);
+            
+            // Re-render Analytics
+            if(loadedData.length > 0) updateAnalytics(loadedData);
+
+            // Re-render Costs
+            recalcCosts();
+
+            // Re-render Slider Label
+            const slider = document.getElementById('price-slider');
+            if(slider && slider.noUiSlider) {
+                const values = slider.noUiSlider.get();
+                // We keep values in USD internally, but display converted
+                document.getElementById('price-values').innerText = 
+                    `${formatCurrency(values[0])} - ${formatCurrency(values[1])}`;
+            }
+        }
+
+        // --- TOGGLE LOGIC ---
+        function setupToggle(btnId, targetId, labelKeyEnabled, labelKeyDisabled) {
+            const btn = document.getElementById(btnId);
+            const target = document.getElementById(targetId);
+            let isVisible = true;
+
+            btn.addEventListener('click', () => {
+                const t = translations[currentLang];
+                isVisible = !isVisible;
+                if(isVisible) {
+                    target.classList.remove('minimized');
+                    btn.classList.add('on');
+                    btn.classList.remove('off');
+                    btn.textContent = t[labelKeyEnabled];
+                } else {
+                    target.classList.add('minimized');
+                    btn.classList.remove('on');
+                    btn.classList.add('off');
+                    btn.textContent = t[labelKeyDisabled];
+                }
+            });
+        }
+        setupToggle('map-toggle-btn', 'interactive-map-area', 'mapEnabled', 'mapDisabled');
+        setupToggle('stats-toggle-btn', 'analytics-area', 'statsEnabled', 'statsDisabled');
+
 
         // --- FILTER LOGIC ---
         function masterFilter(row) {
@@ -562,15 +859,11 @@
             }
             if(!priceMatch) return false;
 
-            // Location Filter
             if (filterState.location !== "" && row.country !== filterState.location) {
                 return false;
             }
 
-            // Status Filter
             if (filterState.status !== "" && row.status !== filterState.status) {
-                // Optional: Loose matching if data isn't exact (e.g., "Open (Sept)" vs "Open")
-                // For now, using exact match based on your dropdown request.
                 return false;
             }
 
@@ -611,6 +904,7 @@
             updateTableFilters();
         }
         function updateSpecialtyUI() {
+            const t = translations[currentLang];
             const tagsArea = document.getElementById('specialty-tags-area');
             if(!tagsArea) return;
             tagsArea.innerHTML = '';
@@ -622,7 +916,7 @@
                     tagsArea.appendChild(pill);
                 });
             } else {
-                tagsArea.innerHTML = '<span style="color:#666; font-size:0.8em;">No tags selected</span>';
+                tagsArea.innerHTML = `<span style="color:#666; font-size:0.8em;">${t.noTags}</span>`;
             }
         }
 
@@ -703,7 +997,7 @@
             const tourismCost = document.getElementById('check-tourism').checked ? costs.tourism : 0;
             const variableCosts = visaCost + flightOptCost + tourismCost;
             globalTravelCost = currentSelectedFlightCost + costs.base + variableCosts;
-            document.getElementById('cost-total-display').textContent = `$${globalTravelCost.toLocaleString()}`;
+            document.getElementById('cost-total-display').textContent = formatCurrency(globalTravelCost);
             updateTableTravelData();
         }
 
@@ -718,7 +1012,7 @@
             prompt.textContent = "< DATA LINK ACTIVE >";
             document.getElementById('cost-city').textContent = `${d.city}, ${d.state}`;
             document.getElementById('cost-airport').textContent = d.code;
-            document.getElementById('cost-flight').textContent = `$${d.cost.toLocaleString()}`;
+            document.getElementById('cost-flight').textContent = formatCurrency(d.cost);
             recalcCosts();
         }
 
@@ -734,7 +1028,6 @@
             return val; 
         }
 
-        // New Wrapper Function for consistent Pop-out style
         function wrapInTilt(content, style = "") {
              return `<div class="text-wrapper"><span class="text-content" style="${style}">${content}</span></div>`;
         }
@@ -746,8 +1039,9 @@
         }
 
         function updateResultCounter(activeCount, totalCount) {
+            const t = translations[currentLang];
             const el = document.getElementById("results-counter");
-            if(el) el.innerHTML = `Makers matching criteria: <b>${activeCount}</b> <span style="font-size:0.8em; color:#666;">(of ${totalCount})</span>`;
+            if(el) el.innerHTML = `${t.loading.replace('...', '')}: <b>${activeCount}</b> <span style="font-size:0.8em; color:#666;">(of ${totalCount})</span>`;
         }
 
         function refreshCounter() {
@@ -770,21 +1064,140 @@
             }
         }
 
-        function initTable(data) {
-            // Note: colMinMax logic is preserved for future use or other cols, 
-            // even though we removed gradients from requested columns.
-            const colMinMax = {};
-            const gradientColumns = ['price','partials','fursuits','portfolio','acctAge','followers'];
-            gradientColumns.forEach(col=>{
-                const vals = data.map(d=>d[col]).filter(v=>v!==null && v!=="" && !isNaN(v));
-                if(vals.length > 0) { colMinMax[col] = {min: Math.min(...vals), max: Math.max(...vals)}; } 
-                else { colMinMax[col] = {min: 0, max: 1}; }
-            });
+        // --- ANALYTICS LOGIC ---
+        function updateAnalytics(data) {
+            const container = document.getElementById('analytics-area');
+            const locations = ['China', 'Japan', 'Korea'];
+            const t = translations[currentLang];
             
+            // Stats buckets
+            let stats = {
+                'China': { sumPrice: 0, countPrice: 0, sumFollowers: 0, countFollowers: 0, totalCostumes: 0, cssClass: 'theme-china', prices: [] },
+                'Japan': { sumPrice: 0, countPrice: 0, sumFollowers: 0, countFollowers: 0, totalCostumes: 0, cssClass: 'theme-japan', prices: [] },
+                'Korea': { sumPrice: 0, countPrice: 0, sumFollowers: 0, countFollowers: 0, totalCostumes: 0, cssClass: 'theme-korea', prices: [] }
+            };
+
+            // Process Data
+            data.forEach(row => {
+                const loc = row.country;
+                if (stats[loc]) {
+                    // Price Stats
+                    if (row.price !== null && !isNaN(row.price)) {
+                        stats[loc].sumPrice += row.price;
+                        stats[loc].countPrice++;
+                        stats[loc].prices.push(row.price);
+                    }
+                    // Follower Stats
+                    if (row.followers !== null && !isNaN(row.followers)) {
+                        stats[loc].sumFollowers += row.followers;
+                        stats[loc].countFollowers++;
+                    }
+                    // Total Costumes (Partials + Full) for this specific location
+                    stats[loc].totalCostumes += (row.partials || 0) + (row.fullSuits || 0);
+                }
+            });
+
+            // Calculate Peaks & Bins
+            locations.forEach(loc => {
+                const s = stats[loc];
+                if (s.prices.length > 0) {
+                    const sorted = s.prices.sort((a,b)=>a-b);
+                    const x = d3.scaleLinear().domain(d3.extent(sorted)).range([0, 300]);
+                    const histogram = d3.bin().domain(x.domain()).thresholds(x.ticks(15));
+                    s.bins = histogram(sorted);
+                    
+                    // Find bin with highest frequency
+                    let maxBin = s.bins[0];
+                    s.bins.forEach(bin => {
+                        if(bin.length > maxBin.length) maxBin = bin;
+                    });
+                    s.peakLow = maxBin.x0;
+                    s.peakHigh = maxBin.x1;
+                } else {
+                    s.bins = [];
+                    s.peakLow = 0; s.peakHigh = 0;
+                }
+            });
+
+
+            // Generate HTML
+            let html = '';
+            locations.forEach(loc => {
+                const s = stats[loc];
+                const avgPrice = s.countPrice > 0 ? Math.round(s.sumPrice / s.countPrice) : 0;
+                const avgFollowers = s.countFollowers > 0 ? Math.round(s.sumFollowers / s.countFollowers) : 0;
+                const fmtFollowers = avgFollowers > 999 ? (avgFollowers/1000).toFixed(1) + 'k' : avgFollowers;
+
+                // Peak Format
+                const peakStr = (s.peakLow && s.peakHigh) 
+                    ? `${formatCurrency(s.peakLow)} - ${formatCurrency(s.peakHigh)}`
+                    : "N/A";
+
+                const svgId = `curve-${loc}`;
+                const locName = t[loc.toLowerCase()];
+
+                html += `
+                <div class="promo-card ${s.cssClass}">
+                    <svg id="${svgId}" class="promo-bg-curve-container" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
+                    
+                    <div class="promo-content-layer">
+                        <div class="promo-left">
+                            <div class="promo-title">${locName}</div>
+                            
+                            <div class="promo-stat-large">${formatCurrency(avgPrice)}</div>
+                            <div class="promo-sub">${t.avgPrice}<br>${t.basedOn} ${s.totalCostumes.toLocaleString()} ${t.recorded}</div>
+                            
+                            <hr class="promo-divider">
+                            
+                            <div class="promo-stat-large" style="font-size:1.8em;">${fmtFollowers}</div>
+                            <div class="promo-sub">${t.avgFollowers}</div>
+                        </div>
+
+                        <div class="promo-right">
+                             <div class="peak-label">${t.mostCommon}</div>
+                             <div class="peak-range">${peakStr}</div>
+                             <div class="promo-sub">${t.majority}</div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+
+            // DRAW CURVES WITH D3 (Using pre-calced bins)
+            locations.forEach(loc => {
+                const s = stats[loc];
+                if (!s.bins || s.bins.length < 2) return; 
+
+                const svg = d3.select(`#curve-${loc}`);
+                const width = 300;
+                const height = 100;
+
+                const x = d3.scaleLinear()
+                    .domain([s.bins[0].x0, s.bins[s.bins.length-1].x1])
+                    .range([0, width]);
+
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(s.bins, d => d.length)])
+                    .range([height, 0]);
+
+                const area = d3.area()
+                    .x(d => x(d.x0 + (d.x1 - d.x0) / 2)) 
+                    .y0(height)
+                    .y1(d => y(d.length))
+                    .curve(d3.curveBasis); 
+
+                svg.append("path")
+                    .datum(s.bins)
+                    .attr("class", "promo-bg-curve")
+                    .attr("d", area);
+            });
+        }
+
+        function initTable(data) {
             // Clear if existing
-            if(table) {
-                table.destroy();
-            }
+            if(table) { table.destroy(); }
+            const t = translations[currentLang];
 
             table = new Tabulator("#creator-table", {
                 data: data,
@@ -792,30 +1205,26 @@
                 movableColumns: true,
                 resizableColumns: true,
                 placeholder:"No Data Available",
-                height: "100%", // Fill container
+                height: "100%", 
                 initialSort:[ {column:"rank", dir:"asc"} ],
                 dataFiltered: function(filters, rows) {
                     updateResultCounter(rows.length, totalDataCount);
                 },
                 columns: [
-                    { title:"Row", field:"rank", visible:true, sorter:"number" },
-                    { title: "Freight", field: "shipOrFly", visible:false, sorter: "number" },
-                    { title:"Aesthetic", field:"aesthetic", visible:false },
-                    { title:"Maker", field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
+                    { title: t.colRow, field:"rank", visible:true, sorter:"number" },
+                    { title: t.colFreight, field: "shipOrFly", visible:false, sorter: "number" },
+                    { title: t.colAesthetic, field:"aesthetic", visible:false },
+                    { title: t.colMaker, field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
                     { 
-                        title:"Logo", field:"logo", hozAlign:"center", width:90, 
+                        title: t.colLogo, field:"logo", hozAlign:"center", width:90, 
                         formatter:function(cell){
                             const val = cell.getValue();
                             return val ? `<div class="logo-box" data-src="${val}" style="background-image:url('${val}');"></div>` : "";
                         }
                     },
-                    // MOVED: Location (Right of Logo)
-                    { title:"Location", field:"country", formatter: formatTextCell, cssClass: "text-cell" },
-                    
-                    // REMOVED: Maker Type
-                    
+                    { title: t.colLoc, field:"country", formatter: formatTextCell, cssClass: "text-cell" },
                     { 
-                        title:"Link", field:"link", hozAlign:"center",
+                        title: t.colLink, field:"link", hozAlign:"center",
                         formatter: function(cell) {
                             const url = cell.getValue();
                             if(!url) return "";
@@ -824,7 +1233,7 @@
                         }
                     },
                     { 
-                        title: "Preview", field: "previewImages", hozAlign: "center", width: 200,
+                        title: t.colPreview, field: "previewImages", hozAlign: "center", width: 200,
                         formatter: function(cell) {
                            const imageUrls = cell.getValue();
                            if (!imageUrls || imageUrls.length === 0) return "";
@@ -841,9 +1250,9 @@
                            return container;
                         }
                     },
-                    { title:"Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
+                    { title: t.colStatus, field:"status", formatter: formatTextCell, cssClass: "text-cell" },
                     { 
-                        title:"Specialty", field:"specialty", width: 300,
+                        title: t.colSpecialty, field:"specialty", width: 300,
                         formatter: function(cell) {
                             const val = cell.getValue(); if (!val) return "";
                             const tags = val.split(',').map(t => t.trim()).filter(t => t);
@@ -857,34 +1266,31 @@
                             return wrapper;
                         }
                     },
-                    { title:"Partials", field:"partials", visible:false, hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
-                    { title:"Full Suits", field:"fullSuits", visible:false, hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
-                    { title:"Fursuits", field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
-                    { title:"Portfolio Size", field:"portfolio", visible:false, hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
-                    
-                    // MOVED: Followers (Right of Portfolio Size)
-                    { title:"Followers", field:"followers", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
+                    { title: t.colPartials, field:"partials", visible:false, hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title: t.colFull, field:"fullSuits", visible:false, hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title: t.colFursuits, field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title: t.colPort, field:"portfolio", visible:false, hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title: t.colFollowers, field:"followers", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
 
-                    // FINANCIAL COLUMNS (Far Right)
                     { 
-                        title:"Price", field:"price", hozAlign:"right", sorter:"number",
+                        title: t.colPrice, field:"price", hozAlign:"right", sorter:"number",
                         sorterParams:{ alignEmptyValues:"bottom" },
                         formatter:function(cell){
                             const val = cell.getValue();
-                            return val !== null ? wrapInTilt(val.toLocaleString()) : "---";
+                            return val !== null ? wrapInTilt(formatCurrency(val)) : "---";
                         }
                     },
-                    { title: "Tariff", field: "tariff", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt(cell.getValue().toLocaleString()) : "---"; } },
-                    { title: "Total (Ship)", field: "ship", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt(cell.getValue().toLocaleString()) : "---"; } },
+                    { title: t.colTariff, field: "tariff", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt(formatCurrency(cell.getValue())) : "---"; } },
+                    { title: t.colTotalShip, field: "ship", hozAlign: "right", sorter: "number", formatter: function(cell) { return cell.getValue() ? wrapInTilt(formatCurrency(cell.getValue())) : "---"; } },
                     {
-                        title: "Est. Travel", field: "calculatedTravel", visible:false, hozAlign: "right",
+                        title: t.colEstTravel, field: "calculatedTravel", visible:false, hozAlign: "right",
                         formatter: function(cell) {
                             if(globalTravelCost === 0) return "---";
-                            return wrapInTilt(globalTravelCost.toLocaleString(), "color:#00E676");
+                            return wrapInTilt(formatCurrency(globalTravelCost), "color:#00E676");
                         }
                     },
                     {
-                        title: "Total (Pick Up)", field: "calculatedTotal", hozAlign: "right", sorter: "number",
+                        title: t.colTotalPick, field: "calculatedTotal", hozAlign: "right", sorter: "number",
                         accessor: function(value, data) {
                             const price = data.price || 0;
                             if(globalTravelCost === 0 || price === 0) return 0;
@@ -896,11 +1302,11 @@
                             if(globalTravelCost === 0 || price === 0) return "---";
                             const duty = Math.max(0, (price - 800) * 0.03);
                             const total = price + globalTravelCost + duty;
-                            return wrapInTilt(total.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}), "color:darkorange; font-weight:bold");
+                            return wrapInTilt(formatCurrency(total), "color:darkorange; font-weight:bold");
                         }
                     },
                     {
-                        title: "Pick Up Savings", field: "calculatedSavings", hozAlign: "right", sorter: "number",
+                        title: t.colSavings, field: "calculatedSavings", hozAlign: "right", sorter: "number",
                         accessor: function(value, data) {
                             const ship = data.ship || 0;
                             const price = data.price || 0;
@@ -921,16 +1327,16 @@
                             const el = cell.getElement();
                             el.style.fontWeight = "bold";
                             const color = savings > 0 ? "#00E676" : "#ff5252";
-                            return wrapInTilt(savings.toLocaleString(), `color:${color}; font-weight:bold`);
+                            return wrapInTilt(formatCurrency(savings), `color:${color}; font-weight:bold`);
                         }
                     }
                 ]
             });
         }
 
-        // NEW: Reusable Data Loader
         function loadTableData(url) {
-             document.getElementById("results-counter").innerHTML = "Loading data...";
+             const t = translations[currentLang];
+             document.getElementById("results-counter").innerHTML = t.loading;
              Papa.parse(url, {
                 download: true, header: true, dynamicTyping: true,
                 error: function(err) {
@@ -954,18 +1360,22 @@
                         specialty: row['Specialty'],
                         partials: cleanNumber(row['Partials']),
                         fullSuits: cleanNumber(row['Full Suits']), 
-                        portfolio: cleanNumber(row['Fursuits']), // Changed 'Works' to 'Fursuits' as per user instruction
+                        portfolio: cleanNumber(row['Fursuits']),
                         fursuits: cleanNumber(row['Fursuits']),
-                        country: row['Location'], // Renamed in prompt
+                        country: row['Location'], 
                         followers: cleanNumber(row['Followers']),
                         acctAge: cleanNumber(row['Acct Age']),
                     })).filter(row => row.maker); 
                     
+                    loadedData = data; // Save for language switching
                     totalDataCount = data.length;
+                    
+                    // UPDATE ANALYTICS
+                    updateAnalytics(data);
+
                     initTable(data);
                     setTimeout(() => updateResultCounter(data.length, data.length), 100);
 
-                    // Re-attach slider logic if needed, or reset slider
                     const slider = document.getElementById('price-slider');
                     if(slider && slider.noUiSlider) {
                          slider.noUiSlider.set([2000, 10000]);
@@ -1017,7 +1427,6 @@
                 const star = document.createElement('div'); star.className = 'star-particle';
                 star.textContent = '★'; 
                 const rect = headerText.getBoundingClientRect();
-                // FIXED: Star generation now based on entire width
                 star.style.left = (Math.random() * window.innerWidth) + 'px';
                 star.style.top = (rect.bottom - 10) + 'px';
                 star.style.fontSize = (0.8 + Math.random() * 0.8) + 'em';
@@ -1100,7 +1509,9 @@
                     filterState.priceMin = parseInt(values[0]);
                     filterState.priceMax = parseInt(values[1]);
                     filterState.showNA = document.getElementById('show-na-prices').checked;
-                    document.getElementById('price-values').innerText = `$${filterState.priceMin.toLocaleString()} - $${filterState.priceMax.toLocaleString()}`;
+                    // Format Label
+                    document.getElementById('price-values').innerText = 
+                        `${formatCurrency(filterState.priceMin)} - ${formatCurrency(filterState.priceMax)}`;
                     updateTableFilters();
                 };
                 slider.noUiSlider.on('update', updateTableFilter);
@@ -1111,7 +1522,6 @@
                 });
             }
 
-            // NEW LISTENERS FOR LOCATION AND STATUS
             document.getElementById('filter-location').addEventListener('change', function() {
                 filterState.location = this.value;
                 updateTableFilters();
@@ -1121,43 +1531,43 @@
                 filterState.status = this.value;
                 updateTableFilters();
             });
+
+            // LANGUAGE LISTENER
+            document.getElementById('language-selector').addEventListener('change', function() {
+                currentLang = this.value;
+                applyLanguage();
+            });
         });
 
-        // Tooltip & Hover Logic (COMBINED ROBUST HANDLER)
+        // Tooltip & Hover Logic
         const tooltipEl = document.getElementById("image-tooltip");
         let lastTiltCell = null;
         let currentHoverBox = null; 
 
         document.addEventListener('mousemove', e => {
             const target = e.target;
-
-            // --- 1. TOOLTIP LOGIC ---
             const box = target.closest('.preview-box') || target.closest('.logo-box');
             
             if(box) {
                 let sizeVmin = 60; 
                 if (box.classList.contains('logo-box')) {
-                    sizeVmin = 48; // 20% smaller for logos
+                    sizeVmin = 48;
                 }
 
-                // Update Tooltip Dimensions
                 tooltipEl.style.width = sizeVmin + 'vmin';
                 tooltipEl.style.height = sizeVmin + 'vmin';
 
                 if (box !== currentHoverBox) {
                     currentHoverBox = box;
-                    
                     let url = box.getAttribute('data-src'); 
                     if(url) {
                         if(box.classList.contains('preview-box')) {
-                             url = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=600&h=600&output=webp&q=80`; // Increased size
+                             url = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=600&h=600&output=webp&q=80`;
                         }
-                        
                         tooltipEl.style.backgroundImage = `url('${url}')`;
-                        tooltipEl.style.display = 'flex'; // Flex for HUD alignment
+                        tooltipEl.style.display = 'flex'; 
                         requestAnimationFrame(() => { tooltipEl.style.opacity = '1'; });
 
-                        // --- HUD GENERATION ---
                         const oldHud = tooltipEl.querySelector('.tooltip-hud');
                         if(oldHud) oldHud.remove();
 
@@ -1165,7 +1575,6 @@
                             const index = parseInt(box.getAttribute('data-image-index'));
                             const container = box.parentNode;
                             const total = container.children.length;
-
                             if (total > 1) {
                                 const hud = document.createElement('div');
                                 hud.className = 'tooltip-hud';
@@ -1179,8 +1588,6 @@
                         }
                     }
                 }
-
-                // ALWAYS update position
                 const tooltipWidth = tooltipEl.offsetWidth;
                 const tooltipHeight = tooltipEl.offsetHeight;
                 const offset = 20;
@@ -1188,16 +1595,12 @@
                 let left = e.clientX + offset;
                 let top = e.clientY + offset;
 
-                // Check Right Edge
                 if (left + tooltipWidth > window.innerWidth) {
                     left = e.clientX - tooltipWidth - offset;
                 }
-                // Check Bottom Edge
                 if (top + tooltipHeight > window.innerHeight) {
                     top = e.clientY - tooltipHeight - offset;
                 }
-                
-                // Hard Clamp (Safety)
                 if (left < 0) left = 10; 
                 if (top < 0) top = 10;
 
@@ -1205,7 +1608,6 @@
                 tooltipEl.style.top = top + 'px';
 
             } else {
-                // Hide logic if we left a box
                 if (currentHoverBox) {
                     currentHoverBox = null;
                     if (tooltipEl.style.opacity !== '0') {
@@ -1213,7 +1615,6 @@
                         setTimeout(() => { 
                             if(tooltipEl.style.opacity === '0') {
                                 tooltipEl.style.display = 'none'; 
-                                // Clear HUD when hiding
                                 const oldHud = tooltipEl.querySelector('.tooltip-hud');
                                 if(oldHud) oldHud.remove();
                             }
@@ -1222,9 +1623,7 @@
                 }
             }
 
-            // --- 2. 3D TILT LOGIC ---
             const cell = target.closest('.tabulator-cell');
-            
             if (lastTiltCell && lastTiltCell !== cell) {
                 const oldWrapper = lastTiltCell.querySelector('.text-wrapper');
                 if (oldWrapper) oldWrapper.style.transform = '';
@@ -1234,10 +1633,7 @@
             }
 
             if (cell) {
-                // Check if this cell contains clickable tags or links
-                const isInteractive = cell.querySelector('.tag-wrapper'); // Removed 'a' check to allow link tilt
-                
-                // ONLY apply tilt if it's NOT an interactive cell (except links)
+                const isInteractive = cell.querySelector('.tag-wrapper'); 
                 if (!isInteractive) {
                     lastTiltCell = cell;
                     cell.classList.add('active-tilt');
@@ -1261,7 +1657,6 @@
                 }
             }
         });
-
     </script>
 </body>
 </html>
