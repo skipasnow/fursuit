@@ -1,112 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Maintenance & Transport | Kemono Fursuit</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <style>
-        /* =========================================
-           SHARED GLOBAL STYLES 
-           ========================================= */
-        @font-face {
-            font-family: 'VCR OSD Mono';
-            src: url('https://skipasnow.github.io/fursuit/fonts/VCR_OSD_MONO_1.001.ttf') format('truetype');
-        }
-
-        html {
-            min-height: 100%; margin: 0; padding: 0;
-            background: #2e2e2e; color: #fff;
-            font-family: 'VCR OSD Mono', 'Noto Sans TC', 'Noto Sans JP', 'Malgun Gothic', monospace, sans-serif;
-        }
-
-        body {
-            min-height: 100vh; width: 100%; margin: 0; padding: 0;
-            box-sizing: border-box; display: block; overflow-y: auto; overflow-x: hidden;
-        }
-
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: #1a1a1a; }
-        ::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; }
-        ::-webkit-scrollbar-thumb:hover { background: darkorange; }
-
-        #top-pane {
-            position: relative; z-index: 20; background: #2e2e2e; padding: 20px;
-            border-bottom: 2px solid #444; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-
-        #nav-bar { display: flex; gap: 20px; margin-bottom: 15px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
-        #nav-bar a { text-decoration: none; font-size: 1.2em; transition: all 0.2s; }
-        #nav-bar a:hover { color: darkorange !important; }
-
-        h1 { margin: 0 0 15px 0; min-height: 60px; position: relative; }
-        #header-text {
-            display: inline-block; position: relative;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform-origin: left center;
-        }
-        #header-text:hover {
-            transform: scale(1.05);
-            background-image: linear-gradient(to right, #00E676, #ff7f00, #ffff00, #00ff00, #0000ff);
-            background-size: 200% auto; -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent; animation: rainbow-move 2s linear infinite;
-        }
-        @keyframes rainbow-move { to { background-position: 200% center; } }
-
-        /* =========================================
-           MAINTENANCE PAGE SPECIFIC STYLES
-           ========================================= */
-        #content-pane {
-            padding: 30px; max-width: 1200px; margin: 0 auto;
-            display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
-        }
-
-        @media (max-width: 900px) {
-            #content-pane { grid-template-columns: 1fr; }
-        }
-
-        .info-card {
-            background: #1f1f1f; border: 1px solid #444; border-radius: 8px;
-            padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        
-        .info-card h2 {
-            color: darkorange; font-size: 1.5em; margin-top: 0;
-            border-bottom: 2px solid #333; padding-bottom: 10px; text-transform: uppercase;
-        }
-
-        .info-card h3 { color: #00E676; font-size: 1.1em; margin-bottom: 5px; }
-        
-        .info-card p, .info-card li {
-            color: #ccc; line-height: 1.6; font-family: sans-serif; font-size: 15px;
-        }
-
-        .info-card ul { padding-left: 20px; margin-top: 5px; }
-
-        .highlight-box {
-            background: rgba(0, 230, 118, 0.1); border-left: 4px solid #00E676;
-            padding: 15px; margin: 15px 0; border-radius: 0 4px 4px 0;
-        }
-
-        .highlight-box strong { color: #00E676; display: block; margin-bottom: 5px; font-family: 'VCR OSD Mono'; font-size: 1.1em;}
-
-        .diy-recipe {
-            background: #222; border: 1px dashed darkorange; padding: 15px;
-            border-radius: 6px; font-family: monospace; color: #eee;
-        }
-    </style>
-</head>
-<body>
-
-    <div id="top-pane">
-        <div id="nav-bar">
-            <a href="index.html" style="color: #aaa;">> Fursuits</a>
-            <a href="maintenance.html" style="color: darkorange; font-weight: bold; border-bottom: 2px solid darkorange; padding-bottom: 3px;">> Maintenance</a>
-        </div>
-        <h1><span id="header-text">Suit Maintenance & Logistics</span></h1>
-    </div>
-
-    <div id="content-pane">
+<div id="content-pane">
         
         <div class="info-card" style="grid-column: 1 / -1;">
             <h2>Protecting the Investment</h2>
@@ -115,13 +7,18 @@
 
         <div class="info-card">
             <h2>Logistics & Transport</h2>
-            <p>Whether taking a domestic hop or a long-haul international flight across the Pacific, how you pack dictates the survival of the suit.</p>
+            <p>Whether taking a domestic hop or a long-haul international flight across the Pacific, how you pack dictates the survival of the suit. For airline travel, the <strong>Pelican 0340 Cube Case</strong> is the industry-standard recommendation. It is engineered to provide the maximum allowable volume for a checked bag while remaining within standard size constraints.</p>
             
-            <h3>Hard-Shell Luggage</h3>
-            <ul>
-                <li><strong>The Head:</strong> Never check a costume head in a soft duffel. It requires a hard-shell suitcase (polycarbonate) to prevent crushing. </li>
-                <li><strong>Dome Eyes:</strong> Anime-style suits often feature glossy plastic domes. Always wrap the head in a soft fleece blanket or custom hood to prevent the domes from scratching against the suitcase lining.</li>
-            </ul>
+            <div class="diy-recipe" style="margin-bottom: 15px; border-color: #00E676;">
+                <strong style="color: #00E676;">PELICAN 0340 SPECIFICATIONS:</strong><br>
+                • Exterior: 20.5 x 20.5 x 19.25 in (52.1 x 52.1 x 48.9 cm)<br>
+                • Interior: 18.00 x 18.00 x 18.00 in (45.7 x 45.7 x 45.7 cm)
+            </div>
+
+            <div class="highlight-box" style="border-left-color: #ff5252; background: rgba(255, 82, 82, 0.1);">
+                <strong style="color: #ff5252;">SIZE LIMIT WARNING:</strong>
+                If a fursuit head exceeds 18 inches in any dimension, it is not advisable for air transportation. Forcing a head into a smaller container risks permanent foam deformation or cracking the internal structure.
+            </div>
 
             <h3>Vacuum Compression Bags</h3>
             <ul>
@@ -151,22 +48,6 @@
             </ul>
         </div>
 
-		<div class="info-card">
-            <h2>Logistics & Transport</h2>
-            <p>For airline travel, the <strong>Pelican 0340 Cube Case</strong> is the industry-standard recommendation. It is engineered to provide the maximum allowable volume for a checked bag while remaining within standard size constraints.</p>
-            
-            <div class="diy-recipe" style="margin-bottom: 15px; border-color: #00E676;">
-                <strong style="color: #00E676;">PELICAN 0340 SPECIFICATIONS:</strong><br>
-                • Exterior: 20.5 x 20.5 x 19.25 in (52.1 x 52.1 x 48.9 cm)<br>
-                • Interior: 18.00 x 18.00 x 18.00 in (45.7 x 45.7 x 45.7 cm)
-            </div>
-
-            <div class="highlight-box" style="border-left-color: #ff5252; background: rgba(255, 82, 82, 0.1);">
-                <strong style="color: #ff5252;">SIZE LIMIT WARNING:</strong>
-                If a fursuit head exceeds 18 inches in any dimension, it is not advisable for air transportation. Forcing a head into a smaller container risks permanent foam deformation or cracking the internal structure.
-            </div>
-        </div>
-
         <div class="info-card" style="grid-column: 1 / -1;">
             <h2>The DIY Disinfectant (Precision Formula)</h2>
             <p>Commercial sprays are often diluted. For maximum efficacy and safety, use a pure Isopropyl base. This formula eliminates the need for distilled water, ensuring a faster evaporation rate and better antimicrobial action.</p>
@@ -180,12 +61,14 @@
             </div>
 
             <div class="highlight-box">
+                <strong>> APPLICATION PROTOCOL</strong>
+                You must <strong>only ever spray the inside</strong> of the fursuit. The objective is strictly to sanitize the interior lining and padding that have direct exposure to human sweat and waste materials. Do not spray or interact with the exterior faux fur in any way if possible, as the alcohol mixture can degrade or damage the synthetic fibers over time. Let the interior sit in front of a high-powered fan until completely bone dry before storing.
+            </div>
+
+            <div class="highlight-box">
                 <strong>> SAFETY COMPLIANCE</strong>
                 Always ensure your fragrance oils are <strong>IFRA compliant</strong>. Since the suit lining sits directly against your skin during high-exertion activity, non-compliant oils can cause chemical burns or severe contact dermatitis.
             </div>
         </div>
 
     </div>
-
-</body>
-</html>
