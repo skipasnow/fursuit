@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Maintenance & Transport | Kemono Fursuit</title>
+    <title>Maintenance | Kemono Fursuit</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
@@ -53,10 +53,10 @@
         }
         @keyframes rainbow-move { to { background-position: 200% center; } }
 
-        /* =========================================
+		/* =========================================
            MAINTENANCE PAGE SPECIFIC STYLES
            ========================================= */
-		#content-pane {
+        #content-pane {
             padding: 30px; 
             max-width: 95%; /* Scales fluidly with your monitor width */
             margin: 0 auto;
@@ -70,15 +70,8 @@
             #content-pane { grid-template-columns: 1fr; }
         }
 
-		.info-card p, .info-card li {
-            color: #ccc; 
-            line-height: 1.6; 
-            font-family: sans-serif; 
-            font-size: 18px; /* Bumped up from 15px */
-        }
-        
-		.info-card h2 {
-            color: darkorange; font-size: 1.8em; /* Bumped up from 1.5em */
+        .info-card h2 {
+            color: darkorange; font-size: 1.8em; 
             margin-top: 0;
             border-bottom: 2px solid #333; padding-bottom: 10px; text-transform: uppercase;
         }
@@ -86,32 +79,33 @@
         .info-card h3 { color: #00E676; font-size: 1.1em; margin-bottom: 5px; }
         
         .info-card p, .info-card li {
-            color: #ccc; line-height: 1.6; font-family: sans-serif; font-size: 15px;
+            color: #ccc; 
+            line-height: 1.6; 
+            font-family: 'VCR OSD Mono', 'Noto Sans TC', 'Noto Sans JP', 'Malgun Gothic', monospace; 
+            font-size: 18px; 
         }
 
         .info-card ul { padding-left: 20px; margin-top: 5px; }
 
-		.highlight-box {
+        .highlight-box {
             background: rgba(0, 230, 118, 0.1); border-left: 4px solid #00E676;
             padding: 15px; margin: 15px 0; border-radius: 0 4px 4px 0;
-            font-size: 16px; /* Added explicitly to enlarge text */
+            font-size: 16px; 
             line-height: 1.5;
         }
 
-        .highlight-box strong { color: #00E676; display: block; margin-bottom: 5px; font-family: 'VCR OSD Mono'; font-size: 1.2em; /* Scaled up the header slightly */}
-
-        .diy-recipe {
-            background: #222; border: 1px dashed darkorange; padding: 15px;
-            border-radius: 6px; font-family: monospace; color: #eee;
-            font-size: 16px; /* Added explicitly to enlarge text */
-            line-height: 1.5; /* Added for better readability of the recipe lines */
+        .highlight-box strong { 
+            color: #00E676; display: block; margin-bottom: 5px; 
+            font-family: 'VCR OSD Mono'; font-size: 1.2em; 
         }
 
-        .highlight-box strong { color: #00E676; display: block; margin-bottom: 5px; font-family: 'VCR OSD Mono'; font-size: 1.1em;}
-
         .diy-recipe {
             background: #222; border: 1px dashed darkorange; padding: 15px;
-            border-radius: 6px; font-family: monospace; color: #eee;
+            border-radius: 6px; 
+            font-family: 'VCR OSD Mono', 'Noto Sans TC', 'Noto Sans JP', 'Malgun Gothic', monospace; 
+            color: #eee;
+            font-size: 16px; 
+            line-height: 1.5; 
         }
     </style>
 </head>
@@ -122,79 +116,88 @@
             <a href="index.html" style="color: #aaa;">> Fursuits</a>
             <a href="maintenance.html" style="color: darkorange; font-weight: bold; border-bottom: 2px solid darkorange; padding-bottom: 3px;">> Maintenance</a>
         </div>
-        <h1><span id="header-text">Suit Maintenance & Logistics</span></h1>
+        <h1><span id="header-text">Suit Maintenance</span></h1>
     </div>
 
     <div id="content-pane">
         
         <div class="info-card" style="grid-column: 1 / -1;">
-            <h2>Protecting the Investment</h2>
-            <p>A custom costume is a massive financial and artistic investment. Without proper, immediate care after every single use, the faux fur will mat permanently, backing fabrics will degrade, and bacteria will ruin the internal padding. Establishing a strict maintenance routine and assembling a dedicated travel and care kit is non-negotiable for longevity.</p>
+            <h2>Fursuit Care</h2>
+            <p>A fursuit is a long-term investment. Without proper care: fur mats, backing fabrics degrade, and bacteria grows inside the fabric. A maintenance routine is required for longevity.</p>
         </div>
 
         <div class="info-card">
             <h2>Logistics & Transport</h2>
-            <p>Whether taking a domestic hop or a long-haul international flight across the Pacific, how you pack dictates the survival of the suit. For airline travel, the <strong>Pelican 0340 Cube Case</strong> is the industry-standard recommendation. It is engineered to provide the maximum allowable volume for a checked bag while remaining within standard size constraints.</p>
+            <p>Regardless of flight destination or duration, packing methods are necessary to transport the suit. For airline travel, the <strong>Pelican 0340 Case</strong> is the largest permitted size for a checked bag within airline constraints.</p>
             
             <div class="diy-recipe" style="margin-bottom: 15px; border-color: #00E676;">
-                <strong style="color: #00E676;">PELICAN 0340 SPECIFICATIONS:</strong><br>
+                <strong style="color: #00E676;">PELICAN 0340 DIMENSIONS:</strong><br>
                 • Exterior: 20.5 x 20.5 x 19.25 in (52.1 x 52.1 x 48.9 cm)<br>
                 • Interior: 18.00 x 18.00 x 18.00 in (45.7 x 45.7 x 45.7 cm)
             </div>
 
             <div class="highlight-box" style="border-left-color: #ff5252; background: rgba(255, 82, 82, 0.1);">
-                <strong style="color: #ff5252;">SIZE LIMIT WARNING:</strong>
-                If a fursuit head exceeds 18 inches in any dimension, it is not advisable for air transportation. Forcing a rigid head into a smaller container risks permanent deformation or cracking. Foam and TPU bases can be marginally compressed for several hours without deformation, but Resin and PLA are brittle and will break or deform from extended pressure.
+                <strong style="color: #ff5252;">SIZE LIMIT:</strong>
+                If a fursuit head exceeds 18 inches in any dimension, checked bag air transportation may damage the head. Compressing a rigid head base in a container risks deformation. Foam and TPU bases can be compressed for several hours without deformation, but Resin and PLA are likely to deform from pressure.
             </div>
 
             <h3>Vacuum Compression Bags</h3>
             <ul>
-                <li>Body suits and padding take up massive volume. Use heavy-duty vacuum seal bags (the kind requiring a hand pump or vacuum) to compress the body down to a fraction of its size.</li>
-                <li><em>Warning:</em> Do not leave fur vacuum-sealed for longer than the duration of the flight, as it can permanently kink the fur fibers. Unpack and brush immediately upon arrival.</li>
+                <li>Body suits, padding, feet, paws, and the head take up massive volume. Use heavy-duty vacuum seal bags to compress the pieces down to a fraction of its size.</li>
+                <li><em>Warning:</em> Only compress fursuit garments as long as necessary for travel. Long-term compression can deform the garments. The fursuit head should not be compressed to avoid damage.</li>
             </ul>
         </div>
 
         <div class="info-card">
-            <h2>The Base Care Kit</h2>
-            <p>Purchase these items before your suit arrives.</p>
+            <h2>Usage Supplies</h2>
+            <p>Purchase these items to maintain your fursuit.</p>
 
-            <h3>The Brushes</h3>
+            <h3>Slicker Brush</h3>
             <ul>
-                <li><strong>Slicker Brush:</strong> A wire-bristle pet brush. Used to detangle matted fur. Always brush gently to avoid pulling fibers out of the backing.</li>
-                <li><strong>Rubber Brush:</strong> Great for gathering loose shedding fibers without damaging the suit.</li>
+                <li>A pet brush with plastic tips. Used to straighten fur. Brush gently to avoid damage. Do not use wire brushes the fursuit will be damaged.</li>
             </ul>
 
-            <h3>Microfiber & Lens Care</h3>
+            <h3>Microfiber Cloth</h3>
             <ul>
-                <li>For large plastic eyes, carry premium microfiber cloths and anti-fog lens cleaner. Never use paper towels or harsh chemicals on the eyes, as they will scratch and cloud the plastic.</li>
+                <li>For cleaning plastic materials without scarring. Do not use paper towels or non-lens cleaner on plastic to avoid damage.</li>
+            </ul>
+			
+            <h3>Disinfectant Spray</h3>
+            <ul>
+                <li>A scented isopropyl alcohol medium to sanitize the fursuit.</li>
+            </ul>
+			
+            <h3>K/N95 Mask</h3>
+            <ul>
+                <li>Covering the mouth and nose prevents moisture spread within the fursuit head.</li>
             </ul>
 
-            <h3>Portable Ventilation</h3>
+            <h3>Spandex Suit</h3>
             <ul>
-                <li>A high-velocity, small-form-factor floor fan is critical. Costume heads contain foam and dense fabrics that trap moisture. Resting the head neck-down over a fan immediately after wear prevents mold.</li>
+                <li>Wicks moisture from the wearer, keeping them dry. This protect the fursuit from sweat exposure.</li>
             </ul>
         </div>
 
         <div class="info-card" style="grid-column: 1 / -1;">
-            <h2>The DIY Disinfectant (Precision Formula)</h2>
-            <p>Commercial sprays are often diluted. For maximum efficacy and safety, use a pure Isopropyl base. This formula eliminates the need for distilled water, ensuring a faster evaporation rate and better antimicrobial action.</p>
+            <h2>DIY Disinfectant Spray</h2>
+            <p>Commercial sprays are diluted with potentially damaging chemicals. For cost and safety reasons, make your own spray with isopropyl alcohol and skin-safe fragrance oil.</p>
             
             <div class="diy-recipe">
-                <strong style="color: darkorange; font-size: 1.2em; display:block; margin-bottom:10px;">> MASTER MIXTURE RATIO:</strong>
-                • <strong>Base:</strong> 70% Isopropyl Alcohol (Use pure; do not dilute further with water).<br>
-                • <strong>Scent:</strong> 1ml of IFRA-compliant (skin-safe) fragrance oil per 1 fl oz of alcohol.<br><br>
+                <strong style="color: darkorange; font-size: 1.2em; display:block; margin-bottom:10px;">> MIXTURE RATIO:</strong>
+                • <strong>Base:</strong> 70% Isopropyl Alcohol.<br>
+                • <strong>Scent:</strong> 1ml of IFRA-compliant (skin-safe) fragrance oil per 1 fl oz of isopropyl.<br><br>
                 
-                <strong>> WHY 70%?</strong> At this concentration, the alcohol permeates the cell wall of bacteria more effectively than 99% concentrations, which often evaporate too quickly to fully disinfect.
+                <strong>> Why 70%?</strong> This alcohol ratio permeates bacteria more effectively than higher concentrations that evaporate more quickly. Higher ratio can also damage the lining of the suit.
             </div>
 
             <div class="highlight-box">
                 <strong>> APPLICATION PROTOCOL</strong>
-                You must <strong>only ever spray the inside</strong> of the fursuit. The objective is strictly to sanitize the interior lining and padding that have direct exposure to human sweat and waste materials. Do not spray or interact with the exterior faux fur in any way if possible, as the alcohol mixture can degrade or damage the synthetic fibers over time. Let the interior sit in front of a high-powered fan until completely bone dry before storing.
+                <strong>Only spray inside the fursuit</strong> Disinfectant spray sanitizes the interior lining and padding that have direct exposure to sweat. Do not spray exterior fur, alcohol can degrade synthetic fibers over time.
             </div>
 
             <div class="highlight-box">
                 <strong>> SAFETY COMPLIANCE</strong>
-                Always ensure your fragrance oils are <strong>IFRA compliant</strong>. Since the suit lining sits directly against your skin during high-exertion activity, non-compliant oils can cause chemical burns or severe contact dermatitis.
+                <strong>Only use IFRA compliant fragrance oils</strong>. The suit lining rests against your skin, non-compliant oils can burn your body.
             </div>
         </div>
 
