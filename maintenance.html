@@ -53,7 +53,7 @@
         }
         @keyframes rainbow-move { to { background-position: 200% center; } }
 
-		/* =========================================
+        /* =========================================
            MAINTENANCE PAGE SPECIFIC STYLES
            ========================================= */
         #content-pane {
@@ -107,8 +107,28 @@
             font-size: 16px; 
             line-height: 1.5; 
         }
-		
-		/* --- PRODUCT RECOMMENDATION WIDGET --- */
+
+        /* --- SECTION TOTAL WIDGET --- */
+        .section-total {
+            background: rgba(255, 140, 0, 0.1);
+            border: 1px dashed darkorange;
+            color: darkorange;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-family: 'VCR OSD Mono', monospace;
+            font-size: 1.1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-total span { 
+            font-size: 0.85em; 
+            color: #ccc; 
+            font-family: 'Noto Sans TC', sans-serif; 
+        }
+        
+        /* --- PRODUCT RECOMMENDATION WIDGET --- */
         .product-rec {
             display: flex;
             align-items: center;
@@ -128,11 +148,11 @@
             border-color: darkorange;
         }
 
-		.product-img {
+        .product-img {
             width: 70px;
             height: 70px;
-            object-fit: contain; /* Changed from cover */
-            background-color: #fff; /* Clean backdrop for product photos */
+            object-fit: contain !important; /* Forces image scaling to obey */
+            background-color: #fff !important; /* Clean backdrop for product photos */
             padding: 2px;
             border-radius: 4px;
             border: 1px solid #444;
@@ -151,7 +171,6 @@
             line-height: 1.2;
         }
 
-        /* ADD THIS NEW BLOCK FOR THE PRICE */
         .product-price {
             color: #00E676; /* Terminal green for money */
             font-family: 'VCR OSD Mono', monospace;
@@ -183,21 +202,22 @@
         @media (max-width: 500px) {
             .product-rec { flex-direction: column; align-items: flex-start; }
             .product-img { width: 100%; height: 120px; }
+            .section-total { flex-direction: column; align-items: flex-start; gap: 5px; }
         }
-		
-		/* --- IMAGE TOOLTIP (HOVER ZOOM) --- */
+        
+        /* --- IMAGE TOOLTIP (HOVER ZOOM) --- */
         #image-tooltip {
             display: none;
             position: fixed;
             z-index: 99999;
             width: 350px; 
             height: 350px;
-            background-color: #222;
+            background-color: #fff !important; /* Changed to white to seamlessly blend with Amazon JPEGs */
             border: 2px solid darkorange;
             border-radius: 6px;
             box-shadow: 0 15px 40px rgba(0,0,0,0.8);
             opacity: 0;
-            background-size: contain; /* Changed from cover */
+            background-size: contain !important; /* Forces tooltip to prevent cropping */
             background-repeat: no-repeat;
             background-position: center;
             pointer-events: none;
@@ -224,6 +244,11 @@
 
         <div class="info-card">
             <h2>Logistics & Transport</h2>
+            <div class="section-total">
+                <div>> EST. TOTAL: $310.00</div>
+                <span>Range: $250 - $350</span>
+            </div>
+            
             <p>Airline checked bag total size limit is 62in (158cm).</p>
             
             <div class="diy-recipe" style="margin-bottom: 15px; border-color: #00E676;">
@@ -236,74 +261,206 @@
                 <strong style="color: #ff5252;">HEAD LIMIT:</strong>
                 If a fursuit head exceeds 18 inches horizontally (X/Z axis), airline compressed storage may damage the head. Foam and TPU bases can be compressed for several hours without deformation, but Resin and PLA are likely to deform from pressure.
             </div>
-			
+
+            <div class="product-rec">
+                <img src="images/products/pelican0340.jpg" alt="Pelican 0340 Case" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">Pelican 0340 Case</div>
+                    <div class="product-price">$199.00</div> <a href="https://www.ebay.com/itm/257355570478" target="_blank" class="amazon-btn">> VIEW ON EBAY</a>
+                </div>
+            </div>
+            
             <h3>Smart Tags</h3>
             <ul>
                 <li>Tracking device for luggage and fursuits, location is traced via supporting devices to triangulate position. Most common smart tags are Apple, Samsung, and Tile</li>
             </ul>
+
+            <div class="product-rec">
+                <img src="images/products/smarttags.jpg" alt="Samsung SmartTag2 4-Pack" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">Samsung SmartTag2 4-Pack</div>
+                    <div class="product-price">$51.99</div> <a href="https://www.amazon.com/dp/B0CJYL1Q9S" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
+
+            <h3>Luggage Tags</h3>
+            <ul>
+                <li>Identification tags that can be attached to straps and holes in suitcases to add ownership details when looking for checked baggage.</li>
+            </ul>
+
+            <div class="product-rec">
+                <img src="images/products/luggagetags.jpg" alt="Luggage Tags 3-Pack" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">Luggage Tags 3-Pack</div>
+                    <div class="product-price">$7.99</div> <a href="https://www.amazon.com/dp/B0C1BRYBQM" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
+
+            <h3>Stickers</h3>
+            <ul>
+                <li>Stickers to provide customization upon checked baggage, to prevent luggage identification issues.</li>
+            </ul>
+
+            <div class="product-rec">
+                <img src="images/products/stickers.jpg" alt="Fox Stickers Pack" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">Fox Stickers Pack</div>
+                    <div class="product-price">$5.99</div> <a href="https://www.amazon.com/dp/B0CQM9FWJ4" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
 
             <h3>Vacuum Seal Bags</h3>
             <ul>
                 <li>Use to compress the fursuit garments for travel.</li>
                 <li><em>Warning:</em> Compressing a fursuit head can cause damage.</li>
             </ul>
-			
+
+            <div class="product-rec">
+                <img src="images/products/vacuumbags.jpg" alt="Hefty MAX Shrink-Pak Vacuum Seal Storage Bags" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">Hefty MAX Shrink-Pak Vacuum Seal Storage Bags</div>
+                    <div class="product-price">$24.97</div> <a href="https://www.amazon.com/dp/B0CWLSJ717" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
+            
             <h3>Electric Air Pump</h3>
             <ul>
                 <li>Inflates/deflates vacuum seal bags.</li>
             </ul>
+            
+            <div class="product-rec">
+                <img src="images/products/vacuumairpump.jpg" alt="JOYROOM Air Pump for Inflatables" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">JOYROOM Air Pump for Inflatables, 3600 mAh Battery</div>
+                    <div class="product-price">$19.99</div> <a href="https://www.amazon.com/dp/B0F4QHTYM9" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
         </div>
 
         <div class="info-card">
             <h2>Suiting Complements</h2>
+            <div class="section-total">
+                <div>> EST. TOTAL: $179.00</div>
+                <span>Range: $150 - $200</span>
+            </div>
+            
             <p>Necessities for fursuiting</p>
-			
+            
             <h3>K/N95 Mask</h3>
             <ul>
                 <li>Covering the mouth and nose prevents moisture spread within the fursuit head.</li>
             </ul>
 
+            <div class="product-rec">
+                <img src="images/products/n95mask.jpg" alt="3M Aura Particulate Respirator 9205+ N95" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">3M Aura Particulate Respirator 9205+ N95</div>
+                    <div class="product-price">$9.97</div> <a href="https://www.amazon.com/dp/B095DZQ5MX" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
+
             <h3>Spandex Suit</h3>
             <ul>
                 <li>Wicks moisture from the wearer, keeping them dry. Protects the fursuit from sweat exposure.</li>
             </ul>
-			
+
+            <div class="product-rec">
+                <img src="images/products/spandexsuit.jpg" alt="DreamHigh Full Body Spandex" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">DreamHigh Men's/Women's Polyester Spandex Full Body</div>
+                    <div class="product-price">$25.98</div> <a href="https://www.amazon.com/dp/B072QDSK1X" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
+            
             <h3>Spandex Gloves</h3>
             <ul>
                 <li>Wicks moisture from the wearer's hands, keeping them dry. Protects the fursuit paws from sweat exposure.</li>
             </ul>
-			
+
+            <div class="product-rec">
+                <img src="images/products/spandexgloves.jpg" alt="Ensnovo Spandex Gloves" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">Ensnovo Adult 10in Spandex Full Finger Short Glove</div>
+                    <div class="product-price">$9.49</div> <a href="https://www.amazon.com/dp/B01KT1V3N2" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
+            
             <h3>Electric Air Duster</h3>
             <ul>
                 <li>Cools fursuit wearer by blowing outside air into fursuit cavity.</li>
             </ul>
-			
+
+            <div class="product-rec">
+                <img src="images/products/electricduster.jpg" alt="WOLFBOX MF200 Compressed Air Duster" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">WOLFBOX MF200 Compressed Air Duster</div>
+                    <div class="product-price">$85.48</div> <a href="https://www.amazon.com/dp/B0FPMPBSLL" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
+            
             <h3>Open Top Spanker</h3>
             <ul>
                 <li>Allows holstering electric air duster.</li>
             </ul>
-			
+
+            <div class="product-rec">
+                <img src="images/products/spanker.jpg" alt="Excellent Elite Spanker Open Top" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">Excellent Elite Spanker Open Top</div>
+                    <div class="product-price">$14.99</div> <a href="https://www.amazon.com/dp/B07BKXJZJH" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
+            
             <h3>Round Cord Lanyard</h3>
             <ul>
                 <li>Creates necklace to hold spanker and holstered electric air duster for convenient use.</li>
             </ul>
-			
+
+            <div class="product-rec">
+                <img src="images/products/lanyard.jpg" alt="Wisdompro Lanyard" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">Wisdompro 2 Pack 23-inch Heavy Duty Lanyard</div>
+                    <div class="product-price">$11.99</div> <a href="https://www.amazon.com/dp/B0B7L4PWPQ" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
+            
             <h3>ID Badge</h3>
             <ul>
-                <li>Character name or artwork.</li>
+                <li>Character name or artwork. Typically commissioned.</li>
             </ul>
-			
+
+            <div class="product-rec">
+                <img src="images/products/customcards.jpg" alt="Custom Business Cards" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">Custom Business Cards</div>
+                    <div class="product-price">$7.95</div> <a href="https://www.amazon.com/dp/B0F162CHKG" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
+            
             <h3>ID Badge Holder</h3>
             <ul>
-                <li>Allows fursuiter to carry name ID.</li>
+                <li>Allows fursuiter to carry name ID. Typically part of commission.</li>
             </ul>
+            
+            <div class="product-rec">
+                <img src="images/products/idholder.jpg" alt="SANTLET Silicone ID Badge Holder" class="product-img">
+                <div class="product-details">
+                    <div class="product-name">SANTLET Silicone ID Badge Holder with Retractable Cord</div>
+                    <div class="product-price">$12.99</div> <a href="https://www.amazon.com/dp/B0D5GRGLX2" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
+                </div>
+            </div>
         </div>
 
         <div class="info-card">
             <h2>Cleaning Supplies</h2>
+            <div class="section-total">
+                <div>> EST. TOTAL: $258.00</div>
+                <span>Range: $200 - $300</span>
+            </div>
+            
             <p>Ventilation keeps fursuits clean.</p>
 
-			<h3>Motorcycle Helmet Blower</h3>
+            <h3>Motorcycle Helmet Blower</h3>
             <ul>
                 <li>Allows fursuit head to be ventilated after usage to remove excess moisture with ambient airflow.</li>
             </ul>
@@ -311,11 +468,11 @@
             <div class="product-rec">
                 <img src="images/products/motoblower.jpg" alt="MOTO4U Helmet Dryer" class="product-img">
                 <div class="product-details">
-                    <div class="product-name">MOTO4U Portable Motorcycle Helmet Dryer Stand with Ventilation Fan</div>
+                    <div class="product-name">MOTO4U Portable Motorcycle Helmet Dryer Stand with Fan</div>
                     <div class="product-price">$45.99</div> <a href="https://www.amazon.com/dp/B0BNXCFNHJ" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
                 </div>
             </div>
-			
+            
             <h3>Cutout Wig Stand</h3>
             <ul>
                 <li>Keeps fursuit head upright.</li>
@@ -324,20 +481,20 @@
             <div class="product-rec">
                 <img src="images/products/wigstand.jpg" alt="Cutout Wig Stand" class="product-img">
                 <div class="product-details">
-                    <div class="product-name"></div>
+                    <div class="product-name">MoyRetty Wig Stand, Plastic Head-Shaped Cutout Design</div>
                     <div class="product-price">$16.99</div> <a href="https://www.amazon.com/dp/B0CXDXMQ8Q" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
                 </div>
             </div>
-			
+            
             <h3>Wetsuit Rack Dryer</h3>
             <ul>
                 <li>Removes moisture from body suit while hung on clothing rack with ambient airflow.</li>
             </ul>
 
             <div class="product-rec">
-                <img src="images/products/suitdryer.jpg" alt="Push Industries JetDry Gear Drye" class="product-img">
+                <img src="images/products/suitdryer.jpg" alt="Push Industries JetDry Gear Dryer" class="product-img">
                 <div class="product-details">
-                    <div class="product-name"></div>
+                    <div class="product-name">Push Industries JetDry Gear Dryer</div>
                     <div class="product-price">$80.95</div> <a href="https://www.amazon.com/dp/B0FXY7736Y" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
                 </div>
             </div>
@@ -348,9 +505,9 @@
             </ul>
 
             <div class="product-rec">
-                <img src="images/products/garmentdryer.jpg" alt="DryGuy Shoe, Boot, Garment & Gear Electric Dryer" class="product-img">
+                <img src="images/products/garmentdryer.jpg" alt="DryGuy Electric Dryer" class="product-img">
                 <div class="product-details">
-                    <div class="product-name"></div>
+                    <div class="product-name">DryGuy Shoe, Boot, Garment & Gear Electric Dryer</div>
                     <div class="product-price">$76.30</div> <a href="https://www.amazon.com/dp/B010A5J5FU" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
                 </div>
             </div>
@@ -363,7 +520,7 @@
             <div class="product-rec">
                 <img src="images/products/slickerbrush.jpg" alt="Hertzko Self Cleaning Slicker Brush" class="product-img">
                 <div class="product-details">
-                    <div class="product-name"></div>
+                    <div class="product-name">Hertzko Self Cleaning Slicker Brush</div>
                     <div class="product-price">$10.97</div> <a href="https://www.amazon.com/dp/B0DSG8DQGB" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
                 </div>
             </div>
@@ -376,40 +533,39 @@
             <div class="product-rec">
                 <img src="images/products/microfibercloth.jpg" alt="Koala Lens Cleaning Cloth" class="product-img">
                 <div class="product-details">
-                    <div class="product-name"></div>
+                    <div class="product-name">Koala Lens Cleaning Cloth</div>
                     <div class="product-price">$9.99</div> <a href="https://www.amazon.com/dp/B06X9V866C" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
                 </div>
             </div>
-			
+            
             <h3>Disinfectant Spray</h3>
             <ul>
                 <li>A scented isopropyl alcohol medium to sanitize the inside of the fursuit.</li>
             </ul>
 
             <div class="product-rec">
-                <img src="images/products/isopropyl.jpg" alt="Swan Isoprophyl Alcohol, 70% 16 Fl Oz" class="product-img">
+                <img src="images/products/isopropyl.jpg" alt="Swan Isoprophyl Alcohol, 70%" class="product-img">
                 <div class="product-details">
-                    <div class="product-name"></div>
+                    <div class="product-name">Swan Isoprophyl Alcohol, 70% 16 Fl Oz</div>
                     <div class="product-price">$2.89</div> <a href="https://www.amazon.com/dp/B0006GBEFS" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
                 </div>
             </div>
 
             <div class="product-rec">
-                <img src="images/products/fragranceoil.jpg" alt="HIQILI Blueberry Fragrance Oil 1 Fl Oz" class="product-img">
+                <img src="images/products/fragranceoil.jpg" alt="HIQILI Blueberry Fragrance Oil" class="product-img">
                 <div class="product-details">
-                    <div class="product-name"></div>
+                    <div class="product-name">HIQILI Blueberry Fragrance Oil 1 Fl Oz</div>
                     <div class="product-price">$8.88</div> <a href="https://www.amazon.com/dp/B0FG2TJS6T" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
                 </div>
             </div>
-			
+            
             <div class="product-rec">
-                <img src="images/products/spraybottle.jpg" alt="RNOAFMU 2 Pack Small Spray Bottle 2oz/60ml" class="product-img">
+                <img src="images/products/spraybottle.jpg" alt="RNOAFMU Spray Bottle" class="product-img">
                 <div class="product-details">
-                    <div class="product-name"></div>
+                    <div class="product-name">RNOAFMU 2 Pack Small Spray Bottle 2oz/60ml</div>
                     <div class="product-price">$4.79</div> <a href="https://www.amazon.com/dp/B0GFCT6YQ1" target="_blank" class="amazon-btn">> VIEW ON AMAZON</a>
                 </div>
             </div>
-			
         </div>
 
         <div class="info-card" style="grid-column: 1 / -1;">
@@ -426,7 +582,7 @@
 
             <div class="highlight-box">
                 <strong>> APPLICATION PROTOCOL</strong>
-                <strong>Only spray inside the fursuit</strong> Disinfectant spray sanitizes the interior lining and padding that have direct exposure to sweat. Do not spray exterior fur, alcohol can degrade synthetic fibers over time.
+                <strong>Only spray inside the fursuit.</strong> Disinfectant spray sanitizes the interior lining and padding that have direct exposure to sweat. Do not spray exterior fur, alcohol can degrade synthetic fibers over time.
             </div>
 
             <div class="highlight-box">
@@ -436,9 +592,9 @@
         </div>
 
     </div>
-	<div id="image-tooltip"></div>
-	
-	<script>
+    <div id="image-tooltip"></div>
+    
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
             const tooltipEl = document.getElementById("image-tooltip");
             let currentHoverImg = null;
@@ -446,29 +602,24 @@
             document.addEventListener('mousemove', e => {
                 const target = e.target;
                 
-                // Check if we are hovering over a product image
                 if (target && target.classList.contains('product-img')) {
                     if (target !== currentHoverImg) {
                         currentHoverImg = target;
                         const src = target.getAttribute('src');
                         
-                        // Set the tooltip background to the hovered image
                         tooltipEl.style.backgroundImage = `url('${src}')`;
                         tooltipEl.style.display = 'block';
                         
-                        // Small delay to allow CSS fade-in to trigger
                         requestAnimationFrame(() => { tooltipEl.style.opacity = '1'; });
                     }
 
-                    // Calculate position (keep it near the cursor)
-                    const tooltipWidth = 350; // Matches CSS width
-                    const tooltipHeight = 350; // Matches CSS height
+                    const tooltipWidth = 350; 
+                    const tooltipHeight = 350; 
                     const offset = 20;
 
                     let left = e.clientX + offset;
                     let top = e.clientY + offset;
 
-                    // Prevent the tooltip from clipping off the right or bottom edges of the screen
                     if (left + tooltipWidth > window.innerWidth) left = e.clientX - tooltipWidth - offset;
                     if (top + tooltipHeight > window.innerHeight) top = e.clientY - tooltipHeight - offset;
 
@@ -476,7 +627,6 @@
                     tooltipEl.style.top = top + 'px';
 
                 } else {
-                    // Hide the tooltip if we move off the image
                     if (currentHoverImg) {
                         currentHoverImg = null;
                         tooltipEl.style.opacity = '0';
@@ -484,7 +634,7 @@
                             if(tooltipEl.style.opacity === '0') {
                                 tooltipEl.style.display = 'none'; 
                             }
-                        }, 150); // Matches CSS transition time
+                        }, 150); 
                     }
                 }
             });
