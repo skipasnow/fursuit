@@ -173,6 +173,25 @@
             .product-rec { flex-direction: column; align-items: flex-start; }
             .product-img { width: 100%; height: 120px; }
         }
+		
+		/* --- IMAGE TOOLTIP (HOVER ZOOM) --- */
+        #image-tooltip {
+            display: none;
+            position: fixed;
+            z-index: 99999;
+            width: 350px; 
+            height: 350px;
+            background-color: #222;
+            border: 2px solid darkorange;
+            border-radius: 6px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            opacity: 0;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none; /* Lets the mouse click through it */
+            transition: opacity 0.15s ease-in-out;
+        }
     </style>
 </head>
 <body>
@@ -341,6 +360,59 @@
         </div>
 
     </div>
+	<div id="image-tooltip"></div>
+	
+	<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipEl = document.getElementById("image-tooltip");
+            let currentHoverImg = null;
 
+            document.addEventListener('mousemove', e => {
+                const target = e.target;
+                
+                // Check if we are hovering over a product image
+                if (target && target.classList.contains('product-img')) {
+                    if (target !== currentHoverImg) {
+                        currentHoverImg = target;
+                        const src = target.getAttribute('src');
+                        
+                        // Set the tooltip background to the hovered image
+                        tooltipEl.style.backgroundImage = `url('${src}')`;
+                        tooltipEl.style.display = 'block';
+                        
+                        // Small delay to allow CSS fade-in to trigger
+                        requestAnimationFrame(() => { tooltipEl.style.opacity = '1'; });
+                    }
+
+                    // Calculate position (keep it near the cursor)
+                    const tooltipWidth = 350; // Matches CSS width
+                    const tooltipHeight = 350; // Matches CSS height
+                    const offset = 20;
+
+                    let left = e.clientX + offset;
+                    let top = e.clientY + offset;
+
+                    // Prevent the tooltip from clipping off the right or bottom edges of the screen
+                    if (left + tooltipWidth > window.innerWidth) left = e.clientX - tooltipWidth - offset;
+                    if (top + tooltipHeight > window.innerHeight) top = e.clientY - tooltipHeight - offset;
+
+                    tooltipEl.style.left = left + 'px';
+                    tooltipEl.style.top = top + 'px';
+
+                } else {
+                    // Hide the tooltip if we move off the image
+                    if (currentHoverImg) {
+                        currentHoverImg = null;
+                        tooltipEl.style.opacity = '0';
+                        setTimeout(() => { 
+                            if(tooltipEl.style.opacity === '0') {
+                                tooltipEl.style.display = 'none'; 
+                            }
+                        }, 150); // Matches CSS transition time
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
