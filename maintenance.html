@@ -128,10 +128,12 @@
             border-color: darkorange;
         }
 
-        .product-img {
+		.product-img {
             width: 70px;
             height: 70px;
-            object-fit: cover;
+            object-fit: contain; /* Changed from cover */
+            background-color: #fff; /* Clean backdrop for product photos */
+            padding: 2px;
             border-radius: 4px;
             border: 1px solid #444;
         }
@@ -195,10 +197,10 @@
             border-radius: 6px;
             box-shadow: 0 15px 40px rgba(0,0,0,0.8);
             opacity: 0;
-            background-size: cover;
+            background-size: contain; /* Changed from cover */
             background-repeat: no-repeat;
             background-position: center;
-            pointer-events: none; /* Lets the mouse click through it */
+            pointer-events: none;
             transition: opacity 0.15s ease-in-out;
         }
     </style>
