@@ -580,7 +580,7 @@
         let globalTravelCost = 0;
         let currentSelectedFlightCost = 0;
         let table = null;
-        let filterState = { priceMin: 2000, priceMax: 10000, showNA: true, tags: new Set(), location: "", status: "" };
+        let filterState = { priceMin: 500, priceMax: 10000, showNA: true, tags: new Set(), location: "", status: "" };
         let pendingTags = new Set();
         let totalDataCount = 0;
         let loadedData = []; // Store raw data for language switching
@@ -1563,7 +1563,7 @@
             const slider = document.getElementById('price-slider');
             if(slider) {
                 noUiSlider.create(slider, {
-                    start: [2000, 10000], connect: true, range: { 'min': 2000, 'max': 10000 },
+                    start: [500, 10000], connect: true, range: { 'min': 500, 'max': 10000 },
                     step: 500, tooltips: false,
                     pips: { mode: 'steps', density: 6, format: { to: v => '$' + v/1000 + 'k' } }
                 });
@@ -1580,7 +1580,7 @@
                 slider.noUiSlider.on('update', updateTableFilter);
                 document.getElementById('show-na-prices').addEventListener('change', updateTableFilter);
                 document.getElementById('reset-price-btn').addEventListener('click', function(){
-                    slider.noUiSlider.set([2000, 10000]);
+                    slider.noUiSlider.set([500, 10000]);
                     document.getElementById('show-na-prices').checked = true;
                 });
             }
