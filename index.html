@@ -477,7 +477,8 @@
             <label id="t-lang-label">Language:</label>
             <select id="language-selector">
                 <option value="en">English (USD)</option>
-                <option value="zh-TW">繁體中文 (CNY)</option>
+                <option value="zh-TW">繁體中文 (TWD)</option>
+                <option value="zh-CN">简体中文 (CNY)</option>
                 <option value="ja">日本語 (JPY)</option>
                 <option value="ko">한국어 (KRW)</option>
             </select>
@@ -576,7 +577,8 @@
         // Approximate Exchange Rates (Base USD)
         const exchangeRates = {
             'en': { rate: 1, symbol: '$' },
-            'zh-TW': { rate: 7.2, symbol: '¥' }, // CNY
+            'zh-TW': { rate: 32, symbol: '	NT$' }, // TWD
+            'zh-CN': { rate: 7.2, symbol: '¥' }, // CNY
             'ja': { rate: 155, symbol: '¥' }, // JPY
             'ko': { rate: 1400, symbol: '₩' } // KRW
         };
@@ -630,46 +632,91 @@
             },
             'zh-TW': {
                 title: "獸裝製作師名錄 (Kemono)",
-                mapTitle: "美亞旅行成本地圖",
+                mapTitle: "美/亞州旅行成本地圖",
                 selectAirport: "選擇出發機場",
-                flight: "往返機票",
+                flight: "來回機票",
                 totalTravel: "預計旅行總費用",
-                config: "配置:",
+                config: "設定:",
                 visa: "護照與簽證",
-                domFlight: "國內航班",
+                domFlight: "國內線航班",
                 tourism: "旅遊觀光",
                 baseIncl: "基本包含:",
-                hotel: "酒店", food: "餐飲", logistics: "物流",
+                hotel: "飯店", food: "餐飲", logistics: "物流",
                 langLabel: "語言:",
                 interface: "介面:",
                 mapEnabled: "地圖: 啟用", mapDisabled: "地圖: 禁用",
                 statsEnabled: "統計: 啟用", statsDisabled: "統計: 禁用",
-                dataset: "數據集:",
+                dataset: "資料集:",
                 fullSuits: "全套獸裝", partialSuits: "半套獸裝",
                 priceLabel: "獸裝價格:",
                 showNA: "顯示 N/A 價格",
-                specialty: "特長標籤:",
+                specialty: "專長標籤:",
                 placeholder: "+ 輸入標籤 (例: kemono)...",
                 noTags: "未選擇標籤",
-                apply: "應用篩選", clear: "清除全部",
+                apply: "套用篩選", clear: "清除全部",
                 location: "地點:", allLoc: "所有地點", china: "中國", japan: "日本", korea: "韓國",
-                status: "狀態:", allStats: "所有狀態", open: "開放", closed: "關閉",
-                sortHint: "*按住 <b>Shift</b> 並點擊列標題可進行多列排序。",
-                loading: "正在加載數據...",
+                status: "狀態:", allStats: "所有狀態", open: "開放委託", closed: "關閉委託",
+                sortHint: "*按住 <b>Shift</b> 並點擊列標題可進行多重排序。",
+                loading: "資料載入中...",
                 
                 avgPrice: "平均價格",
                 basedOn: "基於",
-                recorded: "套記錄的服裝",
-                avgFollowers: "平均關注者",
-                mostCommon: "最常見範圍",
-                majority: "多數定價落在此處",
+                recorded: "筆獸裝紀錄",
+                avgFollowers: "平均追蹤人數",
+                mostCommon: "最常見價格帶",
+                majority: "多數價格落在此區間",
 
-                colRow: "行", colFreight: "運費", colAesthetic: "美學", colMaker: "製作師",
-                colLogo: "標誌", colLoc: "地點", colLink: "連結", colPreview: "預覽",
-                colStatus: "狀態", colSpecialty: "特長", colPartials: "半套", colFull: "全套",
-                colFursuits: "獸裝數量", colPort: "作品集", colFollowers: "關注者",
-                colPrice: "價格", colTariff: "關稅", colTotalShip: "總計 (郵寄)",
-                colEstTravel: "預計旅行", colTotalPick: "總計 (自取)", colSavings: "自取節省"
+                colRow: "編號", colFreight: "運費", colAesthetic: "風格", colMaker: "製作師",
+                colLogo: "商標", colLoc: "地點", colLink: "連結", colPreview: "預覽",
+                colStatus: "狀態", colSpecialty: "專長", colPartials: "半套", colFull: "全套",
+                colFursuits: "獸裝數量", colPort: "作品集", colFollowers: "追蹤人數",
+                colPrice: "價格", colTariff: "關稅", colTotalShip: "總計 (含運)",
+                colEstTravel: "預估旅費", colTotalPick: "總計 (自取)", colSavings: "自取節省"
+            },
+            'zh-CN': {
+                title: "日系兽装工作室",
+                mapTitle: "美亚开销地图",
+                selectAirport: "选择出发机场",
+                flight: "往返机票",
+                totalTravel: "预计总差旅费",
+                config: "配置：",
+                visa: "护照与签证",
+                domFlight: "国内航班",
+                tourism: "旅游观光",
+                baseIncl: "基础包含：",
+                hotel: "酒店", food: "餐饮", logistics: "物流快递",
+                langLabel: "语言：",
+                interface: "界面：",
+                mapEnabled: "地图：已开启", mapDisabled: "地图：已关闭",
+                statsEnabled: "统计：已开启", statsDisabled: "统计：已关闭",
+                dataset: "数据集：",
+                fullSuits: "全装", partialSuits: "半装",
+                priceLabel: "兽装价格：",
+                showNA: "显示暂无报价项",
+                specialty: "特色标签：",
+                placeholder: "+ 输入标签（例如：'kemono'）...",
+                noTags: "未选择标签",
+                apply: "应用筛选", clear: "清空全部",
+                location: "地区：", allLoc: "所有地区", china: "中国", japan: "日本", korea: "韩国",
+                status: "状态：", allStats: "所有状态", open: "接单中", closed: "已截单",
+                sortHint: "*按住 <b>Shift</b> 并点击列标题即可进行多列排序。",
+                loading: "数据加载中...",
+                
+                // Analytics
+                avgPrice: "平均价格",
+                basedOn: "基于",
+                recorded: "套已记录兽装",
+                avgFollowers: "平均粉丝数",
+                mostCommon: "最常见价格区间",
+                majority: "多数价格落在此区间",
+
+                // Table Columns
+                colRow: "序号", colFreight: "运费", colAesthetic: "风格", colMaker: "工作室",
+                colLogo: "商标", colLoc: "地区", colLink: "链接", colPreview: "预览",
+                colStatus: "状态", colSpecialty: "特色", colPartials: "半装", colFull: "全装",
+                colFursuits: "兽装", colPort: "作品集数量", colFollowers: "粉丝数",
+                colPrice: "价格", colTariff: "关税", colTotalShip: "总计（含邮）",
+                colEstTravel: "预计差旅费", colTotalPick: "总计（自提）", colSavings: "自提省下费用"
             },
             'ja': {
                 title: "ケモノ着ぐるみメーカー",
