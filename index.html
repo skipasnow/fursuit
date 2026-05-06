@@ -1274,7 +1274,7 @@
                     updateResultCounter(rows.length, totalDataCount);
                 },
                 columns: [
-                    { title: t.colRow, field:"rank", visible:true, sorter:"number" },
+                    { title: t.colRow, field:"rank", visible:true, formatter:"rownum", headerSort:false },
                     { title: t.colFreight, field: "shipOrFly", visible:false, sorter: "number" },
                     { title: t.colAesthetic, field:"aesthetic", visible:false },
                     { title: t.colMaker, field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
@@ -1425,7 +1425,7 @@
                         fullSuits: cleanNumber(row['Full Suits']), 
                         portfolio: cleanNumber(row['Fursuits']),
                         fursuits: cleanNumber(row['Fursuits']),
-                        country: row['Location'], 
+                        country: typeof row['Location'] === 'string' ? row['Location'].trim() : row['Location'],
                         followers: cleanNumber(row['Followers']),
                         acctAge: cleanNumber(row['Acct Age']),
                     })).filter(row => row.maker); 
