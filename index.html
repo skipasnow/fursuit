@@ -1274,7 +1274,7 @@
                     updateResultCounter(rows.length, totalDataCount);
                 },
                 columns: [
-                    { title: t.colRow, field:"rank", visible:true, formatter:"rownum", headerSort:false },
+                    { title: t.colRow, field:"rank", visible:true, sorter:"number" },
                     { title: t.colFreight, field: "shipOrFly", visible:false, sorter: "number" },
                     { title: t.colAesthetic, field:"aesthetic", visible:false },
                     { title: t.colMaker, field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
