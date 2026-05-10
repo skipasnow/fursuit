@@ -635,7 +635,7 @@
                 majority: "Majority of pricing falls here",
 
                 // Table Columns
-                colRow: "Row", colFreight: "Freight", colAesthetic: "Aesthetic", colMaker: "Maker",
+                colRow: "Row", colFreight: "Freight", colImporter: "Importer Rate", colAesthetic: "Aesthetic", colMaker: "Maker",
                 colLogo: "Logo", colLoc: "Location", colLink: "Link", colPreview: "Preview",
                 colStatus: "Status", colSpecialty: "Specialty", colPartials: "Partials", colFull: "Full Suits",
                 colFursuits: "Fursuits", colPort: "Portfolio Size", colFollowers: "Followers",
@@ -678,7 +678,7 @@
                 mostCommon: "最常見價格帶",
                 majority: "多數價格落在此區間",
 
-                colRow: "編號", colFreight: "運費", colAesthetic: "風格", colMaker: "製作師",
+                colRow: "編號", colFreight: "運費", colImporter: "進口費率", colAesthetic: "風格", colMaker: "製作師",
                 colLogo: "商標", colLoc: "地點", colLink: "連結", colPreview: "預覽",
                 colStatus: "狀態", colSpecialty: "專長", colPartials: "半套", colFull: "全套",
                 colFursuits: "獸裝數量", colPort: "作品集", colFollowers: "追蹤人數",
@@ -723,7 +723,7 @@
                 majority: "多数价格落在此区间",
 
                 // Table Columns
-                colRow: "序号", colFreight: "运费", colAesthetic: "风格", colMaker: "工作室",
+                colRow: "序号", colFreight: "运费", colImporter: "进口费率", colAesthetic: "风格", colMaker: "工作室",
                 colLogo: "商标", colLoc: "地区", colLink: "链接", colPreview: "预览",
                 colStatus: "状态", colSpecialty: "特色", colPartials: "半装", colFull: "全装",
                 colFursuits: "兽装", colPort: "作品集数量", colFollowers: "粉丝数",
@@ -766,7 +766,7 @@
                 mostCommon: "最頻価格帯",
                 majority: "価格の大部分はここに該当",
 
-                colRow: "行", colFreight: "貨物", colAesthetic: "美学", colMaker: "メーカー",
+                colRow: "行", colFreight: "貨物", colImporter: "輸入レート", colAesthetic: "美学", colMaker: "メーカー",
                 colLogo: "ロゴ", colLoc: "場所", colLink: "リンク", colPreview: "プレビュー",
                 colStatus: "ステータス", colSpecialty: "専門", colPartials: "パート", colFull: "フル",
                 colFursuits: "着ぐるみ数", colPort: "ポートフォリオ", colFollowers: "フォロワー",
@@ -809,7 +809,7 @@
                 mostCommon: "가장 흔한 범위",
                 majority: "대부분의 가격이 여기에 해당",
 
-                colRow: "행", colFreight: "화물", colAesthetic: "미학", colMaker: "제작자",
+                colRow: "행", colFreight: "화물", colImporter: "수입 요율", colAesthetic: "미학", colMaker: "제작자",
                 colLogo: "로고", colLoc: "위치", colLink: "링크", colPreview: "미리보기",
                 colStatus: "상태", colSpecialty: "전문", colPartials: "파셜", colFull: "풀",
                 colFursuits: "퍼슈트 수", colPort: "포트폴리오", colFollowers: "팔로워",
@@ -1415,8 +1415,9 @@
                         link: row['Link'],
                         previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
                         price: cleanNumber(row['$ Price']),
+						importerRate: cleanNumber(row['Importer Rate']),
                         shipOrFly: cleanNumber(row['$ Ship or Fly'] || row['$ Freight'] || row['Freight']),
-                        tariff: cleanNumber(row['$ Tariff (2025)'] || row['$ Tariff'] || row['Tariff']),
+                        tariff: cleanNumber(row['Standard Tariff'] || row['$ Tariff (2026)'] || row['Tariff']),
                         ship: cleanNumber(row['$ Ship'] || row['Ship']),
                         aesthetic: row['Aesthetic'],
                         status: row['Status'],
