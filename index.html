@@ -1456,14 +1456,12 @@
                         followers: cleanNumber(row['Followers']),
                         acctAge: cleanNumber(row['Acct Age']),
                         
-                        // --- 1. NEW DATA EXTRACTORS ---
-                        // IMPORTANT: Ensure these string names perfectly match the headers in Row 1 of your Google Sheet!
+                        // --- UPDATED: Matches your exact spreadsheet headers ---
                         daysInactive: cleanNumber(row['Days Since Last Post']), 
-                        activitySymbol: row['Activity Symbol'] 
-                        // ------------------------------
+                        activitySymbol: row['Symbol'] 
+                        // -------------------------------------------------------
 
                     }))
-                    // --- 2. THE ARCHIVE PURGER ---
                     // This filters out empty maker names AND anyone with 300+ days inactive
                     .filter(row => row.maker && (row.daysInactive === null || row.daysInactive <= 299));
                     
