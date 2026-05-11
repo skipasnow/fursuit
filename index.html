@@ -1277,7 +1277,33 @@
                     { title: t.colRow, field:"rank", visible:true, sorter:"number" },
                     { title: t.colFreight, field: "shipOrFly", visible:false, sorter: "number" },
                     { title: t.colAesthetic, field:"aesthetic", visible:false },
-                    { title: t.colMaker, field:"maker", formatter: formatTextCell, cssClass: "text-cell" },
+                    { title: t.colMaker, field:"maker", cssClass: "text-cell",
+                        formatter: function(cell) {
+                            const data = cell.getData();
+                            const name = data.maker;
+                            const days = data.daysInactive;
+                            let symbol = data.activitySymbol || "❓";
+                            let tooltipText = "Unknown";
+
+                            // Tooltip text logic
+                            if (days === null || days === "") {
+                                tooltipText = "Unknown";
+                                symbol = "❓";
+                            } else if (days <= 31) {
+                                tooltipText = "Active Weekly";
+                            } else if (days <= 119) {
+                                tooltipText = "Active Monthly";
+                            } else if (days <= 299) {
+                                tooltipText = "120+ Days Inactive";
+                            }
+
+                            // Build the HTML for the name + symbol
+                            const htmlString = `${name} <span title="${tooltipText}" style="cursor: help; font-size: 0.85em; margin-left: 6px; padding-bottom: 2px;">${symbol}</span>`;
+                            
+                            // Wrap it in your existing 3D tilt effect!
+                            return wrapInTilt(htmlString);
+                        }
+                    },
                     { 
                         title: t.colLogo, field:"logo", hozAlign:"center", width:90, 
                         formatter:function(cell){
@@ -1406,7 +1432,7 @@
                     console.error("CSV Error:", err);
                     document.getElementById("results-counter").innerHTML = "<span style='color:red'>Error loading data.</span>";
                 },
-                complete: function(results) {
+					complete: function(results) {
                     const data = results.data.map(row => ({
                         rank: cleanNumber(row['Rank']),
                         maker: row['Maker'],
@@ -1415,7 +1441,7 @@
                         link: row['Link'],
                         previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
                         price: cleanNumber(row['$ Price']),
-						importerRate: cleanNumber(row['Importer Rate']),
+                        importerRate: cleanNumber(row['Importer Rate']),
                         shipOrFly: cleanNumber(row['$ Ship or Fly'] || row['$ Freight'] || row['Freight']),
                         tariff: cleanNumber(row['Standard Tariff'] || row['$ Tariff (2026)'] || row['Tariff']),
                         ship: cleanNumber(row['$ Ship'] || row['Ship']),
@@ -1429,7 +1455,17 @@
                         country: typeof row['Location'] === 'string' ? row['Location'].trim() : row['Location'],
                         followers: cleanNumber(row['Followers']),
                         acctAge: cleanNumber(row['Acct Age']),
-                    })).filter(row => row.maker); 
+                        
+                        // --- 1. NEW DATA EXTRACTORS ---
+                        // IMPORTANT: Ensure these string names perfectly match the headers in Row 1 of your Google Sheet!
+                        daysInactive: cleanNumber(row['Days Since Last Post']), 
+                        activitySymbol: row['Activity Symbol'] 
+                        // ------------------------------
+
+                    }))
+                    // --- 2. THE ARCHIVE PURGER ---
+                    // This filters out empty maker names AND anyone with 300+ days inactive
+                    .filter(row => row.maker && (row.daysInactive === null || row.daysInactive <= 299));
                     
                     loadedData = data; // Save for language switching
                     totalDataCount = data.length;
