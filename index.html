@@ -1277,7 +1277,8 @@
                     { title: t.colRow, field:"rank", visible:true, sorter:"number" },
                     { title: t.colFreight, field: "shipOrFly", visible:false, sorter: "number" },
                     { title: t.colAesthetic, field:"aesthetic", visible:false },
-                    { title: t.colMaker, field:"maker", cssClass: "text-cell",
+                    { 
+                        title: t.colMaker, field:"maker", cssClass: "text-cell",
                         formatter: function(cell) {
                             const data = cell.getData();
                             const name = data.maker;
@@ -1295,12 +1296,15 @@
                                 tooltipText = "Active Monthly";
                             } else if (days <= 299) {
                                 tooltipText = "120+ Days Inactive";
+                            } else {
+                                // Handles the 300+ day tier
+                                tooltipText = "300+ Days Inactive"; 
                             }
 
                             // Build the HTML for the name + symbol
                             const htmlString = `${name} <span title="${tooltipText}" style="cursor: help; font-size: 0.85em; margin-left: 6px; padding-bottom: 2px;">${symbol}</span>`;
                             
-                            // Wrap it in your existing 3D tilt effect!
+                            // Wrap it in your existing 3D tilt effect
                             return wrapInTilt(htmlString);
                         }
                     },
@@ -1456,14 +1460,14 @@
                         followers: cleanNumber(row['Followers']),
                         acctAge: cleanNumber(row['Acct Age']),
                         
-                        // --- UPDATED: Matches your exact spreadsheet headers ---
+						// --- UPDATED: Matches your exact spreadsheet headers ---
                         daysInactive: cleanNumber(row['Days Since Last Post']), 
                         activitySymbol: row['Symbol'] 
                         // -------------------------------------------------------
 
                     }))
-                    // This filters out empty maker names AND anyone with 300+ days inactive
-                    .filter(row => row.maker && (row.daysInactive === null || row.daysInactive <= 299));
+                    // Simply filters out blank rows, allowing ALL inactive tiers to pass through
+                    .filter(row => row.maker);
                     
                     loadedData = data; // Save for language switching
                     totalDataCount = data.length;
