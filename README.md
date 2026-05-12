@@ -10,9 +10,9 @@ The data powering this website is categorized into several core directories:
 ### 1. The Maker Directories (Full Suits & Partials)
 The primary index tracks hundreds of active makers across the globe (heavily focusing on China, Japan, and Korea). For each maker, the directory provides:
 * **Basic Info:** Maker Name, Logo/Preview, and Location.
-* **Pricing Data:** Estimated base prices (USD) for Heads, Partials, and Full Suits.
+* **Pricing Data:** Estimated base prices (USD) for Full Fursuits and Partial Fursuits.
 * **Specialties & Aesthetics:** Categorization by tags (e.g., Realistic, Western, Hybrid).
-* **Commission Status:** Current queue status (Open or Closed) and overall ranking.
+* **Commission Status:** Current commission status (Open or Closed) and overall ranking.
 * **Social Reach:** Follower counts and account age.
 
 ### 2. Activity & Content Momentum (Automated)
