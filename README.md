@@ -7,7 +7,7 @@ Welcome to the **Kemono Fursuit Maker Index**, a comprehensive, data-driven dire
 
 The data powering this website is categorized into several core directories:
 
-### 1. The Maker Directories
+### 1. Maker Directories
 The primary index tracks hundreds of active makers across the globe (heavily focusing on China, Japan, and Korea). For each maker, the directory provides:
 * **Basic Info:** Maker Name, Logo/Preview, and Location.
 * **Pricing Data:** Estimated base prices (USD) for Full Fursuits and Partial Fursuits.
@@ -15,7 +15,7 @@ The primary index tracks hundreds of active makers across the globe (heavily foc
 * **Commission Status:** Current commission status (Open or Closed) and overall ranking.
 * **Social Reach:** Follower counts and account age.
 
-### 2. Activity & Content Momentum
+### 2. Activity & Content
 To prevent inactive account data, the index features an automated tracking system that monitors public portfolio activity.
 * **Days Since Last Post:** Icons track next to maker name the frequency of updates: ⭐0+ days, ✅ 31+ days, ⚠️ 120+ days, 🛑 300+ days
 * **Content Growth:** Monthly tracking of new uploads to identify rising stars and highly active studios.
@@ -29,13 +29,13 @@ International commissions carry logistical concerns:
 * Flying is frequently cheaper than shipping with standard tariff rates, if logistics partners are not viable for the maker.
 * Always remember that flying in-person typically guarantees your fursuit will arrive safely, shipping carries a small, but realistic risk.
 
-### 4. Accessories & Components
+### 4. Accessories & Tools
 A dedicated index for makers who specialize in fursuit-adjacent items, including:
 * Accessories
 * Undergarments
 * Maintenance Tooling
 
-## 🛠️ How to Use the Website
+## 🛠️ Website Usage
 
 ### Filtering and Sorting
 Users can filter the database to fit their exact budget and style preferences. You can sort makers by Location to estimate freight and tariff costs, or by Aesthetic to find the exact style you are looking for.
