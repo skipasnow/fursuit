@@ -55,7 +55,7 @@ If you are a maker from Asia who would like to update the accuracy of your infor
 
 ## 🐺 Contact
 
-Discord: Skipa
-Telegram: Cierran
-QQ: 3796383183
-X: SquidDog7
+* **Discord**: Skipa
+* **Telegram**: Cierran
+* **QQ**: 3796383183
+* **X**: SquidDog7
