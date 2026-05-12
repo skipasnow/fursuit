@@ -1,4 +1,4 @@
-# Kemono Fursuit Maker Index & Analytics Dashboard
+# Kemono Fursuit Maker Index
 
 Welcome to the **Kemono Fursuit Maker Index**, a comprehensive, data-driven directory and analytics dashboard designed to assist the fursuit community with researching, comparing, and commissioning creators from Asia. 
 * **Website URL:** https://skipasnow.github.io/fursuit/
