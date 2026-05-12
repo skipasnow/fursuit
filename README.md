@@ -3,11 +3,11 @@
 Welcome to the **Kemono Fursuit Maker Index**, a comprehensive, data-driven directory and analytics dashboard designed to assist the fursuit community with researching, comparing, and commissioning creators from Asia. 
 * **Website URL:** https://skipasnow.github.io/fursuit/
 
-## 📊 What Information is Provided?
+## 📊 Information Details
 
 The data powering this website is categorized into several core directories:
 
-### 1. The Maker Directories (Full Suits & Partials)
+### 1. The Maker Directories
 The primary index tracks hundreds of active makers across the globe (heavily focusing on China, Japan, and Korea). For each maker, the directory provides:
 * **Basic Info:** Maker Name, Logo/Preview, and Location.
 * **Pricing Data:** Estimated base prices (USD) for Full Fursuits and Partial Fursuits.
@@ -15,7 +15,7 @@ The primary index tracks hundreds of active makers across the globe (heavily foc
 * **Commission Status:** Current commission status (Open or Closed) and overall ranking.
 * **Social Reach:** Follower counts and account age.
 
-### 2. Activity & Content Momentum (Automated)
+### 2. Activity & Content Momentum
 To prevent inactive account data, the index features an automated tracking system that monitors public portfolio activity.
 * **Days Since Last Post:** Icons track next to maker name the frequency of updates: ⭐0+ days, ✅ 31+ days, ⚠️ 120+ days, 🛑 300+ days
 * **Content Growth:** Monthly tracking of new uploads to identify rising stars and highly active studios.
