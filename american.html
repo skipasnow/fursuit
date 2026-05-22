@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>American Fursuit Makers & Pricing Estimator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://unpkg.com/tabulator-tables@5.6.0/dist/css/tabulator_midnight.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/tabulator-tables@5.6.0/dist/js/tabulator.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson-client@3"></script>
+
+    <style>
+        @font-face {
+            font-family: 'VCR OSD Mono';
+            src: url('https://fonts.cdnfonts.com/s/17260/VCROSDMono.woff') format('woff');
+        }
+        body {
+            background-color: #0d0d12;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .panel {
+            background: #1a1a24;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        h1, h2, h3 {
+            font-family: 'VCR OSD Mono', monospace;
+            color: #00d2ff;
+            margin-top: 0;
+            text-transform: uppercase;
+        }
+        .control-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a0a0b0;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            background: #252530;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: #0d0d12;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        .tooltip {
+            position: absolute;
+            background: rgba(15, 15, 20, 0.95);
+            border: 1px solid #00d2ff;
+            color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            font-size: 0.85em;
+            box-shadow: 0 4px 15px rgba(0,210,255,0.2);
+            z-index: 100;
+            max-width: 250px;
+        }
+        #chart-container {
+            width: 100%;
+            height: 200px;
+            margin-top: 20px;
+        }
+        .cost-display {
+            background: #0d0d12;
+            border: 1px solid #00d2ff;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .cost-display span {
+            display: block;
+            font-family: 'VCR OSD Mono', monospace;
+            font-size: 2em;
+            color: #00d2ff;
+        }
+        .tabulator {
+            background-color: #1a1a24;
+            border: 1px solid #333;
+        }
+        .tabulator-row {
+            background-color: #1a1a24 !important;
+        }
+        .tabulator-row:nth-child(even) {
+            background-color: #20202c !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <div class="left-column">
+        <div class="panel">
+            <h2>US Cost Estimator</h2>
+            
+            <div class="control-group">
+                <label>Target Dataset</label>
+                <select id="dataset-select">
+                    <option value="https://docs.google.com/spreadsheets/d/1SvwN7pOwTwbBb2uajPgRXbxyFy1rKZK81I5mRVPYaEo/gviz/tq?tqx=out:csv&sheet=Full+Suits">Full Suits</option>
+                    <option value="https://docs.google.com/spreadsheets/d/1SvwN7pOwTwbBb2uajPgRXbxyFy1rKZK81I5mRVPYaEo/gviz/tq?tqx=out:csv&sheet=Partial+Suits">Partial Suits</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Select Resident State</label>
+                <select id="state-select">
+                    <option value="0.0400">Alabama (4.00%)</option>
+                    <option value="0.0000">Alaska (0.00%)</option>
+                    <option value="0.0560">Arizona (5.60%)</option>
+                    <option value="0.0650">Arkansas (6.50%)</option>
+                    <option value="0.0725">California (7.25%)</option>
+                    <option value="0.0290">Colorado (2.90%)</option>
+                    <option value="0.0635">Connecticut (6.35%)</option>
+                    <option value="0.0000">Delaware (0.00%)</option>
+                    <option value="0.0600">Florida (6.00%)</option>
+                    <option value="0.0400">Georgia (4.00%)</option>
+                    <option value="0.0400">Hawaii (4.00%)</option>
+                    <option value="0.0600">Idaho (6.00%)</option>
+                    <option value="0.0625">Illinois (6.25%)</option>
+                    <option value="0.0700">Indiana (7.00%)</option>
+                    <option value="0.0600">Iowa (6.00%)</option>
+                    <option value="0.0650">Kansas (6.50%)</option>
+                    <option value="0.0600">Kentucky (6.00%)</option>
+                    <option value="0.0445">Louisiana (4.45%)</option>
+                    <option value="0.0550" selected>Maine (5.50%)</option>
+                    <option value="0.0600">Maryland (6.00%)</option>
+                    <option value="0.0625">Massachusetts (6.25%)</option>
+                    <option value="0.0600">Michigan (6.00%)</option>
+                    <option value="0.0688">Minnesota (6.88%)</option>
+                    <option value="0.0700">Mississippi (7.00%)</option>
+                    <option value="0.0423">Missouri (4.23%)</option>
+                    <option value="0.0000">Montana (0.00%)</option>
+                    <option value="0.0550">Nebraska (5.50%)</option>
+                    <option value="0.0685">Nevada (6.85%)</option>
+                    <option value="0.0000">New Hampshire (0.00%)</option>
+                    <option value="0.0663">New Jersey (6.63%)</option>
+                    <option value="0.0513">New Mexico (5.13%)</option>
+                    <option value="0.0400">New York (4.00%)</option>
+                    <option value="0.0475">North Carolina (4.75%)</option>
+                    <option value="0.0500">North Dakota (5.00%)</option>
+                    <option value="0.0575">Ohio (5.75%)</option>
+                    <option value="0.0450">Oklahoma (4.50%)</option>
+                    <option value="0.0000">Oregon (0.00%)</option>
+                    <option value="0.0600">Pennsylvania (6.00%)</option>
+                    <option value="0.0700">Rhode Island (7.00%)</option>
+                    <option value="0.0600">South Carolina (6.00%)</option>
+                    <option value="0.0450">South Dakota (4.50%)</option>
+                    <option value="0.0700">Tennessee (7.00%)</option>
+                    <option value="0.0625">Texas (6.25%)</option>
+                    <option value="0.0610">Utah (6.10%)</option>
+                    <option value="0.0600">Vermont (6.00%)</option>
+                    <option value="0.0530">Virginia (5.30%)</option>
+                    <option value="0.0650">Washington (6.50%)</option>
+                    <option value="0.0600">West Virginia (6.00%)</option>
+                    <option value="0.0500">Wisconsin (5.00%)</option>
+                    <option value="0.0400">Wyoming (4.00%)</option>
+                </select>
+            </div>
+
+            <div class="cost-display">
+                Estimated Total Cost
+                <span id="total-cost-output">$0.00</span>
+                <small style="color:#a0a0b0; display:block; margin-top:5px;">(Avg Price + Tax + Shipping)</small>
+            </div>
+
+            <div id="chart-container"></div>
+        </div>
+    </div>
+
+    <div class="right-column">
+        <div class="panel">
+            <div class="map-container" id="map-container">
+                <svg id="map-svg" width="100%" height="100%" viewBox="0 0 960 500" preserveAspectRatio="xMidYMid meet"></svg>
+                <div class="tooltip" id="map-tooltip"></div>
+            </div>
+        </div>
+        <br>
+        <div class="panel">
+            <div id="maker-table"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let tableData = [];
+    let table;
+    let selectedMakerRow = null;
+    let currentTaxRate = parseFloat(document.getElementById('state-select').value);
+
+    const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
+
+    function initTable(csvUrl) {
+        Papa.parse(csvUrl, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                tableData = results.data.filter(row => row.Maker); 
+                drawTable();
+                drawMap();
+                drawChart();
+            }
+        });
+    }
+
+    function drawTable() {
+        table = new Tabulator("#maker-table", {
+            data: tableData,
+            layout: "fitColumns",
+            responsiveLayout: "collapse",
+            pagination: "local",
+            paginationSize: 15,
+            initialSort: [{column: "Activity", dir: "asc"}],
+            columns: [
+                {title: "Rank", field: "Rank", width: 65},
+                {title: "Logo", field: "Logo", formatter: "image", formatterParams: {height: "30px", width: "30px"}},
+                {title: "Maker", field: "Maker"},
+                {title: "Location", field: "Location"},
+                {title: "Status", field: "Status"},
+                {
+                    title: "Price", 
+                    field: "Average Price",
+                    formatter: cell => formatCurrency(cell.getValue()),
+                    sorter: "number"
+                },
+                {
+                    title: "Sales Tax", 
+                    mutator: (value, data) => (parseFloat(data["Average Price"]) || 0) * currentTaxRate,
+                    formatter: cell => `<span style="color:#ff4444;">+${formatCurrency(cell.getValue())}</span>`,
+                    sorter: "number"
+                },
+                {title: "Shipping", field: "$ Ship", formatter: cell => formatCurrency(cell.getValue()), sorter: "number"},
+                {title: "Aesthetic", field: "Aesthetic"},
+                {title: "Followers", field: "Followers", sorter: "number"}
+            ]
+        });
+
+        table.on("rowClick", function(e, row){
+            selectedMakerRow = row.getData();
+            updateTotalCost();
+        });
+    }
+
+    function updateTotalCost() {
+        if(!selectedMakerRow) return;
+        const avgPrice = parseFloat(selectedMakerRow["Average Price"]) || 0;
+        const tax = avgPrice * currentTaxRate;
+        const ship = parseFloat(selectedMakerRow["$ Ship"]) || 0;
+        const total = avgPrice + tax + ship;
+        
+        document.getElementById('total-cost-output').innerText = formatCurrency(total);
+    }
+
+    document.getElementById('state-select').addEventListener('change', (e) => {
+        currentTaxRate = parseFloat(e.target.value);
+        if(table) table.replaceData(tableData); // Triggers mutator to recalculate tax
+        updateTotalCost();
+    });
+
+    document.getElementById('dataset-select').addEventListener('change', (e) => {
+        initTable(e.target.value);
+    });
+
+    function drawMap() {
+        const svg = d3.select("#map-svg");
+        svg.selectAll("*").remove(); 
+        const tooltip = d3.select("#map-tooltip");
+
+        const projection = d3.geoAlbersUsa().scale(1000).translate([480, 250]);
+        const path = d3.geoPath().projection(projection);
+
+        d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json").then(us => {
+            svg.append("g")
+                .selectAll("path")
+                .data(topojson.feature(us, us.objects.states).features)
+                .enter().append("path")
+                .attr("d", path)
+                .attr("fill", "#222")
+                .attr("stroke", "#444");
+
+            // Aggregate Maker Data per State
+            const stateData = {};
+            tableData.forEach(row => {
+                const state = row.Location ? row.Location.trim() : null;
+                if(state) {
+                    if(!stateData[state]) stateData[state] = { count: 0, sumPrice: 0, makers: [] };
+                    stateData[state].count += 1;
+                    stateData[state].sumPrice += (parseFloat(row["Average Price"]) || 0);
+                    stateData[state].makers.push(row.Maker);
+                }
+            });
+
+            // Color gradient for Maker Cost Premium
+            const avgPrices = Object.values(stateData).map(d => d.sumPrice / d.count);
+            const colorScale = d3.scaleSequential(d3.interpolateCool)
+                                 .domain([d3.min(avgPrices) || 0, d3.max(avgPrices) || 10000]);
+
+            // Add Red Diamonds for clusters
+            const g = svg.append("g");
+            topojson.feature(us, us.objects.states).features.forEach(feature => {
+                const stateName = feature.properties.name;
+                const data = stateData[stateName];
+                if(data && projection(d3.geoCentroid(feature))) {
+                    const avgStatePrice = data.sumPrice / data.count;
+                    const coords = projection(d3.geoCentroid(feature));
+                    
+                    g.append("path")
+                     .attr("d", d3.symbol().type(d3.symbolDiamond).size(150 + (data.count * 20)))
+                     .attr("transform", `translate(${coords[0]}, ${coords[1]})`)
+                     .attr("fill", colorScale(avgStatePrice))
+                     .attr("stroke", "#ff2a2a")
+                     .attr("stroke-width", 2)
+                     .on("mouseover", function(event) {
+                         d3.select(this).attr("stroke", "#fff").attr("transform", `translate(${coords[0]}, ${coords[1]}) scale(1.5)`);
+                         tooltip.transition().duration(200).style("opacity", 1);
+                         tooltip.html(`
+                            <strong style="color:#00d2ff;font-size:1.1em">${stateName}</strong><br>
+                            Makers: ${data.count}<br>
+                            Avg Price: ${formatCurrency(avgStatePrice)}<br>
+                            <hr style="border-color:#333;margin:5px 0;">
+                            <div style="max-height:100px;overflow-y:auto;color:#ccc;">
+                                ${data.makers.join('<br>')}
+                            </div>
+                         `)
+                         .style("left", (event.pageX + 15) + "px")
+                         .style("top", (event.pageY - 28) + "px");
+                     })
+                     .on("mouseout", function() {
+                         d3.select(this).attr("stroke", "#ff2a2a").attr("transform", `translate(${coords[0]}, ${coords[1]}) scale(1)`);
+                         tooltip.transition().duration(500).style("opacity", 0);
+                     });
+                }
+            });
+        });
+    }
+
+    function drawChart() {
+        const container = d3.select("#chart-container");
+        container.selectAll("*").remove();
+        
+        const prices = tableData.map(d => parseFloat(d["Average Price"])).filter(d => !isNaN(d));
+        if(prices.length === 0) return;
+
+        const margin = {top: 10, right: 10, bottom: 20, left: 40},
+            width = container.node().getBoundingClientRect().width - margin.left - margin.right,
+            height = 200 - margin.top - margin.bottom;
+
+        const svg = container.append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const x = d3.scaleLinear().domain([0, d3.max(prices) * 1.1]).range([0, width]);
+        const histogram = d3.histogram().value(d => d).domain(x.domain()).thresholds(x.ticks(20));
+        const bins = histogram(prices);
+        const y = d3.scaleLinear().range([height, 0]).domain([0, d3.max(bins, d => d.length)]);
+
+        svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => "$" + (d/1000) + "k")).attr("color", "#666");
+        svg.append("g").call(d3.axisLeft(y).ticks(4)).attr("color", "#666");
+
+        svg.selectAll("rect")
+            .data(bins)
+            .enter().append("rect")
+            .attr("x", 1)
+            .attr("transform", d => `translate(${x(d.x0)},${y(d.length)})`)
+            .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
+            .attr("height", d => height - y(d.length))
+            .style("fill", "#00d2ff")
+            .style("opacity", 0.6);
+            
+        // Bell Curve Line
+        const line = d3.line().curve(d3.curveBasis).x(d => x(d.x0 + (d.x1 - d.x0)/2)).y(d => y(d.length));
+        svg.append("path").datum(bins).attr("fill", "none").attr("stroke", "#ff007f").attr("stroke-width", 2).attr("d", line);
+    }
+
+    // Initialize with default selection
+    initTable(document.getElementById('dataset-select').value);
+</script>
+
+</body>
+</html>
