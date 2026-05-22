@@ -53,6 +53,9 @@
         ::-webkit-scrollbar-track { background: #1a1a1a; }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; }
         ::-webkit-scrollbar-thumb:hover { background: darkorange; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #00d2ff; border-radius: 3px; }
 
         /* Screen Shake Animation */
         body.shake-active { animation: screen-shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
@@ -99,7 +102,7 @@
             color: #aaa; text-decoration: none; font-size: 1.2em; font-weight: bold; 
             transition: all 0.2s; position: relative; padding-bottom: 3px;
         }
-        .nav-link:hover { color: #00E676; text-shadow: 0 0 8px rgba(0,230,118,0.6); }
+        .nav-link:hover { color: #00E676; text-shadow: 0 0 8px rgba(0,230,118,0.6); border-bottom: 2px solid #00E676; }
         .nav-link.active { color: #00E676; border-bottom: 2px solid #00E676; }
 
         /* --- HEADER ANIMATION --- */
@@ -238,16 +241,19 @@
         .cost-highlight { font-size: 1.2em; color: #00E676; font-weight: bold; }
         .cost-total-display { font-size: 1.8em; color: darkorange; font-weight: bold; text-align: right; margin-top: 10px; }
 
-        /* Map Tooltip & Scrolling Marquee */
+        /* Map Tooltip FIXED BOTTOM LEFT */
         .map-tooltip {
             position: absolute; background: rgba(15, 15, 20, 0.95); border: 1px solid #00d2ff; color: #fff;
             padding: 15px; border-radius: 4px; pointer-events: none; opacity: 0; font-size: 0.85em;
             box-shadow: 0 4px 15px rgba(0,210,255,0.3); z-index: 100; min-width: 240px;
             backdrop-filter: blur(4px);
+            bottom: 15px; left: 15px;
+            max-height: calc(100% - 30px);
+            display: flex; flex-direction: column;
         }
         
         .marquee-container {
-            max-height: 140px; overflow: hidden; position: relative;
+            flex: 1; overflow: hidden; position: relative; min-height: 50px;
             mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
             margin-top: 5px;
@@ -262,9 +268,10 @@
 
         /* --- ANALYTICS GRID SECTION --- */
         .analytics-section {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            display: grid; grid-template-columns: 1.5fr 1fr 1fr;
             gap: 15px; margin-bottom: 20px;
         }
+        @media (max-width: 1024px) { .analytics-section { grid-template-columns: 1fr; } }
         
         .promo-card {
             background: #1f1f1f; border: 1px solid #444; border-radius: 6px; padding: 15px; 
@@ -279,8 +286,8 @@
         .theme-usa .promo-bg-curve { fill: #ff8c00; }
 
         /* HTML Mini Bar Charts */
-        .mini-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 0.8em; }
-        .mini-bar-label { width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ccc; text-align: right; }
+        .mini-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 0.85em; }
+        .mini-bar-label { width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ccc; text-align: left; }
         .mini-bar-track { flex: 1; height: 10px; background: #333; border-radius: 2px; overflow: hidden; }
         .mini-bar-fill { height: 100%; transition: width 1s ease-out; }
         .mini-bar-value { width: 45px; text-align: right; color: #fff; font-weight: bold; }
@@ -325,7 +332,7 @@
         .noUi-connect { background: #ff8c00 !important; }
         .noUi-handle { width: 24px; height: 24px; border-radius: 50%; top: -9px; right: -12px; background: #eee; border: 2px solid #ff8c00; box-shadow: 0 2px 6px rgba(0,0,0,0.6); cursor: grab; outline: none; }
         .noUi-handle:before, .noUi-handle:after { display: none; }
-        .noUi-pips { font-family: inherit; font-size: 9.5px; color: #ccc; height: 30px; top: 12px; }
+        .noUi-pips { font-family: inherit; font-size: 10px; color: #ccc; height: 30px; top: 12px; }
         .noUi-marker { background: #555; width: 1px; } 
         .noUi-marker-large { background: #aaa; height: 10px; width: 2px; } 
         .noUi-value { color: #ccc; margin-top: 5px; }
@@ -673,12 +680,11 @@
                          .attr("class", "maker-marker")
                          .attr("d", d3.symbol().type(d3.symbolDiamond).size(150))
                          .attr("transform", `translate(${coords[0]}, ${coords[1]})`)
-                         .on("mouseover", function(event) { 
+                         .on("mouseover", function() { 
                              d3.select(this).transition().attr("d", d3.symbol().type(d3.symbolDiamond).size(400)); 
                              
-                             // Marquee build logic (duplicates list to create infinite CSS scroll)
                              const listHTML = d.makers.join('<br>');
-                             const animDuration = Math.max(5, d.count * 1.5); // Slower for longer lists
+                             const animDuration = Math.max(5, d.count * 1.5); 
 
                              tooltip.html(`
                                 <strong style="color:#00d2ff;font-size:1.1em">${sName}</strong><br>
@@ -692,12 +698,9 @@
                                 </div>
                              `);
                              
-                             tooltip.style("display", "block").style("opacity", 0);
-                             positionTooltip(event, tooltip);
+                             // Anchor to Bottom-Left corner permanently
+                             tooltip.style("display", "flex").style("opacity", 0);
                              tooltip.transition().duration(200).style("opacity", 1);
-                         })
-                         .on("mousemove", function(event) {
-                             positionTooltip(event, tooltip);
                          })
                          .on("mouseout", function() { 
                              d3.select(this).transition().attr("d", d3.symbol().type(d3.symbolDiamond).size(150)); 
@@ -706,31 +709,6 @@
                     }
                 });
             });
-        }
-
-        // Quadrant Collision Detection for Map Tooltip
-        function positionTooltip(event, tooltipElement) {
-            const tNode = tooltipElement.node();
-            const w = tNode.offsetWidth || 240;
-            const h = tNode.offsetHeight || 250;
-            
-            let left = event.pageX + 20;
-            let top = event.pageY + 20;
-            
-            // If mouse is on right half of screen, pop left
-            if (event.clientX > window.innerWidth / 2) {
-                left = event.pageX - w - 20;
-            }
-            // If mouse is on bottom half of screen, pop up
-            if (event.clientY > window.innerHeight / 2) {
-                top = event.pageY - h - 20;
-            }
-
-            // Absolute boundaries
-            if (left < 10) left = 10;
-            if (top < window.scrollY + 10) top = window.scrollY + 10;
-
-            tooltipElement.style("left", left + "px").style("top", top + "px");
         }
 
         // --- TAX ESTIMATOR LOGIC ---
@@ -781,24 +759,15 @@
             }
         }
 
-        // --- NEW ANALYTICS GRID LOGIC ---
+        // --- NEW 3-PANEL ANALYTICS GRID LOGIC ---
         function updateAnalytics(data) {
             const container = document.getElementById('analytics-area');
             let sumPrice = 0, countPrice = 0, totalFursuitsSum = 0, prices = [];
-
-            // 1. D3 Aggregations
-            const stateCounts = d3.rollup(data, v => v.length, d => d.country);
-            let stateArr = Array.from(stateCounts, ([state, count]) => ({state: state || 'Unknown', count})).sort((a,b) => b.count - a.count);
-            
-            let pieData = stateArr.slice(0, 6);
-            let otherCount = d3.sum(stateArr.slice(6), d => d.count);
-            if(otherCount > 0) pieData.push({state: 'Other', count: otherCount});
 
             let topExpensive = [...data].filter(d => d.price).sort((a,b) => b.price - a.price).slice(0, 5);
             let topFursuits = [...data].filter(d => d.fursuits).sort((a,b) => b.fursuits - a.fursuits).slice(0, 5);
             let topProductive = [...data].filter(d => d.worksPerYear).sort((a,b) => b.worksPerYear - a.worksPerYear).slice(0, 10);
 
-            // General Stats Gathering
             data.forEach(row => {
                 if (row.price !== null && !isNaN(row.price)) { sumPrice += row.price; countPrice++; prices.push(row.price); }
                 if (row.fursuits !== null && !isNaN(row.fursuits)) { totalFursuitsSum += row.fursuits; }
@@ -820,7 +789,7 @@
             const peakStr = (peakLow && peakHigh) ? `${formatCurrency(peakLow)} - ${formatCurrency(peakHigh)}` : "N/A";
             const fmtTotalFursuits = totalFursuitsSum.toLocaleString();
 
-            // 2. Generate HTML Mini Bar Rows
+            // Generate HTML Mini Bar Rows with WIDER labels aligned left
             const maxExp = topExpensive.length ? topExpensive[0].price : 1;
             let htmlTopExp = topExpensive.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-price" style="width:${(d.price/maxExp)*100}%;"></div></div><div class="mini-bar-value">$${Math.round(d.price/1000)}k</div></div>`).join('');
 
@@ -830,34 +799,23 @@
             const maxProd = topProductive.length ? topProductive[0].worksPerYear : 1;
             let htmlTopProd = topProductive.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-prod" style="width:${(d.worksPerYear/maxProd)*100}%;"></div></div><div class="mini-bar-value">${d.worksPerYear}</div></div>`).join('');
 
-            const pieColors = ["#00d2ff", "#ff8c00", "#ff5252", "#00E676", "#9400d3", "#FFD700", "#555"];
-
-            // 3. Inject the 4-Card Grid
+            // Inject the 3-Card Grid
             container.innerHTML = `
-            <div class="promo-card theme-usa">
+            <div class="promo-card theme-usa" style="grid-column: span 1.5;">
                 <div class="chart-title" style="color:#ff8c00;">US Market Avg</div>
                 <div style="font-size: 2.2em; font-weight: bold; margin-top:5px;">${formatCurrency(avgPrice)}</div>
                 <div style="font-size: 0.8em; color: #aaa; line-height: 1.3;">Based on ${fmtTotalFursuits} total fursuits</div>
                 <hr style="border:none; height:1px; background:#444; width:100%; margin: 15px 0;">
                 <div style="font-size: 0.8em; color: #ccc; text-transform: uppercase;">Most Common Range</div>
                 <div style="font-size: 1.3em; font-weight: bold; color: #ff8c00;">${peakStr}</div>
+                <div style="font-size: 0.8em; color: #aaa; line-height: 1.3; margin-top: 5px;">Majority of pricing falls here</div>
                 <svg id="curve-us" class="promo-bg-curve-container" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
             </div>
 
-            <div class="promo-card" style="border-color:#00d2ff;">
-                <div class="chart-title" style="color:#00d2ff;">Maker State Origin</div>
-                <div style="display:flex; height:calc(100% - 25px); align-items:center;">
-                    <div id="pie-chart-container" style="flex:1; height:100%;"></div>
-                    <div style="flex:1; display:flex; flex-direction:column; gap:6px; font-size:0.75em; padding-left:10px;">
-                        ${pieData.map((d,i) => `<div style="display:flex; align-items:center; gap:5px;"><span style="min-width:10px;height:10px;background:${pieColors[i]};border-radius:2px;"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${d.state}: ${d.count}">${d.state} (${d.count})</span></div>`).join('')}
-                    </div>
-                </div>
-            </div>
-
             <div class="promo-card" style="border-color:#ff5252;">
-                <div class="chart-title" style="color:#ff5252; margin-bottom:10px;">Top 5 Most Expensive</div>
+                <div class="chart-title" style="color:#ff5252; margin-bottom:10px;">Top Prices</div>
                 ${htmlTopExp}
-                <div class="chart-title" style="color:#00E676; margin-top:15px; margin-bottom:10px;">Top 5 Most Fursuits</div>
+                <div class="chart-title" style="color:#00E676; margin-top:15px; margin-bottom:10px;">Top 5 Most Fursuits Produced</div>
                 ${htmlTopSuits}
             </div>
 
@@ -868,7 +826,6 @@
             </div>
             `;
 
-            // 4. Render Decorative D3 elements
             if (bins.length > 1) {
                 const svgCurve = d3.select(`#curve-us`);
                 const width = 300, height = 100;
@@ -877,22 +834,6 @@
                 const area = d3.area().x(d => xCurv(d.x0 + (d.x1 - d.x0) / 2)).y0(height).y1(d => yCurv(d.length)).curve(d3.curveBasis); 
                 svgCurve.append("path").datum(bins).attr("class", "promo-bg-curve").attr("d", area);
             }
-
-            const pieWidth = 150, pieHeight = 150, radius = Math.min(pieWidth, pieHeight) / 2;
-            const svgPie = d3.select("#pie-chart-container").append("svg")
-                .attr("width", "100%").attr("height", "100%")
-                .attr("viewBox", `0 0 ${pieWidth} ${pieHeight}`)
-                .append("g").attr("transform", `translate(${pieWidth/2},${pieHeight/2})`);
-            
-            const pie = d3.pie().value(d => d.count);
-            const arc = d3.arc().innerRadius(35).outerRadius(radius - 5);
-            
-            svgPie.selectAll("path").data(pie(pieData)).enter().append("path")
-                .attr("d", arc).attr("fill", (d,i) => pieColors[i])
-                .attr("stroke", "#1f1f1f").style("stroke-width", "2px")
-                .style("transition", "transform 0.2s")
-                .on("mouseover", function() { d3.select(this).style("transform", "scale(1.05)"); })
-                .on("mouseout", function() { d3.select(this).style("transform", "scale(1)"); });
         }
 
         // --- INITIALIZE TABLE ---
@@ -1105,13 +1046,15 @@
             // Initial Load
             loadTableData(csvUrlFull);
             
-            // Init Slider - Widened to 20k with 1k increments
+            // Build 1k increment array
+            const pipValues = Array.from({length: 20}, (_, i) => (i+1)*1000);
+
             const slider = document.getElementById('price-slider');
             if(slider) {
                 noUiSlider.create(slider, {
                     start: [1000, 20000], connect: true, range: { 'min': 1000, 'max': 20000 },
                     step: 1000, tooltips: false, 
-                    pips: { mode: 'values', values: [1000, 5000, 10000, 15000, 20000], density: 5, format: { to: v => '$' + (v/1000) + 'k' } }
+                    pips: { mode: 'values', values: pipValues, density: 5, format: { to: v => '$' + (v/1000) + 'k' } }
                 });
                 const updateTableFilter = () => {
                     const values = slider.noUiSlider.get();
