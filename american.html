@@ -276,7 +276,7 @@
         .promo-card {
             background: #1f1f1f; border: 1px solid #444; border-radius: 6px; padding: 15px; 
             display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
-            position: relative; overflow: hidden; height: 260px; box-sizing: border-box;
+            position: relative; overflow: hidden; height: 290px; box-sizing: border-box;
         }
 
         .chart-title { font-size: 0.85em; font-weight: bold; color: #aaa; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 4px; }
@@ -344,6 +344,12 @@
         .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; font-size: 16px; }
         .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
         .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
+
+        /* Tabulator Highlight Row */
+        .tabulator-row.tabulator-selected {
+            background-color: rgba(255, 140, 0, 0.3) !important;
+            border: 1px solid #ff8c00 !important;
+        }
 
         .tabulator-row .tabulator-cell { transition: transform 0.1s ease-out; position: relative; background-clip: padding-box; overflow: hidden; }
         .tabulator-row .tabulator-cell.active-tilt { z-index: 10000 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.6); border-color: rgba(255,255,255,0.5) !important; filter: brightness(1.2); overflow: visible !important; }
@@ -802,9 +808,9 @@
             // Inject the 3-Card Grid
             container.innerHTML = `
             <div class="promo-card theme-usa" style="grid-column: span 1.5;">
-                <div class="chart-title" style="color:#ff8c00;">US Market Avg</div>
+                <div class="chart-title" style="color:#ff8c00;">United States</div>
                 <div style="font-size: 2.2em; font-weight: bold; margin-top:5px;">${formatCurrency(avgPrice)}</div>
-                <div style="font-size: 0.8em; color: #aaa; line-height: 1.3;">Based on ${fmtTotalFursuits} total fursuits</div>
+                <div style="font-size: 0.8em; color: #aaa; line-height: 1.3;">Average Price<br>Based on ${fmtTotalFursuits} total fursuits</div>
                 <hr style="border:none; height:1px; background:#444; width:100%; margin: 15px 0;">
                 <div style="font-size: 0.8em; color: #ccc; text-transform: uppercase;">Most Common Range</div>
                 <div style="font-size: 1.3em; font-weight: bold; color: #ff8c00;">${peakStr}</div>
@@ -833,6 +839,18 @@
                 const yCurv = d3.scaleLinear().domain([0, d3.max(bins, d => d.length)]).range([height, 0]);
                 const area = d3.area().x(d => xCurv(d.x0 + (d.x1 - d.x0) / 2)).y0(height).y1(d => yCurv(d.length)).curve(d3.curveBasis); 
                 svgCurve.append("path").datum(bins).attr("class", "promo-bg-curve").attr("d", area);
+                
+                // Overlay dashed vertical line for the mathematical average
+                const avgX = xCurv(avgPrice);
+                if(avgX >= 0 && avgX <= width) {
+                    svgCurve.append("line")
+                        .attr("x1", avgX).attr("x2", avgX)
+                        .attr("y1", 0).attr("y2", height)
+                        .attr("stroke", "#ff8c00")
+                        .attr("stroke-width", 2)
+                        .attr("stroke-dasharray", "4,4")
+                        .style("opacity", 0.8);
+                }
             }
         }
 
@@ -845,6 +863,7 @@
                 layout: "fitData",
                 movableColumns: true,
                 resizableColumns: true,
+                selectableRows: 1, // Enable single-row selection highlighting
                 placeholder:"No Data Available",
                 height: "100%", 
                 initialSort:[ {column:"rank", dir:"asc"} ],
@@ -902,8 +921,8 @@
                         }
                     },
                     { title: "Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
-                    { title: "Avg Works/Yr", field:"worksPerYear", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
                     { title: "Fursuits", field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
+                    { title: "Avg Works/Yr", field:"worksPerYear", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
                     { title: "Followers", field:"followers", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
                     { 
                         title: "Average Price", field:"price", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" },
@@ -934,6 +953,9 @@
             });
 
             table.on("rowClick", function(e, row){
+                // Deselect everything then formally select this single row
+                table.deselectRow();
+                row.select();
                 selectedMakerRow = row.getData();
                 updateCostCard();
             });
