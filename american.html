@@ -489,7 +489,7 @@
           <div class="control-group slider-group">
             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
                 <label>
-                    <span>Fursuit Price:</span> <span id="price-values" style="color:#ff8c00; font-weight:normal;">$1,000 - $15,000</span>
+                    <span>Fursuit Price:</span> <span id="price-values" style="color:#ff8c00; font-weight:normal;">$1,000 - $20,000</span>
                     <button id="reset-price-btn" style="padding:2px 6px; margin-left:5px; font-size:0.8em; background:#444; border:1px solid #666; cursor:pointer;" title="Reset Price">↺</button>
                 </label>
                 <label style="font-size:0.8em; display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none;">
@@ -525,7 +525,7 @@
 
     <script>
         let table = null;
-        let filterState = { priceMin: 1000, priceMax: 15000, showNA: true, status: "" };
+        let filterState = { priceMin: 1000, priceMax: 20000, showNA: true, status: "" };
         let totalDataCount = 0;
         let loadedData = []; 
         let currentTaxRate = parseFloat(document.getElementById('state-select').value);
@@ -667,16 +667,17 @@
                                 </div>
                              `);
                              
-                             // Position with collision detection
                              tooltip.style("display", "block").style("opacity", 0);
                              const tNode = tooltip.node();
                              const w = tNode.offsetWidth || 220;
                              const h = tNode.offsetHeight || 150;
+                             
                              let left = event.pageX + 15;
                              let top = event.pageY - 28;
                              
-                             if (left + w > window.innerWidth) left = event.pageX - w - 15;
-                             if (top + h > window.scrollY + window.innerHeight) top = event.pageY - h - 15;
+                             if (left + w > window.innerWidth - 20) left = event.pageX - w - 15;
+                             if (top + h > window.scrollY + window.innerHeight - 20) top = event.pageY - h - 15;
+                             if (top < window.scrollY + 10) top = window.scrollY + 10;
                              
                              tooltip.style("left", left + "px").style("top", top + "px");
                              tooltip.transition().duration(200).style("opacity", 1);
@@ -685,11 +686,13 @@
                              const tNode = tooltip.node();
                              const w = tNode.offsetWidth || 220;
                              const h = tNode.offsetHeight || 150;
+                             
                              let left = event.pageX + 15;
                              let top = event.pageY - 28;
                              
-                             if (left + w > window.innerWidth) left = event.pageX - w - 15;
-                             if (top + h > window.scrollY + window.innerHeight) top = event.pageY - h - 15;
+                             if (left + w > window.innerWidth - 20) left = event.pageX - w - 15;
+                             if (top + h > window.scrollY + window.innerHeight - 20) top = event.pageY - h - 15;
+                             if (top < window.scrollY + 10) top = window.scrollY + 10;
                              
                              tooltip.style("left", left + "px").style("top", top + "px");
                          })
@@ -828,7 +831,6 @@
                 height: "100%", 
                 initialSort:[ {column:"rank", dir:"asc"} ],
                 dataFiltered: function(filters, rows) { updateResultCounter(rows.length, totalDataCount); },
-                rowClick: function(e, row) { selectedMakerRow = row.getData(); updateCostCard(); },
                 columns: [
                     { title: "Row", field:"rank", visible:true, sorter:"number" },
                     { 
@@ -867,7 +869,7 @@
                         formatter: function(cell) {
                             const url = cell.getValue();
                             if(!url) return "";
-                            return wrapInTilt(`<a href="${url}" target="_blank" class="animated-link">Visit Link</a>`, "background:none; animation:none; -webkit-text-fill-color:initial; color:inherit;");
+                            return wrapInTilt(`<a href="${url}" target="_blank" class="animated-link">${url}</a>`, "background:none; animation:none; -webkit-text-fill-color:initial; color:inherit;");
                         }
                     },
                     { 
@@ -892,7 +894,7 @@
                     { title: "Fursuits", field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
                     { title: "Followers", field:"followers", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
                     { 
-                        title: "Price", field:"price", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" },
+                        title: "Average Price", field:"price", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" },
                         formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(formatCurrency(cell.getValue())) : "---"; }
                     },
                     {
@@ -918,6 +920,12 @@
                     }
                 ]
             });
+
+            // Re-bind row click explicitly to ensure it works across DOM updates
+            table.on("rowClick", function(e, row){
+                selectedMakerRow = row.getData();
+                updateCostCard();
+            });
         }
 
         function loadTableData(url) {
@@ -925,21 +933,26 @@
              Papa.parse(url, {
                 download: true, header: true, dynamicTyping: true,
                 complete: function(results) {
-                    const data = results.data.map(row => ({
-                        rank: cleanNumber(row['Rank']),
-                        maker: row['Maker'],
-                        logo: (row['Logo'] && row['Logo'].match(/=IMAGE\("(.+)"\)/)) ? row['Logo'].match(/=IMAGE\("(.+)"\)/)[1] : row['Logo'],
-                        link: row['Link'],
-                        previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
-                        price: cleanNumber(row['Average Price']),
-                        ship: cleanNumber(row['$ Ship']),
-                        status: row['Status'],
-                        fursuits: cleanNumber(row['Total Fursuits'] || row['Fursuits']),
-                        daysInactive: cleanNumber(row['Days Since Last Post']),
-                        activitySymbol: row['Symbol'],
-                        country: typeof row['Location'] === 'string' ? row['Location'].trim() : row['Location'],
-                        followers: cleanNumber(row['Followers'])
-                    })).filter(row => row.maker);
+                    const data = results.data.map(row => {
+                        const rawPrice = cleanNumber(row['Average Price']);
+                        const rawTotal = cleanNumber(row['$ Total']) || cleanNumber(row['$ Ship']);
+                        
+                        return {
+                            rank: cleanNumber(row['Rank']),
+                            maker: row['Maker'],
+                            logo: (row['Logo'] && row['Logo'].match(/=IMAGE\("(.+)"\)/)) ? row['Logo'].match(/=IMAGE\("(.+)"\)/)[1] : row['Logo'],
+                            link: row['Link'],
+                            previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
+                            price: rawPrice,
+                            ship: (rawTotal && rawPrice) ? (rawTotal - rawPrice) : 350,
+                            status: row['Status'],
+                            fursuits: cleanNumber(row['Total Fursuits'] || row['Fursuits']),
+                            daysInactive: cleanNumber(row['Days Since Last Post']),
+                            activitySymbol: row['Symbol'],
+                            country: typeof row['Location'] === 'string' ? row['Location'].trim() : row['Location'],
+                            followers: cleanNumber(row['Followers'])
+                        };
+                    }).filter(row => row.maker);
                     
                     loadedData = data; 
                     totalDataCount = data.length;
@@ -948,7 +961,7 @@
                     drawMap(data);
 
                     const slider = document.getElementById('price-slider');
-                    if(slider && slider.noUiSlider) { slider.noUiSlider.set([1000, 15000]); }
+                    if(slider && slider.noUiSlider) { slider.noUiSlider.set([1000, 20000]); }
                 }
             });
         }
@@ -1025,7 +1038,7 @@
             const slider = document.getElementById('price-slider');
             if(slider) {
                 noUiSlider.create(slider, {
-                    start: [1000, 15000], connect: true, range: { 'min': 1000, 'max': 15000 },
+                    start: [1000, 20000], connect: true, range: { 'min': 1000, 'max': 20000 },
                     step: 500, tooltips: false, pips: { mode: 'steps', density: 6, format: { to: v => '$' + v/1000 + 'k' } }
                 });
                 const updateTableFilter = () => {
@@ -1038,7 +1051,7 @@
                 slider.noUiSlider.on('update', updateTableFilter);
                 document.getElementById('show-na-prices').addEventListener('change', updateTableFilter);
                 document.getElementById('reset-price-btn').addEventListener('click', function(){
-                    slider.noUiSlider.set([1000, 15000]); document.getElementById('show-na-prices').checked = true;
+                    slider.noUiSlider.set([1000, 20000]); document.getElementById('show-na-prices').checked = true;
                 });
             }
 
