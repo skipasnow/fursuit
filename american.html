@@ -235,7 +235,7 @@
         .state:hover { stroke-width: 2px; fill: rgba(0, 230, 118, 0.1); }
         .state.selected { fill: rgba(0, 210, 255, 0.3); stroke: #00d2ff; stroke-width: 2px; }
         .state.selected:hover { fill: rgba(0, 210, 255, 0.4); stroke-width: 3px; }
-        
+
         .heat-ring { fill: transparent; stroke-width: 1.5px; opacity: 0.7; mix-blend-mode: screen; pointer-events:none; }
         .maker-marker { fill: transparent; stroke: #ff2a2a; stroke-width: 2px; cursor: pointer; transition: all 0.3s; transform-box: fill-box; transform-origin: center; }
         .maker-marker:hover { stroke: #fff; stroke-width: 3px; filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)); }
@@ -424,7 +424,7 @@
                     <div id="map-loading" style="position:absolute; inset:0; display:flex; justify-content:center; align-items:center;">
                         <div class="loader">Loading Map...</div>
                     </div>
-                    
+
                     <div id="map-filter-indicator" style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.85); padding:8px 12px; border:1px solid #00d2ff; border-radius:4px; font-size:0.85em; z-index:10; display:none; backdrop-filter: blur(4px);">
                         <span style="color:#00d2ff; font-weight:bold;" data-i18n="filteringBy">Filtering by:</span> 
                         <span id="map-filter-list" style="color:#fff; margin-left: 5px;"></span>
@@ -432,7 +432,6 @@
                     </div>
 
                     <svg id="us-map" width="100%" height="100%" viewBox="0 0 975 610" preserveAspectRatio="xMidYMid meet"></svg>
-                    
                     <div class="legend-container">
                         <div class="legend-title" data-i18n="legendPremium">MAKER COST PREMIUM</div>
                         <div class="legend-gradient-retro"></div>
@@ -900,11 +899,13 @@
             updateTableFilters();
         }
 
-        document.getElementById("clear-map-filter").addEventListener("click", () => {
-            filterState.states.clear();
-            d3.selectAll(".state").classed("selected", false);
-            document.getElementById("map-filter-indicator").style.display = "none";
-            updateTableFilters();
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById("clear-map-filter").addEventListener("click", () => {
+                filterState.states.clear();
+                d3.selectAll(".state").classed("selected", false);
+                document.getElementById("map-filter-indicator").style.display = "none";
+                updateTableFilters();
+            });
         });
 
         // --- MAP LOGIC ---
@@ -976,7 +977,7 @@
                          .attr("class", "maker-marker")
                          .attr("d", d3.symbol().type(d3.symbolDiamond).size(150))
                          .attr("transform", `translate(${coords[0]}, ${coords[1]})`)
-                         .on("click", function() {
+                         .on("click", function(event) {
                              toggleStateSelection(sName);
                          })
                          .on("mouseover", function() { 
@@ -1085,6 +1086,7 @@
                 if (row.followers !== null && !isNaN(row.followers)) { sumFollowers += row.followers; countFollowers++; }
             });
 
+            // Peak Price Range calculations
             let bins = [], peakLow = 0, peakHigh = 0;
             if (prices.length > 0) {
                 const sorted = prices.sort((a,b)=>a-b);
