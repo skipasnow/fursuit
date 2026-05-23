@@ -1,7 +1,7 @@
-# Kemono Fursuit Maker Index
+# US & Kemono Fursuit Maker Index
 
-Welcome to the **Kemono Fursuit Maker Index**, a comprehensive, data-driven directory and analytics dashboard designed to assist the fursuit community with researching, comparing, and commissioning creators from Asia. 
-* **Website URL:** https://skipasnow.github.io/fursuit/
+Welcome to the **US & Kemono Fursuit Maker Index**, a comprehensive, data-driven directory and analytics dashboard designed to assist the fursuit community with researching, comparing, and commissioning creators from the United States and Asia. 
+* **Website URLs:** https://skipasnow.github.io/fursuit/index.html & https://skipasnow.github.io/fursuit/american.html
 
 ## 📊 Information Details
 
@@ -52,7 +52,7 @@ Typically a good formula estimate is:
 Base full suit price + $1000 = complicated full suit price
 
 ## 🤝 Contributions
-If you are a maker from Asia who would like to update the accuracy of your information, please contact me as listed below. For all other inquiries, also refer to the contact information below.
+If you are a maker from the United States or Asia who would like to update the accuracy of your information, please contact me as listed below. For all other inquiries, also refer to the contact information below.
 
 ## 🐺 Contact
 
