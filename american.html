@@ -1098,17 +1098,6 @@
                 const yCurv = d3.scaleLinear().domain([0, d3.max(bins, d => d.length)]).range([height, 0]);
                 const area = d3.area().x(d => xCurv(d.x0 + (d.x1 - d.x0) / 2)).y0(height).y1(d => yCurv(d.length)).curve(d3.curveBasis); 
                 svgCurve.append("path").datum(bins).attr("class", "promo-bg-curve").attr("d", area);
-                
-                const avgX = xCurv(avgPrice / exchangeRates[currentCurrency]); // Map against original USD bins
-                if(avgX >= 0 && avgX <= width) {
-                    svgCurve.append("line")
-                        .attr("x1", avgX).attr("x2", avgX)
-                        .attr("y1", 0).attr("y2", height)
-                        .attr("stroke", "#fff")
-                        .attr("stroke-width", 2)
-                        .attr("stroke-dasharray", "4,4")
-                        .style("opacity", 0.8);
-                }
             }
         }
 
