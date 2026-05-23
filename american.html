@@ -122,13 +122,13 @@
         @keyframes rainbow-move { to { background-position: 200% center; } }
 
         /* --- COMBO COUNTER --- */
-        #combo-counter {
-            position: absolute; top: -15px; right: -20px;
-            font-family: 'VCR OSD Mono', monospace; font-weight: bold;
-            color: #ff5252; text-shadow: 2px 2px 0px #fff; opacity: 0; pointer-events: none;
-            white-space: nowrap; z-index: 100; transform: rotate(-25deg) scale(1); 
-            transition: opacity 0.2s ease, color 0.2s ease;
-        }
+		#combo-counter {
+			position: fixed;
+			font-family: 'VCR OSD Mono', monospace; font-weight: bold;
+			color: #ff5252; text-shadow: 2px 2px 0px #fff; opacity: 0; pointer-events: none;
+			white-space: nowrap; z-index: 99999; transform: rotate(-25deg) scale(1); 
+			transition: opacity 0.2s ease, color 0.2s ease;
+		}
         @keyframes combo-shake {
             0%, 100% { transform: rotate(-25deg) translate(0, 0) scale(var(--scale)); }
             20% { transform: rotate(-25deg) translate(-4px, 4px) scale(var(--scale)); }
@@ -518,7 +518,7 @@
 
     <div id="top-pane">
         <div id="nav-bar" style="display: flex; gap: 20px; margin-bottom: 15px; border-bottom: 1px dashed #444; padding-bottom: 10px; align-items: center; flex-wrap: wrap;">
-            <a href="american.html" class="nav-link active" data-i18n="navUs">> US Fursuits</a>
+            <a href="american.html" class="nav-link active" data-i18n="navUs">> American Fursuits</a>
             <a href="index.html" class="nav-link" data-i18n="navAsia">> Kemono Fursuits</a>
             <a href="maintenance.html" class="nav-link" data-i18n="navMaintenance">> Maintenance</a>
         </div>
@@ -721,7 +721,7 @@
         // --- TRANSLATION DICTIONARY ---
         const translations = {
             "en": {
-                navUs: "> US Fursuits", navAsia: "> Kemono Fursuits", navMaintenance: "> Maintenance",
+                navUs: "> American Fursuits", navAsia: "> Kemono Fursuits", navMaintenance: "> Maintenance",
                 headerTitle: "American Fursuit Makers", legendPremium: "MAKER COST PREMIUM",
                 low: "LOW", high: "HIGH", usPricing: "United States Pricing",
                 selectState: "Select Resident State", selectedMaker: "Selected Maker",
@@ -1517,9 +1517,13 @@
                     document.body.appendChild(flame); setTimeout(() => flame.remove(), 600);
                 }
             }
-            headerText.addEventListener('mouseenter', () => { 
-                if (isExploded) return; 
-                starInterval = setInterval(createStar, 50); clearTimeout(comboTimeout);
+				headerText.addEventListener('mouseenter', () => { 
+					if (isExploded) return;
+					// Anchor fixed-position counter to top-right of the header text
+					const rect = headerText.getBoundingClientRect();
+					comboEl.style.left = (rect.right - 10) + 'px';
+					comboEl.style.top = (rect.top - 10) + 'px';
+					starInterval = setInterval(createStar, 50); clearTimeout(comboTimeout);
                 if (comboCount >= 99) { createExplosion(); comboCount = 0; comboEl.style.display = 'none'; headerText.style.visibility = 'hidden'; isExploded = true; return; }
                 comboCount++;
                 if (comboCount >= 2) {
