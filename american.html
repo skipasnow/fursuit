@@ -281,21 +281,30 @@
 
         .chart-title { font-size: 0.85em; font-weight: bold; color: #aaa; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 4px; }
         
-        .theme-usa { border-color: #ff8c00; box-shadow: inset 0 0 20px rgba(255, 140, 0, 0.05); }
-        .theme-usa .promo-bg-curve-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; pointer-events: none; z-index: 0; opacity: 0.2; }
+        /* RESTORED SPLIT LAYOUT THEME */
+        .theme-usa { border-color: #ff8c00; box-shadow: inset 0 0 20px rgba(255, 140, 0, 0.1); }
+        .theme-usa .promo-title { color: #ff8c00; }
+        .theme-usa .promo-stat-large { color: #fff; text-shadow: 0 0 10px rgba(255, 140, 0, 0.5); }
         .theme-usa .promo-bg-curve { fill: #ff8c00; }
+        .theme-usa .peak-range { color: #ff8c00; }
 
-        /* Left/Right Card Layout for Market Avg */
-        .promo-content-layer { position: relative; z-index: 1; display: flex; height: 100%; align-items: center; justify-content: space-between; }
-        .promo-left { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-right: 20px; }
-        .promo-right { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-left: 20px; border-left: 2px solid #fff; text-align: left; }
+        .promo-bg-curve-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; pointer-events: none; z-index: 0; opacity: 0.25; }
+        .promo-content-layer { position: relative; z-index: 1; display: flex; height: 100%; justify-content: space-between; }
+        .promo-left { flex: 1.2; display: flex; flex-direction: column; justify-content: space-between; padding-right: 15px; }
+        .promo-right { flex: 0.8; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; text-align: right; border-left: 2px dashed #444; padding-left: 15px; }
+        .promo-title { font-size: 1.5em; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 5px; }
+        .promo-stat-large { font-size: 2.2em; font-weight: bold; line-height: 1; margin-top: 5px;}
+        .promo-sub { font-size: 0.75em; color: #aaa; line-height: 1.3; }
+        .promo-divider { height: 1px; background: #444; margin: 8px 0; border: none; width:100%; }
+        .peak-label { font-size: 0.8em; color: #ccc; text-transform: uppercase; margin-bottom: 2px; }
+        .peak-range { font-size: 1.3em; font-weight: bold; }
 
         /* HTML Mini Bar Charts */
         .mini-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 0.85em; }
         .mini-bar-label { width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ccc; text-align: left; }
         .mini-bar-track { flex: 1; height: 10px; background: #333; border-radius: 2px; overflow: hidden; }
         .mini-bar-fill { height: 100%; transition: width 1s ease-out; }
-        .mini-bar-value { width: 45px; text-align: right; color: #fff; font-weight: bold; }
+        .mini-bar-value { width: 50px; text-align: right; color: #fff; font-weight: bold; white-space: nowrap; }
         
         .fill-price { background: #ff5252; }
         .fill-suits { background: #00E676; }
@@ -396,12 +405,39 @@
 <body>
 
     <div id="top-pane">
-        <div id="nav-bar" style="display: flex; gap: 20px; margin-bottom: 15px; border-bottom: 1px dashed #444; padding-bottom: 10px;">
-            <a href="american.html" class="nav-link active">> US Fursuits</a>
-            <a href="index.html" class="nav-link">> Kemono Fursuits</a>
-            <a href="maintenance.html" class="nav-link">> Maintenance</a>
+        <div id="nav-bar" style="display: flex; gap: 20px; margin-bottom: 15px; border-bottom: 1px dashed #444; padding-bottom: 10px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; gap: 20px;">
+                <a href="american.html" class="nav-link active" data-i18n="navUs">> US Fursuits</a>
+                <a href="index.html" class="nav-link" data-i18n="navAsia">> Kemono Fursuits</a>
+                <a href="maintenance.html" class="nav-link" data-i18n="navMaintenance">> Maintenance</a>
+            </div>
+            
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="control-group" style="flex-direction: row; align-items: center; gap: 10px; margin: 0;">
+                    <label style="margin: 0; color: #00E676;">Language:</label>
+                    <select id="lang-select" style="width: auto; padding: 4px 8px; background: #222;">
+                        <option value="en" selected>English</option>
+                        <option value="zh-TW">繁體中文</option>
+                        <option value="zh-CN">简体中文</option>
+                        <option value="ko">한국어</option>
+                        <option value="ja">日本語</option>
+                    </select>
+                </div>
+                <div class="control-group" style="flex-direction: row; align-items: center; gap: 10px; margin: 0;">
+                    <label style="margin: 0; color: #00d2ff;">Currency:</label>
+                    <select id="currency-select" style="width: auto; padding: 4px 8px; background: #222;">
+                        <option value="USD" selected>USD ($)</option>
+                        <option value="KRW">KRW (₩)</option>
+                        <option value="CNY">CNY (¥)</option>
+                        <option value="TWD">TWD (NT$)</option>
+                        <option value="JPY">JPY (¥)</option>
+                        <option value="EUR">EUR (€)</option>
+                    </select>
+                </div>
+            </div>
         </div>
-        <h1><span id="header-text">American Fursuit Makers</span></h1>
+        
+        <h1><span id="header-text" data-i18n="headerTitle">American Fursuit Makers</span></h1>
 
         <div id="interactive-map-area" class="map-section collapsible-section">
             <div class="map-column">
@@ -412,17 +448,17 @@
                     </div>
                     <svg id="us-map" width="100%" height="100%" viewBox="0 0 975 610" preserveAspectRatio="xMidYMid meet"></svg>
                     <div class="legend-container">
-                        <div class="legend-title">MAKER COST PREMIUM</div>
+                        <div class="legend-title" data-i18n="legendPremium">MAKER COST PREMIUM</div>
                         <div class="legend-gradient-retro"></div>
-                        <div class="legend-labels"><span>LOW</span><span>HIGH</span></div>
+                        <div class="legend-labels"><span data-i18n="low">LOW</span><span data-i18n="high">HIGH</span></div>
                     </div>
                     <div class="map-tooltip" id="map-tooltip"></div>
                 </div>
             </div>
 
             <div class="data-column">
-                <div class="data-header-title">United States Pricing</div>
-                <div class="data-header-subtitle">Select Resident State</div>
+                <div class="data-header-title" data-i18n="usPricing">United States Pricing</div>
+                <div class="data-header-subtitle" data-i18n="selectState">Select Resident State</div>
                 
                 <select id="state-select" style="width:100%; padding:10px; background:#333; color:#fff; border:1px solid #555; border-radius:4px; font-size:1.1em; margin-bottom:15px; cursor:pointer;">
                     <option value="0.0400" data-state="Alabama">Alabama (4.00%)</option>
@@ -481,25 +517,25 @@
                 <div id="map-cost-card" class="map-cost-card active" style="opacity: 1; pointer-events: auto;">
                     <div class="cost-header">
                         <div>
-                            <div class="cost-detail">Selected Maker</div>
-                            <div id="cost-maker-name" style="font-size:1.3em; font-weight:bold; color:#fff; cursor:default;">[ Select a row from the table below ]</div>
+                            <div class="cost-detail" data-i18n="selectedMaker">Selected Maker</div>
+                            <div id="cost-maker-name" style="font-size:1.3em; font-weight:bold; color:#fff; cursor:default;" data-i18n="selectRow">[ Select a row from the table below ]</div>
                         </div>
                         <div style="margin-top:15px;">
                             <div class="cost-row">
-                                <span class="cost-detail">Average Price:</span>
+                                <span class="cost-detail" data-i18n="avgPrice">Average Price:</span>
                                 <span id="cost-base-price" class="cost-highlight">$0</span>
                             </div>
                             <div class="cost-row">
-                                <span class="cost-detail">State Sales Tax:</span>
+                                <span class="cost-detail" data-i18n="salesTax">State Sales Tax:</span>
                                 <span id="cost-tax" class="cost-highlight" style="color:#ff5252;">+$0</span>
                             </div>
                             <div class="cost-row" style="border-bottom:none;">
-                                <span class="cost-detail">Shipping (Geographic Rate):</span>
+                                <span class="cost-detail" data-i18n="shipGeo">Shipping (Geographic Rate):</span>
                                 <span id="cost-shipping" class="cost-highlight">+$0</span>
                             </div>
                         </div>
                         <div style="border-top: 2px solid #444; margin-top:10px; padding-top:10px;">
-                            <div class="cost-detail">TOTAL ESTIMATED COST</div>
+                            <div class="cost-detail" data-i18n="totalCostLabel">TOTAL ESTIMATED COST</div>
                             <div id="cost-total-display" class="cost-total-display">$0</div>
                         </div>
                     </div>
@@ -509,7 +545,7 @@
 
         <div class="controls-container">
           <div class="control-group">
-            <label>Interface:</label>
+            <label data-i18n="interface">Interface:</label>
             <div style="display:flex; gap:5px;">
                 <button id="map-toggle-btn" class="toggle-btn on">Map: ENABLED</button>
                 <button id="stats-toggle-btn" class="toggle-btn on">Stats: ENABLED</button>
@@ -517,38 +553,38 @@
           </div>
 
           <div class="control-group">
-              <label>Dataset:</label>
+              <label data-i18n="dataset">Dataset:</label>
               <div class="dataset-toggle">
-                  <button id="btn-full" class="active">Full Suits</button>
-                  <button id="btn-partial">Partial Suits</button>
+                  <button id="btn-full" class="active" data-i18n="btnFull">Full Suits</button>
+                  <button id="btn-partial" data-i18n="btnPartial">Partial Suits</button>
               </div>
           </div>
 
           <div class="control-group slider-group">
             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:10px;">
                 <label>
-                    <span>Fursuit Price:</span> <span id="price-values" style="color:#ff8c00; font-weight:normal;">$1,000 - $20,000</span>
+                    <span data-i18n="suitPrice">Fursuit Price:</span> <span id="price-values" style="color:#ff8c00; font-weight:normal;">$1,000 - $20,000</span>
                     <button id="reset-price-btn" style="padding:2px 6px; margin-left:5px; font-size:0.8em; background:#444; border:1px solid #666; cursor:pointer;" title="Reset Price">↺</button>
                 </label>
                 <label style="font-size:0.8em; display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none;">
-                    <input type="checkbox" id="show-na-prices" checked> <span>Show N/A Prices</span>
+                    <input type="checkbox" id="show-na-prices" checked> <span data-i18n="showNA">Show N/A Prices</span>
                 </label>
             </div>
             <div id="price-slider"></div>
           </div>
 
           <div class="control-group">
-            <label>Status:</label>
+            <label data-i18n="statusFilter">Status:</label>
             <select id="filter-status">
-                <option value="">All Statuses</option>
-                <option value="Open">Open</option>
-                <option value="Closed">Closed</option>
+                <option value="" data-i18n="allStatuses">All Statuses</option>
+                <option value="Open" data-i18n="open">Open</option>
+                <option value="Closed" data-i18n="closed">Closed</option>
             </select>
           </div>
 
           <div class="controls-footer">
               <div id="results-counter" class="results-counter">Loading data...</div>
-              <div class="sort-hint">*Hold <b>Shift</b> and click column headers to sort by multiple columns.</div>
+              <div class="sort-hint" data-i18n="sortHint">*Hold <b>Shift</b> and click column headers to sort by multiple columns.</div>
           </div>
         </div>
 
@@ -562,6 +598,179 @@
     <div id="image-tooltip"></div>
 
     <script>
+        // --- TRANSLATION DICTIONARY ---
+        const translations = {
+            "en": {
+                navUs: "> US Fursuits", navAsia: "> Kemono Fursuits", navMaintenance: "> Maintenance",
+                headerTitle: "American Fursuit Makers", legendPremium: "MAKER COST PREMIUM",
+                low: "LOW", high: "HIGH", usPricing: "United States Pricing",
+                selectState: "Select Resident State", selectedMaker: "Selected Maker",
+                selectRow: "[ Select a row from the table below ]", avgPrice: "Average Price",
+                salesTax: "State Sales Tax:", shipGeo: "Shipping (Geographic Rate):",
+                totalCostLabel: "TOTAL ESTIMATED COST", interface: "Interface:",
+                dataset: "Dataset:", btnFull: "Full Suits", btnPartial: "Partial Suits",
+                suitPrice: "Fursuit Price:", showNA: "Show N/A Prices",
+                statusFilter: "Status:", allStatuses: "All Statuses", open: "Open", closed: "Closed",
+                sortHint: "*Hold <b>Shift</b> and click column headers to sort by multiple columns.",
+                usLabel: "United States", basedOn: "Based on", recorded: "total fursuits",
+                avgFollowers: "Average Followers", mostCommon: "Most Common Range",
+                majority: "Majority of pricing falls here", topPrices: "Top Prices",
+                topSuits: "Top 5 Most Fursuits Produced", topProd: "Top 10 Most Productive",
+                rankedBy: "(Ranked by Avg Works Per Year)",
+                thRow: "Row", thMaker: "Maker", thLogo: "Logo", thLocation: "Location",
+                thLink: "Link", thPreview: "Preview", thStatus: "Status",
+                thFursuits: "Fursuits", thWorks: "Avg Works/Yr", thFollowers: "Followers",
+                thAvgPrice: "Average Price", thShip: "Shipping", thTax: "Sales Tax", thTotal: "Total Cost"
+            },
+            "zh-TW": {
+                navUs: "> 美國獸裝", navAsia: "> 亞洲獸裝", navMaintenance: "> 維護",
+                headerTitle: "美國獸裝製作者", legendPremium: "製作者成本溢價",
+                low: "低", high: "高", usPricing: "美國定價",
+                selectState: "選擇居住州", selectedMaker: "已選製作者",
+                selectRow: "[ 請從下方表格選擇一行 ]", avgPrice: "平均價格",
+                salesTax: "州銷售稅:", shipGeo: "運費 (地理費率):",
+                totalCostLabel: "預估總成本", interface: "介面:",
+                dataset: "資料集:", btnFull: "全套獸裝", btnPartial: "半套獸裝",
+                suitPrice: "獸裝價格:", showNA: "顯示無價格",
+                statusFilter: "狀態:", allStatuses: "所有狀態", open: "開放", closed: "關閉",
+                sortHint: "*按住 <b>Shift</b> 並點擊欄位標題可進行多重排序。",
+                usLabel: "美國", basedOn: "基於", recorded: "記錄的獸裝",
+                avgFollowers: "平均粉絲數", mostCommon: "最常見價格區間",
+                majority: "大多數定價落在這裡", topPrices: "最高價格",
+                topSuits: "產量最高前五名", topProd: "最高產量前十名",
+                rankedBy: "(按年平均作品數排名)",
+                thRow: "行", thMaker: "製作者", thLogo: "標誌", thLocation: "地點",
+                thLink: "連結", thPreview: "預覽", thStatus: "狀態",
+                thFursuits: "獸裝數", thWorks: "年均作品", thFollowers: "粉絲數",
+                thAvgPrice: "平均價格", thShip: "運費", thTax: "銷售稅", thTotal: "總成本"
+            },
+            "zh-CN": {
+                navUs: "> 美国兽装", navAsia: "> 亚洲兽装", navMaintenance: "> 维护",
+                headerTitle: "美国兽装制作者", legendPremium: "制作者成本溢价",
+                low: "低", high: "高", usPricing: "美国定价",
+                selectState: "选择居住州", selectedMaker: "已选制作者",
+                selectRow: "[ 请从下方表格选择一行 ]", avgPrice: "平均价格",
+                salesTax: "州销售税:", shipGeo: "运费 (地理费率):",
+                totalCostLabel: "预估总成本", interface: "界面:",
+                dataset: "数据集:", btnFull: "全套兽装", btnPartial: "半套兽装",
+                suitPrice: "兽装价格:", showNA: "显示无价格",
+                statusFilter: "状态:", allStatuses: "所有状态", open: "开放", closed: "关闭",
+                sortHint: "*按住 <b>Shift</b> 并点击列标题可进行多重排序。",
+                usLabel: "美国", basedOn: "基于", recorded: "记录的兽装",
+                avgFollowers: "平均粉丝数", mostCommon: "最常见价格区间",
+                majority: "大多数定价落在这里", topPrices: "最高价格",
+                topSuits: "产量最高前五名", topProd: "最高产量前十名",
+                rankedBy: "(按年平均作品数排名)",
+                thRow: "行", thMaker: "制作者", thLogo: "标志", thLocation: "地点",
+                thLink: "链接", thPreview: "预览", thStatus: "状态",
+                thFursuits: "兽装数", thWorks: "年均作品", thFollowers: "粉丝数",
+                thAvgPrice: "平均价格", thShip: "运费", thTax: "销售税", thTotal: "总成本"
+            },
+            "ko": {
+                navUs: "> 미국 퍼수트", navAsia: "> 아시아 퍼수트", navMaintenance: "> 유지보수",
+                headerTitle: "미국 퍼수트 제작자", legendPremium: "제작자 비용 프리미엄",
+                low: "낮음", high: "높음", usPricing: "미국 가격",
+                selectState: "거주 주 선택", selectedMaker: "선택된 제작자",
+                selectRow: "[ 아래 표에서 행을 선택하세요 ]", avgPrice: "평균 가격",
+                salesTax: "주 판매세:", shipGeo: "배송비 (지역 요금):",
+                totalCostLabel: "총 예상 비용", interface: "인터페이스:",
+                dataset: "데이터셋:", btnFull: "풀수트", btnPartial: "파셜",
+                suitPrice: "퍼수트 가격:", showNA: "가격 없음 표시",
+                statusFilter: "상태:", allStatuses: "모든 상태", open: "열림", closed: "닫힘",
+                sortHint: "*<b>Shift</b> 키를 누르고 열 제목을 클릭하면 다중 정렬이 가능합니다.",
+                usLabel: "미국", basedOn: "기준", recorded: "기록된 퍼수트",
+                avgFollowers: "평균 팔로워", mostCommon: "가장 흔한 가격대",
+                majority: "대부분의 가격이 여기에 해당합니다", topPrices: "최고 가격",
+                topSuits: "가장 많이 제작된 상위 5명", topProd: "가장 생산적인 상위 10명",
+                rankedBy: "(연간 평균 작품 수 기준)",
+                thRow: "행", thMaker: "제작자", thLogo: "로고", thLocation: "위치",
+                thLink: "링크", thPreview: "미리보기", thStatus: "상태",
+                thFursuits: "퍼수트 수", thWorks: "연간 작품", thFollowers: "팔로워",
+                thAvgPrice: "평균 가격", thShip: "배송비", thTax: "판매세", thTotal: "총 비용"
+            },
+            "ja": {
+                navUs: "> 米国の着ぐるみ", navAsia: "> アジアの着ぐるみ", navMaintenance: "> メンテナンス",
+                headerTitle: "米国の着ぐるみクリエイター", legendPremium: "クリエイターのコストプレミアム",
+                low: "低", high: "高", usPricing: "米国の価格設定",
+                selectState: "居住州を選択", selectedMaker: "選択されたクリエイター",
+                selectRow: "[ 下の表から行を選択してください ]", avgPrice: "平均価格",
+                salesTax: "州の売上税:", shipGeo: "送料 (地域料金):",
+                totalCostLabel: "総見積費用", interface: "インターフェース:",
+                dataset: "データセット:", btnFull: "フルスーツ", btnPartial: "パーシャル",
+                suitPrice: "着ぐるみ価格:", showNA: "価格なしを表示",
+                statusFilter: "ステータス:", allStatuses: "すべてのステータス", open: "受付中", closed: "受付停止",
+                sortHint: "*複数の列で並べ替えるには、<b>Shift</b> キーを押しながら列見出しをクリックします。",
+                usLabel: "米国", basedOn: "データ元", recorded: "記録された着ぐるみ",
+                avgFollowers: "平均フォロワー数", mostCommon: "最も一般的な価格帯",
+                majority: "価格の大部分がここに該当します", topPrices: "最高価格",
+                topSuits: "最も制作された上位5名", topProd: "最も生産的な上位10名",
+                rankedBy: "(年間の平均作品数によるランキング)",
+                thRow: "行", thMaker: "クリエイター", thLogo: "ロゴ", thLocation: "場所",
+                thLink: "リンク", thPreview: "プレビュー", thStatus: "ステータス",
+                thFursuits: "着ぐるみ数", thWorks: "年間作品", thFollowers: "フォロワー",
+                thAvgPrice: "平均価格", thShip: "送料", thTax: "売上税", thTotal: "総費用"
+            }
+        };
+
+        let currentLang = "en";
+        function t(key) { return translations[currentLang][key] || key; }
+
+        function applyTranslations() {
+            document.querySelectorAll("[data-i18n]").forEach(el => {
+                const key = el.getAttribute("data-i18n");
+                if (translations[currentLang][key]) { el.innerHTML = translations[currentLang][key]; }
+            });
+            if(table) {
+                table.updateColumnDefinition("rank", {title: t("thRow")});
+                table.updateColumnDefinition("maker", {title: t("thMaker")});
+                table.updateColumnDefinition("logo", {title: t("thLogo")});
+                table.updateColumnDefinition("country", {title: t("thLocation")});
+                table.updateColumnDefinition("link", {title: t("thLink")});
+                table.updateColumnDefinition("previewImages", {title: t("thPreview")});
+                table.updateColumnDefinition("status", {title: t("thStatus")});
+                table.updateColumnDefinition("fursuits", {title: t("thFursuits")});
+                table.updateColumnDefinition("worksPerYear", {title: t("thWorks")});
+                table.updateColumnDefinition("followers", {title: t("thFollowers")});
+                table.updateColumnDefinition("price", {title: t("thAvgPrice")});
+                table.updateColumnDefinition("calculatedShip", {title: t("thShip")});
+                table.updateColumnDefinition("calculatedTax", {title: t("thTax")});
+                table.updateColumnDefinition("calculatedTotal", {title: t("thTotal")});
+            }
+            updateAnalytics(loadedData);
+            updateCostCard();
+            updateSliderDisplay();
+        }
+
+        document.getElementById('lang-select').addEventListener('change', (e) => {
+            currentLang = e.target.value; applyTranslations();
+        });
+
+        // --- CURRENCY LOGIC ---
+        let currentCurrency = 'USD';
+        let exchangeRates = { USD: 1, KRW: 1, CNY: 1, TWD: 1, JPY: 1, EUR: 1 };
+        const currencySymbols = { USD: '$', KRW: '₩', CNY: '¥', TWD: 'NT$', JPY: '¥', EUR: '€' };
+
+        fetch('https://api.exchangerate-api.com/v4/latest/USD')
+            .then(res => res.json())
+            .then(data => { if (data && data.rates) { exchangeRates = { ...exchangeRates, ...data.rates }; } })
+            .catch(err => console.log('Exchange rate fetch failed, using defaults.', err));
+
+        function formatCurrency(usdValue) {
+            if (usdValue === null || isNaN(usdValue)) return "---";
+            const converted = usdValue * exchangeRates[currentCurrency];
+            const maxFrac = (currentCurrency === 'KRW' || currentCurrency === 'JPY') ? 0 : 0; 
+            return currencySymbols[currentCurrency] + converted.toLocaleString(undefined, { maximumFractionDigits: maxFrac });
+        }
+
+        document.getElementById('currency-select').addEventListener('change', (e) => {
+            currentCurrency = e.target.value;
+            if(table) table.redraw(true);
+            updateCostCard();
+            updateAnalytics(loadedData);
+            updateSliderDisplay();
+        });
+
+        // Global State Vars
         let table = null;
         let filterState = { priceMin: 1000, priceMax: 20000, showNA: true, status: "" };
         let totalDataCount = 0;
@@ -593,18 +802,16 @@
 
         function getShippingCost(makerState, residentState) {
             if (!makerState || !residentState || !stateCoords[makerState] || !stateCoords[residentState]) {
-                return 250; // Flat safe rate if location is unknown
+                return 250; 
             }
             const [lat1, lon1] = stateCoords[makerState];
             const [lat2, lon2] = stateCoords[residentState];
-            const R = 3958.8; // Earth radius miles
+            const R = 3958.8; 
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             const miles = R * c;
-            
-            // Dimensional Oversize Box Model Proxy
             return Math.round(120 + (miles * 0.08)); 
         }
 
@@ -612,11 +819,6 @@
         let comboCount = 0;
         let comboTimeout;
         let isExploded = false;
-
-        function formatCurrency(usdValue) {
-            if (usdValue === null || isNaN(usdValue)) return "---";
-            return '$' + usdValue.toLocaleString(undefined, { maximumFractionDigits: 0 });
-        }
 
         // --- TOGGLE LOGIC ---
         function setupToggle(btnId, targetId, textEnabled, textDisabled) {
@@ -736,7 +938,7 @@
                              tooltip.html(`
                                 <strong style="color:#00d2ff;font-size:1.1em">${sName}</strong><br>
                                 Makers: ${d.count}<br>
-                                Avg Price: ${formatCurrency(d.avgPrice)}<br>
+                                ${t("avgPrice")}: ${formatCurrency(d.avgPrice)}<br>
                                 <hr style="border-color:#333;margin:5px 0;">
                                 <div class="marquee-container">
                                     <div class="marquee-content" style="animation-duration: ${animDuration}s;">
@@ -806,11 +1008,16 @@
                 updateResultCounter(activeRows.length, totalDataCount);
             }
         }
+        
+        function updateSliderDisplay() {
+            const el = document.getElementById('price-values');
+            if (el) el.innerText = `${formatCurrency(filterState.priceMin)} - ${formatCurrency(filterState.priceMax)}`;
+        }
 
-        // --- NEW 3-PANEL ANALYTICS GRID LOGIC ---
+        // --- NEW 3-PANEL ANALYTICS GRID LOGIC (Original China Layout) ---
         function updateAnalytics(data) {
             const container = document.getElementById('analytics-area');
-            let sumPrice = 0, countPrice = 0, totalFursuitsSum = 0, prices = [];
+            let sumPrice = 0, countPrice = 0, sumFollowers = 0, countFollowers = 0, totalFursuitsSum = 0, prices = [];
 
             let topExpensive = [...data].filter(d => d.price).sort((a,b) => b.price - a.price).slice(0, 5);
             let topFursuits = [...data].filter(d => d.fursuits).sort((a,b) => b.fursuits - a.fursuits).slice(0, 5);
@@ -819,9 +1026,9 @@
             data.forEach(row => {
                 if (row.price !== null && !isNaN(row.price)) { sumPrice += row.price; countPrice++; prices.push(row.price); }
                 if (row.fursuits !== null && !isNaN(row.fursuits)) { totalFursuitsSum += row.fursuits; }
+                if (row.followers !== null && !isNaN(row.followers)) { sumFollowers += row.followers; countFollowers++; }
             });
 
-            // Peak Price Range calculations
             let bins = [], peakLow = 0, peakHigh = 0;
             if (prices.length > 0) {
                 const sorted = prices.sort((a,b)=>a-b);
@@ -834,12 +1041,14 @@
             }
 
             const avgPrice = countPrice > 0 ? Math.round(sumPrice / countPrice) : 0;
+            const avgFollowers = countFollowers > 0 ? Math.round(sumFollowers / countFollowers) : 0;
+            const fmtFollowers = avgFollowers > 999 ? (avgFollowers/1000).toFixed(1) + 'k' : avgFollowers;
+            
             const peakStr = (peakLow && peakHigh) ? `${formatCurrency(peakLow)} - ${formatCurrency(peakHigh)}` : "N/A";
             const fmtTotalFursuits = totalFursuitsSum.toLocaleString();
 
-            // Generate HTML Mini Bar Rows with WIDER labels aligned left
             const maxExp = topExpensive.length ? topExpensive[0].price : 1;
-            let htmlTopExp = topExpensive.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-price" style="width:${(d.price/maxExp)*100}%;"></div></div><div class="mini-bar-value">$${Math.round(d.price/1000)}k</div></div>`).join('');
+            let htmlTopExp = topExpensive.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-price" style="width:${(d.price/maxExp)*100}%;"></div></div><div class="mini-bar-value">${formatCurrency(d.price)}</div></div>`).join('');
 
             const maxSuits = topFursuits.length ? topFursuits[0].fursuits : 1;
             let htmlTopSuits = topFursuits.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-suits" style="width:${(d.fursuits/maxSuits)*100}%;"></div></div><div class="mini-bar-value">${d.fursuits}</div></div>`).join('');
@@ -847,34 +1056,37 @@
             const maxProd = topProductive.length ? topProductive[0].worksPerYear : 1;
             let htmlTopProd = topProductive.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-prod" style="width:${(d.worksPerYear/maxProd)*100}%;"></div></div><div class="mini-bar-value">${d.worksPerYear}</div></div>`).join('');
 
-            // Inject the 3-Card Grid with Flex Division
+            // Inject the 3-Card Grid matching the original Index.html China Layout
             container.innerHTML = `
-            <div class="promo-card theme-usa" style="grid-column: span 1.5; justify-content: center;">
+            <div class="promo-card theme-usa" style="grid-column: span 1.5;">
                 <svg id="curve-us" class="promo-bg-curve-container" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
                 <div class="promo-content-layer">
                     <div class="promo-left">
-                        <div class="chart-title" style="color:#ff8c00; border:none; padding:0; margin:0;">United States</div>
-                        <div style="font-size: 2.8em; font-weight: bold; margin: 10px 0;">${formatCurrency(avgPrice)}</div>
-                        <div style="font-size: 0.9em; color: #aaa; line-height: 1.3;">Average Price<br>Based on ${fmtTotalFursuits} total fursuits</div>
+                        <div class="promo-title">${t("usLabel")}</div>
+                        <div class="promo-stat-large">${formatCurrency(avgPrice)}</div>
+                        <div class="promo-sub">${t("avgPrice")}<br>${t("basedOn")} ${fmtTotalFursuits} ${t("recorded")}</div>
+                        <hr class="promo-divider">
+                        <div class="promo-stat-large" style="font-size:1.8em;">${fmtFollowers}</div>
+                        <div class="promo-sub">${t("avgFollowers")}</div>
                     </div>
                     <div class="promo-right">
-                        <div style="font-size: 0.9em; color: #ccc; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">Most Common Range</div>
-                        <div style="font-size: 1.6em; font-weight: bold; color: #ff8c00; margin-bottom: 5px;">${peakStr}</div>
-                        <div style="font-size: 0.9em; color: #aaa; line-height: 1.3;">Majority of pricing falls here</div>
+                         <div class="peak-label">${t("mostCommon")}</div>
+                         <div class="peak-range">${peakStr}</div>
+                         <div class="promo-sub">${t("majority")}</div>
                     </div>
                 </div>
             </div>
 
             <div class="promo-card" style="border-color:#ff5252;">
-                <div class="chart-title" style="color:#ff5252; margin-bottom:10px;">Top 5 Highest Prices</div>
+                <div class="chart-title" style="color:#ff5252; margin-bottom:10px;">${t("topPrices")}</div>
                 ${htmlTopExp}
-                <div class="chart-title" style="color:#00E676; margin-top:15px; margin-bottom:10px;">Top 5 Most Fursuits Produced</div>
+                <div class="chart-title" style="color:#00E676; margin-top:15px; margin-bottom:10px;">${t("topSuits")}</div>
                 ${htmlTopSuits}
             </div>
 
             <div class="promo-card" style="border-color:#ff8c00;">
-                <div class="chart-title" style="color:#ff8c00; margin-bottom:15px;">Top 10 Most Productive</div>
-                <div style="color:#aaa; font-size:0.75em; margin-bottom:10px;">(Ranked by Avg Works Per Year)</div>
+                <div class="chart-title" style="color:#ff8c00; margin-bottom:15px;">${t("topProd")}</div>
+                <div style="color:#aaa; font-size:0.75em; margin-bottom:10px;">${t("rankedBy")}</div>
                 ${htmlTopProd}
             </div>
             `;
@@ -887,13 +1099,12 @@
                 const area = d3.area().x(d => xCurv(d.x0 + (d.x1 - d.x0) / 2)).y0(height).y1(d => yCurv(d.length)).curve(d3.curveBasis); 
                 svgCurve.append("path").datum(bins).attr("class", "promo-bg-curve").attr("d", area);
                 
-                // Overlay dashed vertical line for the mathematical average
-                const avgX = xCurv(avgPrice);
+                const avgX = xCurv(avgPrice / exchangeRates[currentCurrency]); // Map against original USD bins
                 if(avgX >= 0 && avgX <= width) {
                     svgCurve.append("line")
                         .attr("x1", avgX).attr("x2", avgX)
                         .attr("y1", 0).attr("y2", height)
-                        .attr("stroke", "#ff8c00")
+                        .attr("stroke", "#fff")
                         .attr("stroke-width", 2)
                         .attr("stroke-dasharray", "4,4")
                         .style("opacity", 0.8);
@@ -910,15 +1121,15 @@
                 layout: "fitData",
                 movableColumns: true,
                 resizableColumns: true,
-                selectableRows: 1, // Enable single-row selection highlighting
+                selectableRows: 1, 
                 placeholder:"No Data Available",
                 height: "100%", 
                 initialSort:[ {column:"rank", dir:"asc"} ],
                 dataFiltered: function(filters, rows) { updateResultCounter(rows.length, totalDataCount); },
                 columns: [
-                    { title: "Row", field:"rank", visible:true, sorter:"number" },
+                    { title: t("thRow"), field:"rank", visible:true, sorter:"number" },
                     { 
-                        title: "Maker", field:"maker", cssClass: "text-cell",
+                        title: t("thMaker"), field:"maker", cssClass: "text-cell",
                         formatter: function(cell) {
                             const data = cell.getData();
                             const days = data.daysInactive;
@@ -934,15 +1145,15 @@
                         }
                     },
                     { 
-                        title: "Logo", field:"logo", hozAlign:"center", width:90, 
+                        title: t("thLogo"), field:"logo", hozAlign:"center", width:90, 
                         formatter:function(cell){
                             const val = cell.getValue();
                             return val ? `<div class="logo-box" data-src="${val}" style="background-image:url('${val}');"></div>` : "";
                         }
                     },
-                    { title: "Location", field:"country", formatter: formatTextCell, cssClass: "text-cell" },
+                    { title: t("thLocation"), field:"country", formatter: formatTextCell, cssClass: "text-cell" },
                     { 
-                        title: "Link", field:"link", hozAlign:"center",
+                        title: t("thLink"), field:"link", hozAlign:"center",
                         formatter: function(cell) {
                             const url = cell.getValue();
                             if(!url) return "";
@@ -950,7 +1161,7 @@
                         }
                     },
                     { 
-                        title: "Preview", field: "previewImages", hozAlign: "center", width: 200,
+                        title: t("thPreview"), field: "previewImages", hozAlign: "center", width: 200,
                         formatter: function(cell) {
                            const imageUrls = cell.getValue();
                            if (!imageUrls || imageUrls.length === 0) return "";
@@ -967,16 +1178,16 @@
                            return container;
                         }
                     },
-                    { title: "Status", field:"status", formatter: formatTextCell, cssClass: "text-cell" },
-                    { title: "Fursuits", field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
-                    { title: "Avg Works/Yr", field:"worksPerYear", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
-                    { title: "Followers", field:"followers", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
+                    { title: t("thStatus"), field:"status", formatter: formatTextCell, cssClass: "text-cell" },
+                    { title: t("thFursuits"), field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
+                    { title: t("thWorks"), field:"worksPerYear", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title: t("thFollowers"), field:"followers", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
                     { 
-                        title: "Average Price", field:"price", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" },
+                        title: t("thAvgPrice"), field:"price", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" },
                         formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(formatCurrency(cell.getValue())) : "---"; }
                     },
                     {
-                        title: "Shipping", field: "calculatedShip", hozAlign: "right", sorter: "number",
+                        title: t("thShip"), field: "calculatedShip", hozAlign: "right", sorter: "number",
                         mutator: function(value, data) { return getShippingCost(data.country, currentResidentState); },
                         formatter: function(cell) {
                             const ship = cell.getValue();
@@ -984,7 +1195,7 @@
                         }
                     },
                     {
-                        title: "Sales Tax", field: "calculatedTax", hozAlign: "right", sorter: "number",
+                        title: t("thTax"), field: "calculatedTax", hozAlign: "right", sorter: "number",
                         mutator: function(value, data) { return (data.price || 0) * currentTaxRate; },
                         formatter: function(cell) {
                             const tax = cell.getValue();
@@ -992,7 +1203,7 @@
                         }
                     },
                     {
-                        title: "Total Cost", field: "calculatedTotal", hozAlign: "right", sorter: "number",
+                        title: t("thTotal"), field: "calculatedTotal", hozAlign: "right", sorter: "number",
                         mutator: function(value, data) {
                             const price = data.price || 0;
                             const tax = price * currentTaxRate;
@@ -1021,13 +1232,14 @@
                 download: true, header: true, dynamicTyping: true,
                 complete: function(results) {
                     const data = results.data.map(row => {
+                        const rawPrice = cleanNumber(row['Average Price']);
                         return {
                             rank: cleanNumber(row['Rank']),
                             maker: row['Maker'],
                             logo: (row['Logo'] && row['Logo'].match(/=IMAGE\("(.+)"\)/)) ? row['Logo'].match(/=IMAGE\("(.+)"\)/)[1] : row['Logo'],
                             link: row['Link'],
                             previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
-                            price: cleanNumber(row['Average Price']),
+                            price: rawPrice,
                             status: row['Status'],
                             fursuits: cleanNumber(row['Total Fursuits'] || row['Fursuits']),
                             worksPerYear: cleanNumber(row['Works Per Year']),
@@ -1040,7 +1252,7 @@
                     
                     loadedData = data; 
                     totalDataCount = data.length;
-                    updateAnalytics(data);
+                    applyTranslations(); // Applies text, handles map/table init implicitly via updates
                     initTable(data);
                     drawMap(data);
 
@@ -1132,7 +1344,7 @@
                     const values = slider.noUiSlider.get();
                     filterState.priceMin = parseInt(values[0]); filterState.priceMax = parseInt(values[1]);
                     filterState.showNA = document.getElementById('show-na-prices').checked;
-                    document.getElementById('price-values').innerText = `${formatCurrency(filterState.priceMin)} - ${formatCurrency(filterState.priceMax)}`;
+                    updateSliderDisplay();
                     updateTableFilters();
                 };
                 slider.noUiSlider.on('update', updateTableFilter);
