@@ -1527,12 +1527,8 @@
             const headerText = document.getElementById('header-text');
             const h1 = document.querySelector('h1'); 
             
-            let comboEl = document.getElementById('combo-counter');
-            if (!comboEl) {
-                comboEl = document.createElement('span');
-                comboEl.id = 'combo-counter';
-                headerText.appendChild(comboEl);
-            }
+			let comboEl = document.getElementById('combo-counter');
+			if (!comboEl) { comboEl = document.createElement('span'); comboEl.id = 'combo-counter'; document.body.appendChild(comboEl); }
 
             let starInterval;
             function createStar() {
