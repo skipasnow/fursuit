@@ -895,34 +895,44 @@
             }
         }
 
-        function toggleStateSelection(stateName) {
-            if(filterState.states.has(stateName)) {
-                filterState.states.delete(stateName);
-            } else {
-                filterState.states.add(stateName);
-            }
-            
-            d3.selectAll(".state").classed("selected", d => filterState.states.has(d.properties.name));
-            
-            const indicator = document.getElementById("map-filter-indicator");
-            const listSpan = document.getElementById("map-filter-list");
-            if (filterState.states.size > 0) {
-                indicator.style.display = "block";
-                listSpan.textContent = Array.from(filterState.states).join(", ");
-            } else {
-                indicator.style.display = "none";
-            }
-            
-            updateTableFilters();
-        }
+		function toggleStateSelection(stateName) {
+			if(filterState.states.has(stateName)) {
+				filterState.states.delete(stateName);
+			} else {
+				filterState.states.add(stateName);
+			}
+			
+			d3.selectAll(".state").classed("selected", d => filterState.states.has(d.properties.name));
+			
+			const indicator = document.getElementById("map-filter-indicator");
+			const listSpan = document.getElementById("map-filter-list");
+			if (filterState.states.size > 0) {
+				indicator.style.display = "block";
+				listSpan.textContent = Array.from(filterState.states).join(", ");
+			} else {
+				indicator.style.display = "none";
+			}
+			
+			updateTableFilters();
+
+			// Explicitly refresh analytics after Tabulator processes the filter
+			if (table) {
+				setTimeout(() => updateAnalytics(table.getData("active")), 30);
+			}
+		}
 
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById("clear-map-filter").addEventListener("click", () => {
-                filterState.states.clear();
-                d3.selectAll(".state").classed("selected", false);
-                document.getElementById("map-filter-indicator").style.display = "none";
-                updateTableFilters();
-            });
+			document.getElementById("clear-map-filter").addEventListener("click", () => {
+				filterState.states.clear();
+				d3.selectAll(".state").classed("selected", false);
+				document.getElementById("map-filter-indicator").style.display = "none";
+				updateTableFilters();
+
+				// Revert analytics to all-US data
+				if (table) {
+					setTimeout(() => updateAnalytics(table.getData("active")), 30);
+				}
+			});
         });
 
         // --- MAP LOGIC ---
