@@ -124,9 +124,10 @@
         /* --- COMBO COUNTER --- */
 		#combo-counter {
 			position: fixed;
+			font-size: 2em;
 			font-family: 'VCR OSD Mono', monospace; font-weight: bold;
 			color: #ff5252; text-shadow: 2px 2px 0px #fff; opacity: 0; pointer-events: none;
-			white-space: nowrap; z-index: 99999; transform: rotate(-25deg) scale(1); 
+			white-space: nowrap; z-index: 99999; transform: rotate(-25deg); 
 			transition: opacity 0.2s ease, color 0.2s ease;
 		}
         @keyframes combo-shake {
@@ -1484,8 +1485,7 @@
             // Explosions & Combo
             const headerText = document.getElementById('header-text');
             const h1 = document.querySelector('h1'); 
-            let comboEl = document.getElementById('combo-counter');
-			if (!comboEl) { comboEl = document.createElement('span'); comboEl.id = 'combo-counter'; document.body.appendChild(comboEl); }
+            const comboEl = document.getElementById('combo-counter');
 
             let starInterval;
             function createStar() {
@@ -1742,5 +1742,6 @@
 			}
 		}, { passive: false });
     </script>
+	<span id="combo-counter"></span>
 </body>
 </html>
