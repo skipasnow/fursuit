@@ -696,7 +696,7 @@
                 topProd10: "가장 생산적인 상위 10명", topProd: "가장 생산적임",
                 rankedBy: "(연간 평균 작품 수 기준)", filteringBy: "필터링:", clearFilter: "지우기",
                 thRow: "행", thMaker: "제작자", thLogo: "로고", thLocation: "위치",
-                thLink: "링크", thPreview: "미리보기", 단thStatus: "상태",
+                thLink: "링크", thPreview: "미리보기", thStatus: "상태",
                 thFursuits: "퍼수트 수", thWorks: "연간 작품", thFollowers: "팔로워",
                 thAvgPrice: "평균 가격", thShip: "배송비", thTax: "판매세", thTotal: "총 비용"
             },
@@ -861,21 +861,21 @@
         setupToggle('stats-toggle-btn', 'analytics-area', 'Stats: ENABLED', 'Stats: DISABLED');
 
         // --- FILTER LOGIC ---
-        function masterFilter(row) {
-            const price = row.price;
+        function masterFilter(data, filterParams) {
+            const price = data.price;
             let priceMatch = false;
             if (typeof price !== 'number') {
-                priceMatch = filterState.showNA;
+                priceMatch = filterParams.showNA;
             } else {
-                priceMatch = price >= filterState.priceMin && price <= filterState.priceMax;
+                priceMatch = price >= filterParams.priceMin && price <= filterParams.priceMax;
             }
             if(!priceMatch) return false;
 
-            if (filterState.status !== "" && row.status !== filterState.status) {
+            if (filterParams.status !== "" && data.status !== filterParams.status) {
                 return false;
             }
 
-            if (filterState.states.size > 0 && !filterState.states.has(row.country)) {
+            if (filterParams.states.length > 0 && !filterParams.states.includes(data.country)) {
                 return false;
             }
 
@@ -884,11 +884,13 @@
 
         function updateTableFilters() {
             if(table) {
-                // Force Tabulator to evaluate a new filter reference
-                table.setFilter(function(data){ return masterFilter(data); }).then(() => {
-                    const activeData = table.getData("active");
-                    updateAnalytics(activeData);
-                    updateResultCounter(activeData.length, totalDataCount);
+                // By passing the function AND a dynamically rebuilt params object, Tabulator perfectly recognizes the filter update
+                table.setFilter(masterFilter, {
+                    priceMin: filterState.priceMin,
+                    priceMax: filterState.priceMax,
+                    showNA: filterState.showNA,
+                    status: filterState.status,
+                    states: Array.from(filterState.states)
                 });
             }
         }
@@ -1094,23 +1096,33 @@
                 if (row.followers !== null && !isNaN(row.followers)) { sumFollowers += row.followers; countFollowers++; }
             });
 
-            // Peak Price Range calculations
+            // Peak Price Range calculations - Hardened against D3 Math Crashes for single records
             let bins = [], peakLow = 0, peakHigh = 0;
-            if (prices.length > 0) {
+            if (prices.length > 1 && d3.extent(prices)[0] !== d3.extent(prices)[1]) {
                 const sorted = prices.sort((a,b)=>a-b);
                 const x = d3.scaleLinear().domain(d3.extent(sorted)).range([0, 300]);
                 const histogram = d3.bin().domain(x.domain()).thresholds(x.ticks(15));
                 bins = histogram(sorted);
-                let maxBin = bins[0];
-                bins.forEach(bin => { if(bin.length > maxBin.length) maxBin = bin; });
-                peakLow = maxBin.x0; peakHigh = maxBin.x1;
+                if (bins.length > 0) {
+                    let maxBin = bins[0];
+                    bins.forEach(bin => { if(bin.length > maxBin.length) maxBin = bin; });
+                    peakLow = maxBin.x0; peakHigh = maxBin.x1;
+                }
+            } else if (prices.length > 0) {
+                peakLow = prices[0];
+                peakHigh = prices[0];
             }
 
             const avgPrice = countPrice > 0 ? Math.round(sumPrice / countPrice) : 0;
             const avgFollowers = countFollowers > 0 ? Math.round(sumFollowers / countFollowers) : 0;
             const fmtFollowers = avgFollowers > 999 ? (avgFollowers/1000).toFixed(1) + 'k' : avgFollowers;
             
-            const peakStr = (peakLow && peakHigh) ? `${formatCurrency(peakLow)} - ${formatCurrency(peakHigh)}` : "N/A";
+            let peakStr = "N/A";
+            if (peakLow && peakHigh) {
+                if (peakLow === peakHigh) { peakStr = formatCurrency(peakLow); } 
+                else { peakStr = `${formatCurrency(peakLow)} - ${formatCurrency(peakHigh)}`; }
+            }
+            
             const fmtTotalFursuits = totalFursuitsSum.toLocaleString();
 
             const maxExp = topExpensive.length ? topExpensive[0].price : 1;
@@ -1169,6 +1181,8 @@
                 const yCurv = d3.scaleLinear().domain([0, d3.max(bins, d => d.length)]).range([height, 0]);
                 const area = d3.area().x(d => xCurv(d.x0 + (d.x1 - d.x0) / 2)).y0(height).y1(d => yCurv(d.length)).curve(d3.curveBasis); 
                 svgCurve.append("path").datum(bins).attr("class", "promo-bg-curve").attr("d", area);
+            } else {
+                d3.select(`#curve-us`).selectAll("*").remove();
             }
         }
 
@@ -1185,6 +1199,11 @@
                 placeholder:"No Data Available",
                 height: "100%", 
                 initialSort:[ {column:"rank", dir:"asc"} ],
+                dataFiltered: function(filters, rows) { 
+                    const activeData = rows.map(r => r.getData());
+                    updateResultCounter(activeData.length, totalDataCount); 
+                    updateAnalytics(activeData);
+                },
                 columns: [
                     { title: t("thRow"), field:"rank", visible:true, sorter:"number" },
                     { 
