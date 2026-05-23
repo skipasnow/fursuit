@@ -274,7 +274,7 @@
         @media (max-width: 1024px) { .analytics-section { grid-template-columns: 1fr; } }
         
         .promo-card {
-            background: #1f1f1f; border: 1px solid #444; border-radius: 6px; padding: 15px; 
+            background: #1f1f1f; border: 1px solid #444; border-radius: 6px; padding: 20px; 
             display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
             position: relative; overflow: hidden; height: 290px; box-sizing: border-box;
         }
@@ -284,6 +284,11 @@
         .theme-usa { border-color: #ff8c00; box-shadow: inset 0 0 20px rgba(255, 140, 0, 0.05); }
         .theme-usa .promo-bg-curve-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; pointer-events: none; z-index: 0; opacity: 0.2; }
         .theme-usa .promo-bg-curve { fill: #ff8c00; }
+
+        /* Left/Right Card Layout for Market Avg */
+        .promo-content-layer { position: relative; z-index: 1; display: flex; height: 100%; align-items: center; justify-content: space-between; }
+        .promo-left { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-right: 20px; }
+        .promo-right { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-left: 20px; border-left: 2px solid #fff; text-align: left; }
 
         /* HTML Mini Bar Charts */
         .mini-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 0.85em; }
@@ -420,56 +425,57 @@
                 <div class="data-header-subtitle">Select Resident State</div>
                 
                 <select id="state-select" style="width:100%; padding:10px; background:#333; color:#fff; border:1px solid #555; border-radius:4px; font-size:1.1em; margin-bottom:15px; cursor:pointer;">
-                    <option value="0.0400">Alabama (4.00%)</option>
-                    <option value="0.0000">Alaska (0.00%)</option>
-                    <option value="0.0560">Arizona (5.60%)</option>
-                    <option value="0.0650">Arkansas (6.50%)</option>
-                    <option value="0.0725">California (7.25%)</option>
-                    <option value="0.0290">Colorado (2.90%)</option>
-                    <option value="0.0635">Connecticut (6.35%)</option>
-                    <option value="0.0000">Delaware (0.00%)</option>
-                    <option value="0.0600">Florida (6.00%)</option>
-                    <option value="0.0400">Georgia (4.00%)</option>
-                    <option value="0.0400">Hawaii (4.00%)</option>
-                    <option value="0.0600">Idaho (6.00%)</option>
-                    <option value="0.0625">Illinois (6.25%)</option>
-                    <option value="0.0700">Indiana (7.00%)</option>
-                    <option value="0.0600">Iowa (6.00%)</option>
-                    <option value="0.0650">Kansas (6.50%)</option>
-                    <option value="0.0600">Kentucky (6.00%)</option>
-                    <option value="0.0445">Louisiana (4.45%)</option>
-                    <option value="0.0550" selected>Maine (5.50%)</option>
-                    <option value="0.0600">Maryland (6.00%)</option>
-                    <option value="0.0625">Massachusetts (6.25%)</option>
-                    <option value="0.0600">Michigan (6.00%)</option>
-                    <option value="0.0688">Minnesota (6.88%)</option>
-                    <option value="0.0700">Mississippi (7.00%)</option>
-                    <option value="0.0423">Missouri (4.23%)</option>
-                    <option value="0.0000">Montana (0.00%)</option>
-                    <option value="0.0550">Nebraska (5.50%)</option>
-                    <option value="0.0685">Nevada (6.85%)</option>
-                    <option value="0.0000">New Hampshire (0.00%)</option>
-                    <option value="0.0663">New Jersey (6.63%)</option>
-                    <option value="0.0513">New Mexico (5.13%)</option>
-                    <option value="0.0400">New York (4.00%)</option>
-                    <option value="0.0475">North Carolina (4.75%)</option>
-                    <option value="0.0500">North Dakota (5.00%)</option>
-                    <option value="0.0575">Ohio (5.75%)</option>
-                    <option value="0.0450">Oklahoma (4.50%)</option>
-                    <option value="0.0000">Oregon (0.00%)</option>
-                    <option value="0.0600">Pennsylvania (6.00%)</option>
-                    <option value="0.0700">Rhode Island (7.00%)</option>
-                    <option value="0.0600">South Carolina (6.00%)</option>
-                    <option value="0.0450">South Dakota (4.50%)</option>
-                    <option value="0.0700">Tennessee (7.00%)</option>
-                    <option value="0.0625">Texas (6.25%)</option>
-                    <option value="0.0610">Utah (6.10%)</option>
-                    <option value="0.0600">Vermont (6.00%)</option>
-                    <option value="0.0530">Virginia (5.30%)</option>
-                    <option value="0.0650">Washington (6.50%)</option>
-                    <option value="0.0600">West Virginia (6.00%)</option>
-                    <option value="0.0500">Wisconsin (5.00%)</option>
-                    <option value="0.0400">Wyoming (4.00%)</option>
+                    <option value="0.0400" data-state="Alabama">Alabama (4.00%)</option>
+                    <option value="0.0000" data-state="Alaska">Alaska (0.00%)</option>
+                    <option value="0.0560" data-state="Arizona">Arizona (5.60%)</option>
+                    <option value="0.0650" data-state="Arkansas">Arkansas (6.50%)</option>
+                    <option value="0.0725" data-state="California">California (7.25%)</option>
+                    <option value="0.0290" data-state="Colorado">Colorado (2.90%)</option>
+                    <option value="0.0635" data-state="Connecticut">Connecticut (6.35%)</option>
+                    <option value="0.0000" data-state="Delaware">Delaware (0.00%)</option>
+                    <option value="0.0600" data-state="Florida">Florida (6.00%)</option>
+                    <option value="0.0400" data-state="Georgia">Georgia (4.00%)</option>
+                    <option value="0.0400" data-state="Hawaii">Hawaii (4.00%)</option>
+                    <option value="0.0600" data-state="Idaho">Idaho (6.00%)</option>
+                    <option value="0.0625" data-state="Illinois">Illinois (6.25%)</option>
+                    <option value="0.0700" data-state="Indiana">Indiana (7.00%)</option>
+                    <option value="0.0600" data-state="Iowa">Iowa (6.00%)</option>
+                    <option value="0.0650" data-state="Kansas">Kansas (6.50%)</option>
+                    <option value="0.0600" data-state="Kentucky">Kentucky (6.00%)</option>
+                    <option value="0.0445" data-state="Louisiana">Louisiana (4.45%)</option>
+                    <option value="0.0550" data-state="Maine" selected>Maine (5.50%)</option>
+                    <option value="0.0600" data-state="Maryland">Maryland (6.00%)</option>
+                    <option value="0.0625" data-state="Massachusetts">Massachusetts (6.25%)</option>
+                    <option value="0.0600" data-state="Michigan">Michigan (6.00%)</option>
+                    <option value="0.0688" data-state="Minnesota">Minnesota (6.88%)</option>
+                    <option value="0.0700" data-state="Mississippi">Mississippi (7.00%)</option>
+                    <option value="0.0423" data-state="Missouri">Missouri (4.23%)</option>
+                    <option value="0.0000" data-state="Montana">Montana (0.00%)</option>
+                    <option value="0.0550" data-state="Nebraska">Nebraska (5.50%)</option>
+                    <option value="0.0685" data-state="Nevada">Nevada (6.85%)</option>
+                    <option value="0.0000" data-state="New Hampshire">New Hampshire (0.00%)</option>
+                    <option value="0.0663" data-state="New Jersey">New Jersey (6.63%)</option>
+                    <option value="0.0513" data-state="New Mexico">New Mexico (5.13%)</option>
+                    <option value="0.0400" data-state="New York">New York (4.00%)</option>
+                    <option value="0.0475" data-state="North Carolina">North Carolina (4.75%)</option>
+                    <option value="0.0500" data-state="North Dakota">North Dakota (5.00%)</option>
+                    <option value="0.0575" data-state="Ohio">Ohio (5.75%)</option>
+                    <option value="0.0450" data-state="Oklahoma">Oklahoma (4.50%)</option>
+                    <option value="0.0000" data-state="Oregon">Oregon (0.00%)</option>
+                    <option value="0.0600" data-state="Pennsylvania">Pennsylvania (6.00%)</option>
+                    <option value="0.0700" data-state="Rhode Island">Rhode Island (7.00%)</option>
+                    <option value="0.0600" data-state="South Carolina">South Carolina (6.00%)</option>
+                    <option value="0.0450" data-state="South Dakota">South Dakota (4.50%)</option>
+                    <option value="0.0700" data-state="Tennessee">Tennessee (7.00%)</option>
+                    <option value="0.0625" data-state="Texas">Texas (6.25%)</option>
+                    <option value="0.0610" data-state="Utah">Utah (6.10%)</option>
+                    <option value="0.0600" data-state="Vermont">Vermont (6.00%)</option>
+                    <option value="0.0530" data-state="Virginia">Virginia (5.30%)</option>
+                    <option value="0.0650" data-state="Washington">Washington (6.50%)</option>
+                    <option value="0.0600" data-state="West Virginia">West Virginia (6.00%)</option>
+                    <option value="0.0500" data-state="Wisconsin">Wisconsin (5.00%)</option>
+                    <option value="0.0400" data-state="Wyoming">Wyoming (4.00%)</option>
+                    <option value="0.0600" data-state="District of Columbia">District of Columbia (6.00%)</option>
                 </select>
 
                 <div id="map-cost-card" class="map-cost-card active" style="opacity: 1; pointer-events: auto;">
@@ -488,7 +494,7 @@
                                 <span id="cost-tax" class="cost-highlight" style="color:#ff5252;">+$0</span>
                             </div>
                             <div class="cost-row" style="border-bottom:none;">
-                                <span class="cost-detail">Shipping:</span>
+                                <span class="cost-detail">Shipping (Geographic Rate):</span>
                                 <span id="cost-shipping" class="cost-highlight">+$0</span>
                             </div>
                         </div>
@@ -561,11 +567,46 @@
         let totalDataCount = 0;
         let loadedData = []; 
         let currentTaxRate = parseFloat(document.getElementById('state-select').value);
+        let currentResidentState = document.getElementById('state-select').options[document.getElementById('state-select').selectedIndex].getAttribute('data-state');
         let selectedMakerRow = null;
 
         // URLs (US Direct)
         const csvUrlFull = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTd3XRzddwumu-CCwvf-MwN4D-ar5KXqHaOIDRKGmn5yi_fhKCl9ZyW7BJy60cocXPNwV8f09XVY8_O/pub?gid=0&single=true&output=csv"; 
         const csvUrlPartial = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTd3XRzddwumu-CCwvf-MwN4D-ar5KXqHaOIDRKGmn5yi_fhKCl9ZyW7BJy60cocXPNwV8f09XVY8_O/pub?gid=605909937&single=true&output=csv"; 
+
+        // Geographic Coordinate Data for Distance Calc (Haversine Proxy)
+        const stateCoords = {
+            "Alabama": [32.8, -86.8], "Alaska": [61.3, -152.4], "Arizona": [33.7, -111.4], "Arkansas": [34.9, -92.3],
+            "California": [36.1, -119.6], "Colorado": [39.0, -105.3], "Connecticut": [41.5, -72.7], "Delaware": [39.3, -75.5],
+            "Florida": [27.7, -81.6], "Georgia": [32.1, -82.9], "Hawaii": [21.0, -157.5], "Idaho": [44.2, -114.7],
+            "Illinois": [40.3, -88.9], "Indiana": [39.8, -86.2], "Iowa": [42.0, -93.6], "Kansas": [38.5, -96.7],
+            "Kentucky": [37.6, -84.6], "Louisiana": [31.1, -91.8], "Maine": [44.6, -69.3], "Maryland": [39.0, -76.8],
+            "Massachusetts": [42.2, -71.5], "Michigan": [43.3, -85.6], "Minnesota": [45.6, -93.9], "Mississippi": [32.7, -89.6],
+            "Missouri": [38.4, -92.2], "Montana": [46.9, -110.3], "Nebraska": [41.1, -98.2], "Nevada": [38.3, -117.1],
+            "New Hampshire": [43.1, -71.5], "New Jersey": [40.2, -74.8], "New Mexico": [34.8, -106.2], "New York": [42.1, -74.9],
+            "North Carolina": [35.6, -79.8], "North Dakota": [47.5, -99.9], "Ohio": [40.3, -82.9], "Oklahoma": [35.5, -96.9],
+            "Oregon": [44.5, -122.0], "Pennsylvania": [40.5, -77.2], "Rhode Island": [41.6, -71.4], "South Carolina": [33.8, -80.9],
+            "South Dakota": [44.2, -99.9], "Tennessee": [35.7, -86.6], "Texas": [31.0, -97.5], "Utah": [40.1, -111.8],
+            "Vermont": [44.0, -72.6], "Virginia": [37.7, -78.1], "Washington": [47.3, -121.9], "West Virginia": [38.4, -80.9],
+            "Wisconsin": [44.2, -89.6], "Wyoming": [42.7, -107.3], "District of Columbia": [38.9, -77.0]
+        };
+
+        function getShippingCost(makerState, residentState) {
+            if (!makerState || !residentState || !stateCoords[makerState] || !stateCoords[residentState]) {
+                return 250; // Flat safe rate if location is unknown
+            }
+            const [lat1, lon1] = stateCoords[makerState];
+            const [lat2, lon2] = stateCoords[residentState];
+            const R = 3958.8; // Earth radius miles
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const miles = R * c;
+            
+            // Dimensional Oversize Box Model Proxy
+            return Math.round(120 + (miles * 0.08)); 
+        }
 
         // Combo Vars
         let comboCount = 0;
@@ -717,12 +758,12 @@
             });
         }
 
-        // --- TAX ESTIMATOR LOGIC ---
+        // --- TAX & SHIPPING ESTIMATOR LOGIC ---
         function updateCostCard() {
             if(!selectedMakerRow) return;
             const avgPrice = selectedMakerRow.price || 0;
             const tax = avgPrice * currentTaxRate;
-            const ship = selectedMakerRow.ship !== null ? selectedMakerRow.ship : 350;
+            const ship = getShippingCost(selectedMakerRow.country, currentResidentState);
             const total = avgPrice > 0 ? avgPrice + tax + ship : 0;
             
             document.getElementById('cost-maker-name').innerText = selectedMakerRow.maker;
@@ -734,6 +775,7 @@
 
         document.getElementById('state-select').addEventListener('change', (e) => {
             currentTaxRate = parseFloat(e.target.value);
+            currentResidentState = e.target.options[e.target.selectedIndex].getAttribute('data-state');
             if(table) table.redraw(true); 
             updateCostCard();
         });
@@ -805,21 +847,26 @@
             const maxProd = topProductive.length ? topProductive[0].worksPerYear : 1;
             let htmlTopProd = topProductive.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-prod" style="width:${(d.worksPerYear/maxProd)*100}%;"></div></div><div class="mini-bar-value">${d.worksPerYear}</div></div>`).join('');
 
-            // Inject the 3-Card Grid
+            // Inject the 3-Card Grid with Flex Division
             container.innerHTML = `
-            <div class="promo-card theme-usa" style="grid-column: span 1.5;">
-                <div class="chart-title" style="color:#ff8c00;">United States</div>
-                <div style="font-size: 2.2em; font-weight: bold; margin-top:5px;">${formatCurrency(avgPrice)}</div>
-                <div style="font-size: 0.8em; color: #aaa; line-height: 1.3;">Average Price<br>Based on ${fmtTotalFursuits} total fursuits</div>
-                <hr style="border:none; height:1px; background:#444; width:100%; margin: 15px 0;">
-                <div style="font-size: 0.8em; color: #ccc; text-transform: uppercase;">Most Common Range</div>
-                <div style="font-size: 1.3em; font-weight: bold; color: #ff8c00;">${peakStr}</div>
-                <div style="font-size: 0.8em; color: #aaa; line-height: 1.3; margin-top: 5px;">Majority of pricing falls here</div>
+            <div class="promo-card theme-usa" style="grid-column: span 1.5; justify-content: center;">
                 <svg id="curve-us" class="promo-bg-curve-container" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
+                <div class="promo-content-layer">
+                    <div class="promo-left">
+                        <div class="chart-title" style="color:#ff8c00; border:none; padding:0; margin:0;">United States</div>
+                        <div style="font-size: 2.8em; font-weight: bold; margin: 10px 0;">${formatCurrency(avgPrice)}</div>
+                        <div style="font-size: 0.9em; color: #aaa; line-height: 1.3;">Average Price<br>Based on ${fmtTotalFursuits} total fursuits</div>
+                    </div>
+                    <div class="promo-right">
+                        <div style="font-size: 0.9em; color: #ccc; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">Most Common Range</div>
+                        <div style="font-size: 1.6em; font-weight: bold; color: #ff8c00; margin-bottom: 5px;">${peakStr}</div>
+                        <div style="font-size: 0.9em; color: #aaa; line-height: 1.3;">Majority of pricing falls here</div>
+                    </div>
+                </div>
             </div>
 
             <div class="promo-card" style="border-color:#ff5252;">
-                <div class="chart-title" style="color:#ff5252; margin-bottom:10px;">Top 5 Prices</div>
+                <div class="chart-title" style="color:#ff5252; margin-bottom:10px;">Top 5 Highest Prices</div>
                 ${htmlTopExp}
                 <div class="chart-title" style="color:#00E676; margin-top:15px; margin-bottom:10px;">Top 5 Most Fursuits Produced</div>
                 ${htmlTopSuits}
@@ -827,7 +874,7 @@
 
             <div class="promo-card" style="border-color:#ff8c00;">
                 <div class="chart-title" style="color:#ff8c00; margin-bottom:15px;">Top 10 Most Productive</div>
-                <div style="color:#aaa; font-size:0.75em; margin-bottom:10px;">(Ranked by Avg Suits Per Year)</div>
+                <div style="color:#aaa; font-size:0.75em; margin-bottom:10px;">(Ranked by Avg Works Per Year)</div>
                 ${htmlTopProd}
             </div>
             `;
@@ -929,6 +976,14 @@
                         formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(formatCurrency(cell.getValue())) : "---"; }
                     },
                     {
+                        title: "Shipping", field: "calculatedShip", hozAlign: "right", sorter: "number",
+                        mutator: function(value, data) { return getShippingCost(data.country, currentResidentState); },
+                        formatter: function(cell) {
+                            const ship = cell.getValue();
+                            return ship > 0 ? wrapInTilt(`+${formatCurrency(ship)}`, "color:#a0a0b0;") : "---";
+                        }
+                    },
+                    {
                         title: "Sales Tax", field: "calculatedTax", hozAlign: "right", sorter: "number",
                         mutator: function(value, data) { return (data.price || 0) * currentTaxRate; },
                         formatter: function(cell) {
@@ -941,7 +996,7 @@
                         mutator: function(value, data) {
                             const price = data.price || 0;
                             const tax = price * currentTaxRate;
-                            const ship = data.ship !== null ? data.ship : 350;
+                            const ship = data.calculatedShip || 0;
                             return price > 0 ? price + tax + ship : 0;
                         },
                         formatter: function(cell) {
@@ -953,7 +1008,6 @@
             });
 
             table.on("rowClick", function(e, row){
-                // Deselect everything then formally select this single row
                 table.deselectRow();
                 row.select();
                 selectedMakerRow = row.getData();
@@ -967,17 +1021,13 @@
                 download: true, header: true, dynamicTyping: true,
                 complete: function(results) {
                     const data = results.data.map(row => {
-                        const rawPrice = cleanNumber(row['Average Price']);
-                        const rawTotal = cleanNumber(row['$ Total']) || cleanNumber(row['$ Ship']);
-                        
                         return {
                             rank: cleanNumber(row['Rank']),
                             maker: row['Maker'],
                             logo: (row['Logo'] && row['Logo'].match(/=IMAGE\("(.+)"\)/)) ? row['Logo'].match(/=IMAGE\("(.+)"\)/)[1] : row['Logo'],
                             link: row['Link'],
                             previewImages: row['Preview'] ? row['Preview'].split(/[\s,]+/).filter(u=>u.startsWith('http')) : [],
-                            price: rawPrice,
-                            ship: (rawTotal && rawPrice) ? (rawTotal - rawPrice) : 350,
+                            price: cleanNumber(row['Average Price']),
                             status: row['Status'],
                             fursuits: cleanNumber(row['Total Fursuits'] || row['Fursuits']),
                             worksPerYear: cleanNumber(row['Works Per Year']),
