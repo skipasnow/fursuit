@@ -696,7 +696,7 @@
                 topProd10: "가장 생산적인 상위 10명", topProd: "가장 생산적임",
                 rankedBy: "(연간 평균 작품 수 기준)", filteringBy: "필터링:", clearFilter: "지우기",
                 thRow: "행", thMaker: "제작자", thLogo: "로고", thLocation: "위치",
-                thLink: "링크", thPreview: "미리보기", thStatus: "상태",
+                thLink: "링크", thPreview: "미리보기", 단thStatus: "상태",
                 thFursuits: "퍼수트 수", thWorks: "연간 작품", thFollowers: "팔로워",
                 thAvgPrice: "평균 가격", thShip: "배송비", thTax: "판매세", thTotal: "총 비용"
             },
@@ -884,7 +884,12 @@
 
         function updateTableFilters() {
             if(table) {
-                table.setFilter(masterFilter);
+                // Force Tabulator to evaluate a new filter reference
+                table.setFilter(function(data){ return masterFilter(data); }).then(() => {
+                    const activeData = table.getData("active");
+                    updateAnalytics(activeData);
+                    updateResultCounter(activeData.length, totalDataCount);
+                });
             }
         }
 
@@ -1008,6 +1013,7 @@
                                 </div>
                              `);
                              
+                             // Anchor to Bottom-Left corner permanently
                              tooltip.style("display", "flex").style("opacity", 0);
                              tooltip.transition().duration(200).style("opacity", 1);
                          })
@@ -1018,6 +1024,7 @@
                     }
                 });
                 
+                // Keep the filter indicator visible across redraws if filters exist
                 if (filterState.states.size > 0) {
                     document.getElementById("map-filter-indicator").style.display = "block";
                     document.getElementById("map-filter-list").textContent = Array.from(filterState.states).join(", ");
@@ -1067,13 +1074,6 @@
             if(el) el.innerHTML = `Showing: <b>${activeCount}</b> <span style="font-size:0.8em; color:#666;">(of ${totalCount})</span>`;
         }
 
-        function refreshCounter() {
-            if(table) {
-                const activeRows = table.getData("active");
-                updateResultCounter(activeRows.length, totalDataCount);
-            }
-        }
-        
         function updateSliderDisplay() {
             const el = document.getElementById('price-values');
             if (el) el.innerText = `${formatCurrency(filterState.priceMin)} - ${formatCurrency(filterState.priceMax)}`;
@@ -1185,10 +1185,6 @@
                 placeholder:"No Data Available",
                 height: "100%", 
                 initialSort:[ {column:"rank", dir:"asc"} ],
-                dataFiltered: function(filters, rows) { 
-                    updateResultCounter(rows.length, totalDataCount); 
-                    updateAnalytics(rows.map(r => r.getData()));
-                },
                 columns: [
                     { title: t("thRow"), field:"rank", visible:true, sorter:"number" },
                     { 
