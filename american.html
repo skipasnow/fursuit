@@ -404,6 +404,114 @@
         .legend-title { color: #00E676; margin-bottom:4px; font-weight:bold; }
         .legend-gradient-retro { height: 10px; width: 100%; margin-bottom: 4px; background: linear-gradient(to right, #00E676 0%, #00E676 20%, #76FF03 20%, #76FF03 40%, #FFEA00 40%, #FFEA00 60%, #FF9100 60%, #FF9100 80%, #D50000 80%, #D50000 100%); }
         .legend-labels { display:flex; justify-content:space-between; color:#00E676; }
+		
+		/* =========================================
+		   MOBILE & TOUCH RESPONSIVE
+		   ========================================= */
+
+		/* Suppress hover-only visual effects on touch screens */
+		@media (hover: none) {
+			.state:hover { fill: transparent !important; stroke-width: 1px !important; }
+			.maker-marker:hover { stroke: #ff2a2a !important; stroke-width: 2px !important; filter: none !important; }
+			.nav-link:hover { color: #aaa !important; text-shadow: none !important; border-bottom: none !important; }
+		}
+
+		/* ---- Tablets (601–1024px) ---- */
+		@media (min-width: 601px) and (max-width: 1024px) {
+			.map-section { grid-template-columns: 1fr !important; }
+			.data-column { height: auto !important; }
+			.analytics-section { grid-template-columns: 1fr 1fr !important; }
+			.promo-card:first-child { grid-column: span 2; }
+			.promo-card { height: auto !important; min-height: 200px; }
+		}
+
+		/* ---- Portrait phones (≤600px) ---- */
+		@media (max-width: 600px) {
+			#top-pane { padding: 10px 10px 5px; }
+
+			h1 { font-size: 1.1em; min-height: 30px; margin-bottom: 8px; }
+
+			#nav-bar { gap: 8px; margin-bottom: 8px; padding-bottom: 8px; }
+			.nav-link { font-size: 0.8em; }
+
+			.map-section {
+				grid-template-columns: 1fr !important;
+				gap: 10px;
+				padding: 10px;
+			}
+			.map-column { aspect-ratio: 16/10 !important; min-height: 180px !important; }
+			.data-column { height: auto !important; }
+
+			/* State select and cost card more compact */
+			#state-select { font-size: 0.9em !important; padding: 8px !important; }
+			.cost-total-display { font-size: 1.4em !important; }
+
+			.analytics-section { grid-template-columns: 1fr !important; gap: 10px; }
+			.promo-card { height: auto !important; min-height: unset !important; }
+			.promo-content-layer { flex-direction: column !important; }
+			.promo-right {
+				border-left: none !important;
+				border-top: 1px dashed #444;
+				padding-left: 0 !important;
+				padding-top: 10px;
+				text-align: left !important;
+				align-items: flex-start !important;
+			}
+			.promo-stat-large { font-size: 1.6em !important; }
+
+			.controls-container { padding: 10px; gap: 10px; }
+			.control-group { width: 100%; }
+
+			/* 16px minimum prevents iOS auto-zoom on input focus */
+			select, button, input { font-size: 16px !important; }
+
+			select { width: 100%; padding: 10px; }
+			.dataset-toggle button { padding: 10px 6px; font-size: 14px !important; }
+			.toggle-btn { min-width: unset; flex: 1; }
+
+			.slider-group { padding: 0 5px; max-width: 100% !important; }
+
+			/* Larger touch targets for slider handles */
+			.noUi-handle { width: 34px !important; height: 34px !important; top: -14px !important; right: -17px !important; }
+			.noUi-pips { font-size: 9px !important; }
+
+			#table-pane { height: 70vh; padding: 0 5px; }
+
+			.controls-footer { flex-direction: column; align-items: flex-start; gap: 5px; }
+			.sort-hint { font-size: 0.7em; }
+
+			.legend-container { font-size: 0.6em; padding: 5px; }
+			.map-tooltip { font-size: 0.75em; min-width: 140px; max-width: 48%; }
+
+			/* Tap-to-preview image tooltip centered on screen */
+			#image-tooltip.touch-mode {
+				position: fixed !important;
+				width: 88vw !important;
+				height: 88vw !important;
+				left: 50% !important;
+				top: 50% !important;
+				transform: translate(-50%, -50%) !important;
+				border: 3px solid #ff8c00;
+				z-index: 999999 !important;
+			}
+			/* Full-screen tap-to-dismiss overlay */
+			#touch-dismiss-overlay {
+				position: fixed; inset: 0; z-index: 999998;
+				background: rgba(0,0,0,0.6);
+			}
+		}
+
+		/* ---- Landscape phones (≤900px wide, landscape orientation) ---- */
+		@media (max-width: 900px) and (orientation: landscape) {
+			.map-section { grid-template-columns: 1fr !important; }
+			.map-column { aspect-ratio: 21/9 !important; min-height: 130px !important; }
+			.data-column { height: auto !important; }
+			.analytics-section { grid-template-columns: 1fr 1fr !important; }
+			.promo-card:first-child { grid-column: span 2; }
+			.promo-card { height: auto !important; }
+			#table-pane { height: 58vh; }
+			.controls-container { gap: 8px; padding: 10px; }
+		}
     </style>
 </head>
 <body>
@@ -606,6 +714,10 @@
     <div id="image-tooltip"></div>
 
     <script>
+	
+		// Touch device detection
+		const isTouchDevice = () => ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
         // --- TRANSLATION DICTIONARY ---
         const translations = {
             "en": {
@@ -1420,8 +1532,21 @@
             });
             headerText.addEventListener('mouseleave', () => { clearInterval(starInterval); });
 
-            // Initial Load
-            loadTableData(csvUrlFull);
+			// Auto-collapse map and analytics on small touch screens to surface the table immediately
+			if (isTouchDevice() && window.innerWidth <= 600) {
+				['interactive-map-area', 'analytics-area'].forEach(id => {
+					document.getElementById(id).classList.add('minimized');
+				});
+				const mapBtn = document.getElementById('map-toggle-btn');
+				mapBtn.classList.remove('on'); mapBtn.classList.add('off');
+				mapBtn.textContent = 'Map: DISABLED';
+				const statsBtn = document.getElementById('stats-toggle-btn');
+				statsBtn.classList.remove('on'); statsBtn.classList.add('off');
+				statsBtn.textContent = 'Stats: DISABLED';
+			}
+
+			// Initial Load
+			loadTableData(csvUrlFull);
             
             // Build 1k increment array
             const pipValues = Array.from({length: 20}, (_, i) => (i+1)*1000);
@@ -1457,79 +1582,161 @@
         let lastTiltCell = null;
         let currentHoverBox = null; 
 
-        document.addEventListener('mousemove', e => {
-            const target = e.target;
-            const box = target.closest('.preview-box') || target.closest('.logo-box');
-            
-            if(box) {
-                let sizeVmin = 60; 
-                if (box.classList.contains('logo-box')) sizeVmin = 48;
-                tooltipEl.style.width = sizeVmin + 'vmin'; tooltipEl.style.height = sizeVmin + 'vmin';
+		// ---- DESKTOP: hover-based image tooltip + 3D tilt ----
+		document.addEventListener('mousemove', e => {
+			if (isTouchDevice()) return; // All hover effects handled by touch handlers below
 
-                if (box !== currentHoverBox) {
-                    currentHoverBox = box;
-                    let url = box.getAttribute('data-src'); 
-                    if(url) {
-                        if(box.classList.contains('preview-box')) url = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=600&h=600&output=webp&q=80`;
-                        tooltipEl.style.backgroundImage = `url('${url}')`;
-                        tooltipEl.style.display = 'flex'; 
-                        requestAnimationFrame(() => { tooltipEl.style.opacity = '1'; });
+			const target = e.target;
+			const box = target.closest('.preview-box') || target.closest('.logo-box');
 
-                        const oldHud = tooltipEl.querySelector('.tooltip-hud');
-                        if(oldHud) oldHud.remove();
+			if (box) {
+				let sizeVmin = 60;
+				if (box.classList.contains('logo-box')) sizeVmin = 48;
+				tooltipEl.style.width = sizeVmin + 'vmin';
+				tooltipEl.style.height = sizeVmin + 'vmin';
 
-                        if (box.classList.contains('preview-box')) {
-                            const index = parseInt(box.getAttribute('data-image-index'));
-                            const total = box.parentNode.children.length;
-                            if (total > 1) {
-                                const hud = document.createElement('div'); hud.className = 'tooltip-hud';
-                                for(let i=0; i<total; i++) {
-                                    const dot = document.createElement('div'); dot.className = 'hud-box' + (i === index ? ' active' : ''); hud.appendChild(dot);
-                                }
-                                tooltipEl.appendChild(hud);
-                            }
-                        }
-                    }
-                }
-                const offset = 20; let left = e.clientX + offset; let top = e.clientY + offset;
-                if (left + tooltipEl.offsetWidth > window.innerWidth) left = e.clientX - tooltipEl.offsetWidth - offset;
-                if (top + tooltipEl.offsetHeight > window.innerHeight) top = e.clientY - tooltipEl.offsetHeight - offset;
-                if (left < 0) left = 10; if (top < 0) top = 10;
-                tooltipEl.style.left = left + 'px'; tooltipEl.style.top = top + 'px';
+				if (box !== currentHoverBox) {
+					currentHoverBox = box;
+					let url = box.getAttribute('data-src');
+					if (url) {
+						if (box.classList.contains('preview-box')) url = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=600&h=600&output=webp&q=80`;
+						tooltipEl.style.backgroundImage = `url('${url}')`;
+						tooltipEl.style.display = 'flex';
+						requestAnimationFrame(() => { tooltipEl.style.opacity = '1'; });
 
-            } else {
-                if (currentHoverBox) {
-                    currentHoverBox = null;
-                    if (tooltipEl.style.opacity !== '0') {
-                        tooltipEl.style.opacity = '0';
-                        setTimeout(() => { if(tooltipEl.style.opacity === '0') { tooltipEl.style.display = 'none'; const oldHud = tooltipEl.querySelector('.tooltip-hud'); if(oldHud) oldHud.remove(); } }, 200);
-                    }
-                }
-            }
+						const oldHud = tooltipEl.querySelector('.tooltip-hud');
+						if (oldHud) oldHud.remove();
 
-            const cell = target.closest('.tabulator-cell');
-            if (lastTiltCell && lastTiltCell !== cell) {
-                const oldWrapper = lastTiltCell.querySelector('.text-wrapper');
-                if (oldWrapper) oldWrapper.style.transform = '';
-                lastTiltCell.style.transform = 'none'; lastTiltCell.classList.remove('active-tilt'); lastTiltCell = null;
-            }
+						if (box.classList.contains('preview-box')) {
+							const index = parseInt(box.getAttribute('data-image-index'));
+							const total = box.parentNode.children.length;
+							if (total > 1) {
+								const hud = document.createElement('div'); hud.className = 'tooltip-hud';
+								for (let i = 0; i < total; i++) {
+									const dot = document.createElement('div');
+									dot.className = 'hud-box' + (i === index ? ' active' : '');
+									hud.appendChild(dot);
+								}
+								tooltipEl.appendChild(hud);
+							}
+						}
+					}
+				}
 
-            if (cell) {
-                const isInteractive = cell.querySelector('.tag-wrapper') || cell.querySelector('.preview-container') || cell.querySelector('.logo-box') || cell.querySelector('a'); 
-                if (!isInteractive) {
-                    lastTiltCell = cell; cell.classList.add('active-tilt');
-                    const rect = cell.getBoundingClientRect();
-                    const rotateX = -1 * ((e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2)) * 10; 
-                    const rotateY = ((e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2)) * 10;
-                    
-                    const wrapper = cell.querySelector('.text-wrapper');
-                    const transformString = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.15)`;
-                    
-                    if (wrapper) wrapper.style.transform = `translateY(-50%) ${transformString}`; 
-                    else cell.style.transform = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
-                }
-            }
-        });
+				const offset = 20;
+				let left = e.clientX + offset, top = e.clientY + offset;
+				if (left + tooltipEl.offsetWidth > window.innerWidth) left = e.clientX - tooltipEl.offsetWidth - offset;
+				if (top + tooltipEl.offsetHeight > window.innerHeight) top = e.clientY - tooltipEl.offsetHeight - offset;
+				if (left < 0) left = 10; if (top < 0) top = 10;
+				tooltipEl.style.position = 'fixed';
+				tooltipEl.style.transform = 'none';
+				tooltipEl.style.left = left + 'px';
+				tooltipEl.style.top = top + 'px';
+
+			} else {
+				if (currentHoverBox) {
+					currentHoverBox = null;
+					tooltipEl.style.opacity = '0';
+					setTimeout(() => {
+						if (tooltipEl.style.opacity === '0') {
+							tooltipEl.style.display = 'none';
+							const oldHud = tooltipEl.querySelector('.tooltip-hud');
+							if (oldHud) oldHud.remove();
+						}
+					}, 200);
+				}
+			}
+
+			// 3D Tilt
+			const cell = target.closest('.tabulator-cell');
+			if (lastTiltCell && lastTiltCell !== cell) {
+				const oldWrapper = lastTiltCell.querySelector('.text-wrapper');
+				if (oldWrapper) oldWrapper.style.transform = '';
+				lastTiltCell.style.transform = 'none';
+				lastTiltCell.classList.remove('active-tilt');
+				lastTiltCell = null;
+			}
+			if (cell) {
+				const isInteractive = cell.querySelector('.tag-wrapper') || cell.querySelector('.preview-container') || cell.querySelector('.logo-box') || cell.querySelector('a');
+				if (!isInteractive) {
+					lastTiltCell = cell; cell.classList.add('active-tilt');
+					const rect = cell.getBoundingClientRect();
+					const rotateX = -1 * ((e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2)) * 10;
+					const rotateY = ((e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2)) * 10;
+					const wrapper = cell.querySelector('.text-wrapper');
+					const transformString = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.15)`;
+					if (wrapper) wrapper.style.transform = `translateY(-50%) ${transformString}`;
+					else cell.style.transform = `perspective(500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+				}
+			}
+		});
+
+		// ---- TOUCH: tap-to-preview image tooltip ----
+		let touchDismissOverlay = null;
+
+		function showTouchTooltip(box) {
+			let url = box.getAttribute('data-src');
+			if (!url) return;
+			if (box.classList.contains('preview-box')) {
+				url = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=600&h=600&output=webp&q=80`;
+			}
+
+			tooltipEl.classList.add('touch-mode');
+			tooltipEl.style.backgroundImage = `url('${url}')`;
+			tooltipEl.style.display = 'flex';
+			tooltipEl.style.opacity = '1';
+			tooltipEl.style.position = 'fixed';
+			tooltipEl.style.transform = 'translate(-50%, -50%)';
+			tooltipEl.style.left = '50%';
+			tooltipEl.style.top = '50%';
+
+			const oldHud = tooltipEl.querySelector('.tooltip-hud');
+			if (oldHud) oldHud.remove();
+
+			if (box.classList.contains('preview-box')) {
+				const index = parseInt(box.getAttribute('data-image-index'));
+				const total = box.parentNode.children.length;
+				if (total > 1) {
+					const hud = document.createElement('div'); hud.className = 'tooltip-hud';
+					for (let i = 0; i < total; i++) {
+						const dot = document.createElement('div');
+						dot.className = 'hud-box' + (i === index ? ' active' : '');
+						hud.appendChild(dot);
+					}
+					tooltipEl.appendChild(hud);
+				}
+			}
+
+			// Dim overlay behind tooltip
+			touchDismissOverlay = document.createElement('div');
+			touchDismissOverlay.id = 'touch-dismiss-overlay';
+			touchDismissOverlay.addEventListener('touchstart', hideTouchTooltip, { passive: true });
+			document.body.appendChild(touchDismissOverlay);
+		}
+
+		function hideTouchTooltip() {
+			tooltipEl.classList.remove('touch-mode');
+			tooltipEl.style.opacity = '0';
+			setTimeout(() => {
+				tooltipEl.style.display = 'none';
+				tooltipEl.style.transform = 'none';
+				const oldHud = tooltipEl.querySelector('.tooltip-hud');
+				if (oldHud) oldHud.remove();
+			}, 200);
+			if (touchDismissOverlay) {
+				touchDismissOverlay.remove();
+				touchDismissOverlay = null;
+			}
+		}
+
+		document.addEventListener('touchstart', e => {
+			if (!isTouchDevice()) return;
+			const box = e.target.closest('.preview-box') || e.target.closest('.logo-box');
+			if (box) {
+				e.preventDefault();
+				showTouchTooltip(box);
+			}
+		}, { passive: false });
     </script>
 </body>
 </html>
