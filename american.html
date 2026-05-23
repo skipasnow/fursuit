@@ -884,13 +884,13 @@
 
         function updateTableFilters() {
             if(table) {
-                // By passing the function AND a dynamically rebuilt params object, Tabulator perfectly recognizes the filter update
                 table.setFilter(masterFilter, {
                     priceMin: filterState.priceMin,
                     priceMax: filterState.priceMax,
                     showNA: filterState.showNA,
                     status: filterState.status,
-                    states: Array.from(filterState.states)
+                    states: Array.from(filterState.states),
+                    tick: Date.now() // Forces Tabulator to re-evaluate the custom filter
                 });
             }
         }
@@ -995,6 +995,7 @@
                          .attr("d", d3.symbol().type(d3.symbolDiamond).size(150))
                          .attr("transform", `translate(${coords[0]}, ${coords[1]})`)
                          .on("click", function(event) {
+                             event.stopPropagation();
                              toggleStateSelection(sName);
                          })
                          .on("mouseover", function() { 
@@ -1139,7 +1140,7 @@
             const topProdTitle = topProductive.length >= 10 ? t("topProd10") : t("topProd");
             const mainLabel = filterState.states.size > 0 ? t("selectionAvg") : t("usLabel");
 
-            // Inject the 3-Card Grid matching the original Index.html China Layout
+            // Inject the 3-Card Grid
             container.innerHTML = `
             <div class="promo-card theme-usa" style="grid-column: span 1.5;">
                 <svg id="curve-us" class="promo-bg-curve-container" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
@@ -1174,15 +1175,16 @@
             </div>
             `;
 
+            // Draw Curve only if we have sufficient data
+            const svgCurve = d3.select(`#curve-us`);
+            svgCurve.selectAll("*").remove(); // Wipe any existing curve
+
             if (bins.length > 1) {
-                const svgCurve = d3.select(`#curve-us`);
                 const width = 300, height = 100;
                 const xCurv = d3.scaleLinear().domain([bins[0].x0, bins[bins.length-1].x1]).range([0, width]);
                 const yCurv = d3.scaleLinear().domain([0, d3.max(bins, d => d.length)]).range([height, 0]);
                 const area = d3.area().x(d => xCurv(d.x0 + (d.x1 - d.x0) / 2)).y0(height).y1(d => yCurv(d.length)).curve(d3.curveBasis); 
                 svgCurve.append("path").datum(bins).attr("class", "promo-bg-curve").attr("d", area);
-            } else {
-                d3.select(`#curve-us`).selectAll("*").remove();
             }
         }
 
@@ -1333,6 +1335,9 @@
                     applyTranslations(); 
                     initTable(data);
                     drawMap(data);
+                    
+                    // Force the counter to display before first filter
+                    updateResultCounter(totalDataCount, totalDataCount);
 
                     const slider = document.getElementById('price-slider');
                     if(slider && slider.noUiSlider) { slider.noUiSlider.set([1000, 20000]); }
