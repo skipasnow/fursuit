@@ -230,8 +230,12 @@
             100% { background-position: 0 0; }
         }
 
-        .state { fill: transparent; stroke: #00E676; stroke-width: 1px; transition: stroke-width 0.3s ease; }
+        /* Interactive State Styles */
+        .state { fill: transparent; stroke: #00E676; stroke-width: 1px; transition: stroke-width 0.3s ease, fill 0.3s ease, stroke 0.3s ease; cursor: pointer; }
         .state:hover { stroke-width: 2px; fill: rgba(0, 230, 118, 0.1); }
+        .state.selected { fill: rgba(0, 210, 255, 0.3); stroke: #00d2ff; stroke-width: 2px; }
+        .state.selected:hover { fill: rgba(0, 210, 255, 0.4); stroke-width: 3px; }
+        
         .heat-ring { fill: transparent; stroke-width: 1.5px; opacity: 0.7; mix-blend-mode: screen; pointer-events:none; }
         .maker-marker { fill: transparent; stroke: #ff2a2a; stroke-width: 2px; cursor: pointer; transition: all 0.3s; transform-box: fill-box; transform-origin: center; }
         .maker-marker:hover { stroke: #fff; stroke-width: 3px; filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)); }
@@ -406,8 +410,8 @@
 
     <div id="top-pane">
         <div id="nav-bar" style="display: flex; gap: 20px; margin-bottom: 15px; border-bottom: 1px dashed #444; padding-bottom: 10px; align-items: center; flex-wrap: wrap;">
+            <a href="american.html" class="nav-link active" data-i18n="navUs">> US Fursuits</a>
             <a href="index.html" class="nav-link" data-i18n="navAsia">> Kemono Fursuits</a>
-			<a href="american.html" class="nav-link active" data-i18n="navUs">> US Fursuits</a>
             <a href="maintenance.html" class="nav-link" data-i18n="navMaintenance">> Maintenance</a>
         </div>
         
@@ -420,7 +424,15 @@
                     <div id="map-loading" style="position:absolute; inset:0; display:flex; justify-content:center; align-items:center;">
                         <div class="loader">Loading Map...</div>
                     </div>
+                    
+                    <div id="map-filter-indicator" style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.85); padding:8px 12px; border:1px solid #00d2ff; border-radius:4px; font-size:0.85em; z-index:10; display:none; backdrop-filter: blur(4px);">
+                        <span style="color:#00d2ff; font-weight:bold;" data-i18n="filteringBy">Filtering by:</span> 
+                        <span id="map-filter-list" style="color:#fff; margin-left: 5px;"></span>
+                        <button id="clear-map-filter" data-i18n="clearFilter" style="background:#cc0000; border:1px solid #ff5252; color:#fff; padding:2px 8px; margin-left:10px; border-radius:3px; cursor:pointer; font-size:0.9em; font-weight:bold; transition: background 0.2s;">Clear</button>
+                    </div>
+
                     <svg id="us-map" width="100%" height="100%" viewBox="0 0 975 610" preserveAspectRatio="xMidYMid meet"></svg>
+                    
                     <div class="legend-container">
                         <div class="legend-title" data-i18n="legendPremium">MAKER COST PREMIUM</div>
                         <div class="legend-gradient-retro"></div>
@@ -613,7 +625,7 @@
                 avgFollowers: "Average Followers", mostCommon: "Most Common Range",
                 majority: "Majority of pricing falls here", topPrices: "Top Prices",
                 topSuits: "Top 5 Most Fursuits Produced", topProd: "Top 10 Most Productive",
-                rankedBy: "(Ranked by Avg Works Per Year)",
+                rankedBy: "(Ranked by Avg Works Per Year)", filteringBy: "Filtering by:", clearFilter: "Clear",
                 thRow: "Row", thMaker: "Maker", thLogo: "Logo", thLocation: "Location",
                 thLink: "Link", thPreview: "Preview", thStatus: "Status",
                 thFursuits: "Fursuits", thWorks: "Avg Works/Yr", thFollowers: "Followers",
@@ -635,7 +647,7 @@
                 avgFollowers: "平均粉絲數", mostCommon: "最常見價格區間",
                 majority: "大多數定價落在這裡", topPrices: "最高價格",
                 topSuits: "產量最高前五名", topProd: "最高產量前十名",
-                rankedBy: "(按年平均作品數排名)",
+                rankedBy: "(按年平均作品數排名)", filteringBy: "過濾條件:", clearFilter: "清除",
                 thRow: "行", thMaker: "製作者", thLogo: "標誌", thLocation: "地點",
                 thLink: "連結", thPreview: "預覽", thStatus: "狀態",
                 thFursuits: "獸裝數", thWorks: "年均作品", thFollowers: "粉絲數",
@@ -657,7 +669,7 @@
                 avgFollowers: "平均粉丝数", mostCommon: "最常见价格区间",
                 majority: "大多数定价落在这里", topPrices: "最高价格",
                 topSuits: "产量最高前五名", topProd: "最高产量前十名",
-                rankedBy: "(按年平均作品数排名)",
+                rankedBy: "(按年平均作品数排名)", filteringBy: "过滤条件:", clearFilter: "清除",
                 thRow: "行", thMaker: "制作者", thLogo: "标志", thLocation: "地点",
                 thLink: "链接", thPreview: "预览", thStatus: "状态",
                 thFursuits: "兽装数", thWorks: "年均作品", thFollowers: "粉丝数",
@@ -679,7 +691,7 @@
                 avgFollowers: "평균 팔로워", mostCommon: "가장 흔한 가격대",
                 majority: "대부분의 가격이 여기에 해당합니다", topPrices: "최고 가격",
                 topSuits: "가장 많이 제작된 상위 5명", topProd: "가장 생산적인 상위 10명",
-                rankedBy: "(연간 평균 작품 수 기준)",
+                rankedBy: "(연간 평균 작품 수 기준)", filteringBy: "필터링:", clearFilter: "지우기",
                 thRow: "행", thMaker: "제작자", thLogo: "로고", thLocation: "위치",
                 thLink: "링크", thPreview: "미리보기", thStatus: "상태",
                 thFursuits: "퍼수트 수", thWorks: "연간 작품", thFollowers: "팔로워",
@@ -701,7 +713,7 @@
                 avgFollowers: "平均フォロワー数", mostCommon: "最も一般的な価格帯",
                 majority: "価格の大部分がここに該当します", topPrices: "最高価格",
                 topSuits: "最も制作された上位5名", topProd: "最も生産的な上位10名",
-                rankedBy: "(年間の平均作品数によるランキング)",
+                rankedBy: "(年間の平均作品数によるランキング)", filteringBy: "フィルタ中:", clearFilter: "クリア",
                 thRow: "行", thMaker: "クリエイター", thLogo: "ロゴ", thLocation: "場所",
                 thLink: "リンク", thPreview: "プレビュー", thStatus: "ステータス",
                 thFursuits: "着ぐるみ数", thWorks: "年間作品", thFollowers: "フォロワー",
@@ -769,7 +781,7 @@
 
         // Global State Vars
         let table = null;
-        let filterState = { priceMin: 1000, priceMax: 20000, showNA: true, status: "" };
+        let filterState = { priceMin: 1000, priceMax: 20000, showNA: true, status: "", states: new Set() };
         let totalDataCount = 0;
         let loadedData = []; 
         let currentTaxRate = parseFloat(document.getElementById('state-select').value);
@@ -852,6 +864,11 @@
             if (filterState.status !== "" && row.status !== filterState.status) {
                 return false;
             }
+
+            if (filterState.states.size > 0 && !filterState.states.has(row.country)) {
+                return false;
+            }
+
             return true;
         }
 
@@ -861,6 +878,34 @@
                 setTimeout(refreshCounter, 10);
             }
         }
+
+        function toggleStateSelection(stateName) {
+            if(filterState.states.has(stateName)) {
+                filterState.states.delete(stateName);
+            } else {
+                filterState.states.add(stateName);
+            }
+            
+            d3.selectAll(".state").classed("selected", d => filterState.states.has(d.properties.name));
+            
+            const indicator = document.getElementById("map-filter-indicator");
+            const listSpan = document.getElementById("map-filter-list");
+            if (filterState.states.size > 0) {
+                indicator.style.display = "block";
+                listSpan.textContent = Array.from(filterState.states).join(", ");
+            } else {
+                indicator.style.display = "none";
+            }
+            
+            updateTableFilters();
+        }
+
+        document.getElementById("clear-map-filter").addEventListener("click", () => {
+            filterState.states.clear();
+            d3.selectAll(".state").classed("selected", false);
+            document.getElementById("map-filter-indicator").style.display = "none";
+            updateTableFilters();
+        });
 
         // --- MAP LOGIC ---
         function drawMap(data) {
@@ -876,7 +921,12 @@
                 
                 svg.append("g").selectAll("path")
                    .data(topojson.feature(us, us.objects.states).features)
-                   .join("path").attr("d", path).attr("class", "state");
+                   .join("path")
+                   .attr("d", path)
+                   .attr("class", d => filterState.states.has(d.properties.name) ? "state selected" : "state")
+                   .on("click", function(event, d) {
+                       toggleStateSelection(d.properties.name);
+                   });
 
                 const stateData = {};
                 data.forEach(row => {
@@ -926,6 +976,9 @@
                          .attr("class", "maker-marker")
                          .attr("d", d3.symbol().type(d3.symbolDiamond).size(150))
                          .attr("transform", `translate(${coords[0]}, ${coords[1]})`)
+                         .on("click", function() {
+                             toggleStateSelection(sName);
+                         })
                          .on("mouseover", function() { 
                              d3.select(this).transition().attr("d", d3.symbol().type(d3.symbolDiamond).size(400)); 
                              
@@ -954,6 +1007,12 @@
                          });
                     }
                 });
+                
+                // Keep the filter indicator visible across redraws if filters exist
+                if (filterState.states.size > 0) {
+                    document.getElementById("map-filter-indicator").style.display = "block";
+                    document.getElementById("map-filter-list").textContent = Array.from(filterState.states).join(", ");
+                }
             });
         }
 
