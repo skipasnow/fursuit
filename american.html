@@ -1597,8 +1597,8 @@
 
 		// ---- DESKTOP: hover-based image tooltip + 3D tilt ----
 		document.addEventListener('mousemove', e => {
-			if (isTouchDevice()) return; // All hover effects handled by touch handlers below
-
+			// Replaced the buggy touch check with modern hover detection
+			if (!window.matchMedia("(hover: hover)").matches) return; 
 			const target = e.target;
 			const box = target.closest('.preview-box') || target.closest('.logo-box');
 
