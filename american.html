@@ -1488,10 +1488,16 @@
             
             btnFull.addEventListener('click', () => {
                 btnFull.classList.add('active'); btnPartial.classList.remove('active');
+                filterState.states.clear();
+                d3.selectAll(".state").classed("selected", false);
+                document.getElementById("map-filter-indicator").style.display = "none";
                 loadTableData(csvUrlFull);
             });
             btnPartial.addEventListener('click', () => {
                 btnPartial.classList.add('active'); btnFull.classList.remove('active');
+                filterState.states.clear();
+                d3.selectAll(".state").classed("selected", false);
+                document.getElementById("map-filter-indicator").style.display = "none";
                 loadTableData(csvUrlPartial);
             });
 
