@@ -1475,6 +1475,10 @@
                     if(slider && slider.noUiSlider) { slider.noUiSlider.set([1000, 20000]); }
                 }
             });
+			
+			// Immediately sync the analytics charts to the newly loaded dataset
+			// without waiting for the user to interact with the map or table.
+			updateAnalytics(data);
         }
 
         // --- INIT ROUTINE ---
