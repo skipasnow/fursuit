@@ -225,7 +225,7 @@
         .collapsible-section {
             width: 100%; margin-bottom: 20px; 
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden; max-height: 2000px; opacity: 1;
+            overflow: hidden; max-height: 5000px; opacity: 1;
         }
         .collapsible-section.minimized {
             max-height: 0 !important;
@@ -2009,6 +2009,10 @@
                             '<span style="color:#ff5252;">⚠ No data returned. Verify the Google Sheet is published: File → Share → Publish to web → CSV.</span>';
                         return;
                     }
+                    // Debug: log CSV column names once to console
+                    if (results.data.length > 0) {
+                        console.log('[CSV columns]', Object.keys(results.data[0]));
+                    }
                     const data = results.data.map(row => {
                         const rawPrice = cleanNumber(row['Average Price']);
                         return {
@@ -2029,7 +2033,13 @@
                             publicQueue: row['Public Queue'] || row['Open Public Queue'] || "",
                             publicTos: row['Public Terms of Service'] || "",
                             headBase: row['Head Base Material'] || "",
-                            paidTurnaround: parseFloat(row['Final Payment Turnaround (Months)']) || null
+                            paidTurnaround: parseFloat(
+                                row['Final Payment Turnaround (Months)'] ||
+                                row['Paid Turnaround (Months)'] ||
+                                row['Final Payment Turnaround'] ||
+                                row['Turnaround (Months)'] ||
+                                row['Turnaround']
+                            ) || null
                         };
                     }).filter(row => row.maker);
                     
