@@ -1582,10 +1582,10 @@
             const weightedSum   = valid.reduce((s, d) => s + d.paidTurnaround * d.fursuits, 0);
             const weightedAvg   = weightedSum / totalFursuits;
 
-            // --- Top 15 longest (by turnaround value, ties broken by maker name) ---
+            // --- Top 25 longest (by turnaround value, ties broken by maker name) ---
             const top15 = [...valid]
                 .sort((a, b) => b.paidTurnaround - a.paidTurnaround || a.maker.localeCompare(b.maker))
-                .slice(0, 15);
+                .slice(0, 25);
 
             // --- Bell-curve buckets ---
             const buckets = [
@@ -1613,12 +1613,14 @@
 
               <!-- LEFT: stat + top-15 bar chart -->
               <div class="promo-card" style="border-color:#7b5ea7; display:flex; flex-direction:column; gap:12px;">
-                <div class="chart-title" style="color:#b39ddb;">TOP 15 LONGEST TURNAROUND FOR NEW COMMISSIONER</div>
+                <div class="chart-title" style="color:#b39ddb;">TOP 25 LONGEST TURNAROUNDS FOR NEW COMMISSIONERS</div>
                 <div style="font-size:0.78em; color:#aaa;">
                   Weighted avg (by fursuits): <span style="color:#ff8c00; font-weight:bold; font-size:1.15em;">${weightedAvg.toFixed(1)} months</span>
                   &nbsp;·&nbsp; based on ${valid.length} makers / ${totalFursuits.toLocaleString()} fursuits
                 </div>
-                <svg id="ta-bar" style="width:100%; overflow:visible;"></svg>
+                <div id="ta-bar-scroll" style="height:340px; overflow-y:auto; overflow-x:hidden; scrollbar-width:thin; scrollbar-color:#7b5ea7 #1a1a2e;">
+                  <svg id="ta-bar" style="width:100%; display:block;"></svg>
+                </div>
               </div>
 
               <!-- RIGHT: bell-curve bucket chart -->
