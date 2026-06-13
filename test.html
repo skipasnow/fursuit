@@ -1813,17 +1813,50 @@
                     .style('fill','#888').style('font-size','0.65em')
                     .text('# of Makers');
 
-                // Avg line
-                const avgX = d3.scaleLinear().domain([0, 120]).range([0, iW])(weightedAvg);
+                // ── Weighted avg line (all makers) — positioned on x-axis scale ──
+                // Map avg months to x position using bucket boundaries
+                const bucketMidpoints = [2.5, 6.5, 10.5, 15.5, 21.5, 30];
+                const bucketMins      = [1,   5,   9,   13,   19,   25];
+                const nBuckets = buckets.length;
+                function monthsToX(months) {
+                    // Find which bucket this falls in and interpolate
+                    for (var bi = 0; bi < nBuckets; bi++) {
+                        var bMin = bucketMins[bi];
+                        var bMax = bi < nBuckets - 1 ? bucketMins[bi+1] - 1 : 999;
+                        if (months <= bMax) {
+                            var frac = Math.min((months - bMin) / (bMax - bMin + 1), 1);
+                            return xScale(chartData[bi].label) + frac * xScale.bandwidth();
+                        }
+                    }
+                    return iW;
+                }
+                const avgXpos = monthsToX(weightedAvg);
                 g.append('line')
-                    .attr('x1', avgX).attr('x2', avgX)
+                    .attr('x1', avgXpos).attr('x2', avgXpos)
                     .attr('y1', 0).attr('y2', iH)
                     .attr('stroke','#ff5252').attr('stroke-width',1.5)
                     .attr('stroke-dasharray','4,3');
                 g.append('text')
-                    .attr('x', avgX + 4).attr('y', 14)
+                    .attr('x', avgXpos + 4).attr('y', 14)
                     .style('fill','#ff5252').style('font-size','0.62em')
-                    .text('avg ' + weightedAvg.toFixed(1) + 'mo');
+                    .text('All makers avg: ' + weightedAvg.toFixed(1) + ' mo');
+
+                // ── Open-only avg line (green) ──
+                const openOnly = valid.filter(d => d.status === 'Open');
+                if (openOnly.length > 0) {
+                    const openFursuits = openOnly.reduce((s,d) => s + (d.fursuits||1), 0);
+                    const openWAvg = openOnly.reduce((s,d) => s + d.paidTurnaround*(d.fursuits||1), 0) / openFursuits;
+                    const openXpos = monthsToX(openWAvg);
+                    g.append('line')
+                        .attr('x1', openXpos).attr('x2', openXpos)
+                        .attr('y1', 0).attr('y2', iH)
+                        .attr('stroke','#00E676').attr('stroke-width',1.5)
+                        .attr('stroke-dasharray','4,3');
+                    g.append('text')
+                        .attr('x', openXpos + 4).attr('y', 28)
+                        .style('fill','#00E676').style('font-size','0.62em')
+                        .text('Open now avg: ' + openWAvg.toFixed(1) + ' mo');
+                }
             })();
         }
 
@@ -2006,25 +2039,60 @@
                      + rowsHTML + noteHTML + '</div>';
             }
 
-            function listCard(title, entries, note, maxShow) {
-                var show = entries.slice(0, maxShow || 20);
-                var rowsHTML = show.map(function(e) {
+            function listCard(title, entries, note) {
+                var rowsHTML = entries.map(function(e) {
                     var label = e[0], count = e[1];
                     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #1a1a2e;">'
-                         + '<span style="font-size:0.75em;color:#ccc;">' + label + '</span>'
-                         + '<span style="font-size:0.72em;color:' + C.orange + ';font-weight:bold;white-space:nowrap;margin-left:8px;">' + count + ' mention' + (count === 1 ? '' : 's') + '</span></div>';
+                         + '<span style="font-size:0.75em;color:#ccc;flex:1;padding-right:6px;">' + label + '</span>'
+                         + '<span style="font-size:0.72em;color:' + C.orange + ';font-weight:bold;white-space:nowrap;">' + count + ' mention' + (count === 1 ? '' : 's') + '</span></div>';
                 }).join('');
                 var noteHTML = note ? '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">' + note + '</div>' : '';
-                return '<div class="promo-card" style="border-color:' + C.purple + ';">'
-                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:12px;">' + title + '</div>'
-                     + rowsHTML + noteHTML + '</div>';
+                return '<div class="promo-card" style="border-color:' + C.purple + ';display:flex;flex-direction:column;">'
+                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:8px;">' + title + '</div>'
+                     + '<div style="flex:1;overflow-y:auto;max-height:260px;scrollbar-width:thin;scrollbar-color:' + C.purple + ' #1a1a2e;">' + rowsHTML + '</div>'
+                     + noteHTML + '</div>';
+            }
+
+            function donutChart(segments) {
+                // segments: [{label, count, color}]
+                var tot = segments.reduce(function(s,x){return s+x.count;},0);
+                if (tot === 0) return '';
+                var size = 130, r = 50, cx = size/2, cy = size/2, inner = 28;
+                var startAngle = -Math.PI/2;
+                var paths = '';
+                var legend = '';
+                segments.forEach(function(seg) {
+                    if (seg.count === 0) return;
+                    var angle = (seg.count / tot) * 2 * Math.PI;
+                    var endAngle = startAngle + angle;
+                    var x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
+                    var x2 = cx + r * Math.cos(endAngle),   y2 = cy + r * Math.sin(endAngle);
+                    var xi1 = cx + inner * Math.cos(startAngle), yi1 = cy + inner * Math.sin(startAngle);
+                    var xi2 = cx + inner * Math.cos(endAngle),   yi2 = cy + inner * Math.sin(endAngle);
+                    var large = angle > Math.PI ? 1 : 0;
+                    paths += '<path d="M ' + xi1 + ' ' + yi1 + ' L ' + x1 + ' ' + y1
+                           + ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x2 + ' ' + y2
+                           + ' L ' + xi2 + ' ' + yi2
+                           + ' A ' + inner + ' ' + inner + ' 0 ' + large + ' 0 ' + xi1 + ' ' + yi1 + ' Z"'
+                           + ' fill="' + seg.color + '" stroke="#1a1a2e" stroke-width="1.5">'
+                           + '<title>' + seg.label + ': ' + seg.count + ' (' + (seg.count/tot*100).toFixed(1) + '%)</title>'
+                           + '</path>';
+                    legend += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">'
+                            + '<div style="width:10px;height:10px;border-radius:2px;background:' + seg.color + ';flex-shrink:0;"></div>'
+                            + '<span style="font-size:0.72em;color:#ccc;">' + seg.label + '</span>'
+                            + '<span style="font-size:0.72em;color:' + seg.color + ';font-weight:bold;margin-left:auto;">' + (seg.count/tot*100).toFixed(1) + '%</span></div>';
+                    startAngle = endAngle;
+                });
+                return '<div style="display:flex;align-items:center;gap:16px;">'
+                     + '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" style="flex-shrink:0;">' + paths + '</svg>'
+                     + '<div style="flex:1;">' + legend + '</div></div>';
             }
 
             // ── Calendar card ──────────────────────────────────────────
             function calendarCard() {
                 if (futureDates.length === 0) {
                     return '<div class="promo-card" style="border-color:' + C.purple + ';">'
-                         + '<div class="chart-title" style="color:' + C.light + ';">UPCOMING OPENINGS</div>'
+                         + '<div class="chart-title" style="color:' + C.light + ';">UPCOMING COMMISSION OPENINGS</div>'
                          + '<div style="font-size:0.8em;color:#888;margin-top:10px;">No future opening dates found.</div></div>';
                 }
                 var byMonth = {};
@@ -2048,74 +2116,92 @@
                         if (!dayMap[d]) dayMap[d] = [];
                         dayMap[d].push(f.maker);
                     });
-                    var cells = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:6px;">';
+                    var cells = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:4px;">';
                     ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(function(d) {
-                        cells += '<div style="text-align:center;font-size:0.58em;color:#666;padding:2px;">' + d + '</div>';
+                        cells += '<div style="text-align:center;font-size:0.55em;color:#666;padding:1px;">' + d + '</div>';
                     });
                     for (var i = 0; i < firstDay; i++) cells += '<div></div>';
                     for (var d = 1; d <= daysInMonth; d++) {
-                        var makers = dayMap[d];
-                        var hasMakers = makers && makers.length > 0;
-                        var tip = hasMakers ? ' title="' + makers.join(', ').replace(/"/g, '&quot;') + '"' : '';
-                        var bg = hasMakers ? C.purple : 'transparent';
-                        var col = hasMakers ? '#fff' : '#444';
-                        var cur = hasMakers ? 'pointer' : 'default';
-                        cells += '<div' + tip + ' style="text-align:center;font-size:0.6em;padding:3px 1px;border-radius:3px;background:' + bg + ';color:' + col + ';cursor:' + cur + ';">' + d + '</div>';
+                        var mks = dayMap[d];
+                        var has = mks && mks.length > 0;
+                        var tip = has ? ' title="' + mks.join(', ').replace(/"/g,'&quot;') + '"' : '';
+                        var bg  = has ? C.purple : 'transparent';
+                        var col = has ? '#fff' : '#444';
+                        var cur = has ? 'pointer' : 'default';
+                        cells += '<div' + tip + ' style="text-align:center;font-size:0.58em;padding:2px 1px;border-radius:3px;background:' + bg + ';color:' + col + ';cursor:' + cur + ';">' + d + '</div>';
                     }
                     cells += '</div>';
                     var listHTML = entries.map(function(f) {
-                        return '<div style="font-size:0.7em;color:#ccc;padding:2px 0;border-bottom:1px solid #1a1a2e;">'
+                        return '<div style="font-size:0.68em;color:#ccc;padding:2px 0;border-bottom:1px solid #1a1a2e;white-space:nowrap;">'
                              + '<span style="color:' + C.orange + ';">' + f.date + '</span> \u2014 ' + f.maker + '</div>';
                     }).join('');
-                    calInner += '<div style="min-width:160px;background:#0d0d1a;border:1px solid #2e2e2e;border-radius:6px;padding:10px;flex:0 0 auto;">'
-                              + '<div style="font-size:0.72em;color:' + C.light + ';font-weight:bold;margin-bottom:4px;">' + monthName + '</div>'
+                    calInner += '<div style="background:#0d0d1a;border:1px solid #2e2e2e;border-radius:6px;padding:8px;flex:0 0 170px;min-width:170px;">'
+                              + '<div style="font-size:0.7em;color:' + C.light + ';font-weight:bold;margin-bottom:2px;">' + monthName + '</div>'
                               + cells
-                              + '<div style="margin-top:8px;">' + listHTML + '</div></div>';
+                              + '<div style="margin-top:6px;max-height:140px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:' + C.purple + ' #0d0d1a;">' + listHTML + '</div>'
+                              + '</div>';
                 });
                 return '<div class="promo-card" style="border-color:' + C.purple + ';">'
-                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:12px;">UPCOMING COMMISSION OPENINGS '
+                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:10px;">UPCOMING COMMISSION OPENINGS '
                      + '<span style="font-size:0.7em;color:#888;font-weight:normal;">(' + futureDates.length + ' makers scheduled)</span></div>'
-                     + '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + calInner + '</div></div>';
+                     + '<div style="display:flex;gap:10px;flex-wrap:wrap;overflow-x:auto;padding-bottom:4px;">' + calInner + '</div></div>';
             }
+
+            // ── Open/Closed pie card ───────────────────────────────────
+            var openClosedCard =
+                '<div class="promo-card" style="border-color:' + C.purple + ';">'
+              + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:12px;">COMMISSION STATUS</div>'
+              + donutChart([
+                    { label: 'Open Now',       count: statusOpen,   color: C.yes    },
+                    { label: 'Closed / Future Opening', count: statusClosed, color: C.no }
+                ])
+              + '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">'
+              + 'Makers with an "Open: (date)" status are counted as closed — they are not currently accepting commissions. '
+              + 'Open now: <b style="color:' + C.yes + ';">' + statusOpen + '</b> &nbsp;|&nbsp; '
+              + 'Closed / pending: <b style="color:' + C.no + ';">' + statusClosed + '</b>'
+              + '</div></div>';
 
             // ── Species breakdown ──────────────────────────────────────
             var specRows = [
-                ['No Restriction',          specCounts['No'] || 0,                                                              C.yes],
-                ['Copyright Characters',    (specCounts['Yes - Copyright'] || 0),                                               C.no,     'Will not make characters associated with copyrighted IPs'],
-                ['Selective Copyright',     (specCounts['Yes - Selective Copyright'] || 0),                                     '#ff8c00', 'Certain IPs only — check ToS'],
-                ['No Canines',              (specCounts['Yes - No Canines'] || 0),                                              '#ff8c00'],
-                ['No Dutch Angel Dragons',  (specCounts['Yes - Copyright, Dutch Angel Dragons'] || 0) + (specCounts['Yes - Dutch Angel Dragons'] || 0), '#ff8c00'],
-                ['Other/Yes',               (specCounts['Yes'] || 0),                                                           C.no],
-                ['Not Stated',              (specCounts['None'] || specCounts['none'] || 0) + (specCounts['undefined'] || 0),   C.none]
+                ['No Restriction',         specCounts['No'] || 0,                                                              C.yes],
+                ['Copyright Characters',   specCounts['Yes - Copyright'] || 0,                                                 C.no,     'Will not make characters associated with copyrighted IPs'],
+                ['Selective Copyright',    specCounts['Yes - Selective Copyright'] || 0,                                       '#ff8c00', 'Certain IPs only — check ToS'],
+                ['No Canines',             specCounts['Yes - No Canines'] || 0,                                                '#ff8c00'],
+                ['No Dutch Angel Dragons', (specCounts['Yes - Copyright, Dutch Angel Dragons'] || 0) + (specCounts['Yes - Dutch Angel Dragons'] || 0), '#ff8c00'],
+                ['Other/Yes',              specCounts['Yes'] || 0,                                                             C.no],
+                ['Not Stated',             (specCounts['None'] || 0) + (specCounts['none'] || 0) + (specCounts['undefined'] || 0), C.none]
             ].filter(function(r){ return r[1] > 0; });
 
-            // ── Assemble page ──────────────────────────────────────────
+            // ── Assemble all rows ──────────────────────────────────────
             var row1 =
-                statCard('FULL PAYMENT REQUIRED (AU)', [
-                    ['Full Payment Required / Prioritized', fp.yes,            C.no,   'Work does not begin or is deprioritized until invoice is paid in full'],
-                    ['Not Explicitly Stated',               fp.no + fp.none,   C.none]
+                openClosedCard
+              + statCard('FULL PAYMENT REQUIRED', [
+                    ['Full Payment Required / Prioritized', fp.yes,          C.no,   'Work does not begin or is deprioritized until invoice is paid in full'],
+                    ['Not Explicitly Stated',               fp.no + fp.none, C.none]
                 ], 'Makers requiring full payment upfront or prioritizing fully-paid commissions effectively begin no work until payment is complete. Payment windows are typically under 6 months.')
-              + statCard('SHIPPING INSURANCE MENTIONED (AV)', [
+              + statCard('SHIPPING INSURANCE', [
                     ['Insurance Mentioned in ToS', ship.yes,            C.yes],
                     ['Not Mentioned',              ship.no + ship.none, C.no]
-                ], '&#9888; Standard carriers (UPS, FedEx, USPS Priority) do not insure packages valued over $5,000 for commissioned artwork or costumes. Only <b>UPS Parcel Pro</b> or <b>USPS Registered Mail</b> insure over $5,000 without a 3rd-party insurer such as Shipsurance. FedEx explicitly excludes commissioned artwork/costumes from high-value coverage.')
-              + statCard('EXPLICIT WAITLIST (AY)', [
-                    ['Waitlist Formally Referenced',   wl.yes,          C.yes],
-                    ['No Formal Waitlist in ToS',      wl.no + wl.none, C.no]
-                ], 'Absence of a formal waitlist does not mean there is no queue. Makers with large backlogs but no disclosed queue data represent a risk — commissioners may be unaware of how long their wait will actually be before sending a non-refundable deposit.')
-              + statCard('RUSH ORDERS AVAILABLE (AZ)', [
-                    ['Rush Option Explicitly Offered',    rush.yes,            C.yes],
-                    ['Not Offered / Not Mentioned',       rush.no + rush.none, C.no]
-                ])
-              + statCard('TERMS OF SERVICE PROVIDED (AT)', [
-                    ['Public ToS Available', tosYes, C.yes],
-                    ['No Public ToS',        tosNo,  C.no]
-                ], '&#9888; Many ToS agreements contain clauses allowing makers to retain non-refundable deposits for any reason. Some agreements also include social media restrictions, limiting a commissioner\'s ability to publicly discuss delays or unfinished work even after a payment dispute.')
-              + statCard('SPECIES RESTRICTIONS (AW)', specRows,
-                    'Makers noting "Copyright" will typically not craft characters from copyrighted franchises (Disney, Nintendo, etc.). "Selective Copyright" means only specific IPs are restricted — always verify before commissioning.');
+                ], '&#9888; Standard carriers do not insure packages over $5,000 for commissioned costumes. Only <b>UPS Parcel Pro</b> or <b>USPS Registered Mail</b> cover over $5,000 without a 3rd-party insurer like Shipsurance. FedEx explicitly excludes commissioned costumes from high-value coverage.');
 
             var row2 =
-                statCard('WEBSITE PLATFORM (AR)', [
+                statCard('EXPLICIT WAITLIST', [
+                    ['Waitlist Formally Referenced', wl.yes,          C.yes],
+                    ['No Formal Waitlist in ToS',    wl.no + wl.none, C.no]
+                ], 'Absence of a formal waitlist does not mean there is no queue. Makers with large backlogs but no disclosed queue data represent a risk — commissioners may be unaware of how long their wait will be before sending a non-refundable deposit.')
+              + statCard('RUSH ORDERS AVAILABLE', [
+                    ['Rush Option Explicitly Offered', rush.yes,            C.yes],
+                    ['Not Offered / Not Mentioned',    rush.no + rush.none, C.no]
+                ])
+              + statCard('TERMS OF SERVICE PROVIDED', [
+                    ['Public ToS Available', tosYes, C.yes],
+                    ['No Public ToS',        tosNo,  C.no]
+                ], '&#9888; Many ToS agreements contain clauses allowing makers to retain non-refundable deposits for any reason. Some agreements also restrict commissioners from publicly discussing delays or unfinished work on social media.')
+              + statCard('SPECIES RESTRICTIONS', specRows,
+                    'Makers noting "Copyright" will not craft characters from copyrighted franchises (Disney, Nintendo, etc.). "Selective Copyright" means only specific IPs are restricted — always verify before commissioning.');
+
+            var row3 =
+                statCard('WEBSITE PLATFORM', [
                     ['Custom Domain',  siteCats['Custom Domain'],  C.yes],
                     ['No Website',     siteCats['No Website'],     C.no],
                     ['Carrd',          siteCats['Carrd'],          C.light],
@@ -2124,25 +2210,26 @@
                     ['Linktree',       siteCats['Linktree'],       C.none],
                     ['Google Sites',   siteCats['Google Sites'],   C.none]
                 ].filter(function(r){ return r[1] > 0; }))
-              + statCard('PUBLIC QUEUE AVAILABILITY (AS)', [
+              + statCard('PUBLIC QUEUE AVAILABILITY', [
                     ['Trello Queue',    qTrello, C.yes,    'Publicly accessible Trello board'],
                     ['Other Web Queue', qWeb,    C.orange, 'Non-Trello public queue (Google Docs, website, etc.)'],
                     ['No Public Queue', qNone,   C.no,     '&#9888; Queue not publicly disclosed — commission count unknown before deposit']
                 ], 'Makers without a publicly visible queue make it impossible to assess how many commissions are ahead of yours before you send a non-refundable payment. The larger the undisclosed backlog, the greater your risk.');
 
-            var row3 =
-                listCard('OTHER HEAD BASES USED (BB)', sortedEntries(hbNorm),
-                    'These are pre-made head base forms sourced from other makers and used as a foundation. Counts reflect number of mentions across all maker profiles.')
-              + listCard('PARTS & PATTERNS SUPPLIERS (BC)', sortedEntries(partsNorm),
+            var row4 =
+                listCard('OTHER HEAD BASES USED', sortedEntries(hbNorm),
+                    'Pre-made head base forms sourced from other makers and used as a foundation. Counts reflect number of mentions across all maker profiles.')
+              + listCard('PARTS & PATTERNS SUPPLIERS', sortedEntries(partsNorm),
                     'Makers referencing these suppliers for fursuit parts, patterns, or components. SpiltGrapeSoda variants are merged. Counts reflect number of mentions.')
-              + listCard('FABRIC SUPPLIERS (BD)', sortedEntries(fabNorm),
+              + listCard('FABRIC SUPPLIERS', sortedEntries(fabNorm),
                     '<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly known as <b>Fursuits By Lacey</b>) is the second most common. Counts reflect number of explicit mentions in maker profiles.');
 
             container.innerHTML =
-                '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;">'        + row1 + '</div>'
-              + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px;">' + row2 + '</div>'
-              + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:15px;">' + row3 + '</div>'
-              + '<div style="display:grid;grid-template-columns:1fr;gap:15px;margin-top:15px;">'   + calendarCard() + '</div>';
+                '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;">'            + row1 + '</div>'
+              + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-top:15px;">' + row2 + '</div>'
+              + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px;">'  + row3 + '</div>'
+              + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:15px;">' + row4 + '</div>'
+              + '<div style="margin-top:15px;">' + calendarCard() + '</div>';
         }
 
                 // --- SOCIAL ICON HELPER ---
