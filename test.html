@@ -233,6 +233,19 @@
             border: none !important; opacity: 0 !important;
         }
 
+        /* --- HEAD BASE PIE CHART --- */
+        #headbase-area .promo-card { height: auto; min-height: 320px; }
+        .headbase-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+        @media (max-width: 1024px) { .headbase-grid { grid-template-columns: 1fr; } }
+        .pie-legend { display: flex; flex-direction: column; gap: 6px; justify-content: center; }
+        .pie-legend-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.8em; line-height: 1.3; }
+        .pie-legend-swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+        .pie-legend-group { font-size: 0.75em; color: #888; margin-left: 20px; }
+
         /* --- MAP SECTION --- */
         .map-section {
             padding: 15px; border: 1px solid #444; border-radius: 8px; background: #1f1f1f;
@@ -759,6 +772,7 @@
         </div>
 
         <div id="analytics-area" class="analytics-section collapsible-section"></div>
+        <div id="headbase-area" class="collapsible-section" style="margin-top:10px;"></div>
     </div>
 
     <div id="table-pane">
@@ -1030,6 +1044,16 @@
         }
         setupToggle('map-toggle-btn', 'interactive-map-area', 'Map: ENABLED', 'Map: DISABLED');
         setupToggle('stats-toggle-btn', 'analytics-area', 'Stats: ENABLED', 'Stats: DISABLED');
+        // Mirror stats toggle to headbase chart area
+        document.getElementById('stats-toggle-btn').addEventListener('click', () => {
+            const hb = document.getElementById('headbase-area');
+            const analytics = document.getElementById('analytics-area');
+            if (analytics.classList.contains('minimized')) {
+                hb.classList.add('minimized');
+            } else {
+                hb.classList.remove('minimized');
+            }
+        });
 
         // --- FILTER LOGIC ---
         function masterFilter(data, filterParams) {
@@ -1367,6 +1391,173 @@
                 const area = d3.area().x(d => xCurv(d.x0 + (d.x1 - d.x0) / 2)).y0(height).y1(d => yCurv(d.length)).curve(d3.curveBasis); 
                 svgCurve.append("path").datum(bins).attr("class", "promo-bg-curve").attr("d", area);
             }
+
+            // Head base material pie chart
+            updateHeadBaseChart(data);
+        }
+
+        // --- HEAD BASE MATERIAL PIE CHART ---
+        function parseHeadBaseMaterials(rawStr) {
+            // Normalize separators: " or ", " and ", " & ", " / ", ","
+            const normalized = rawStr.replace(/\s*\/\s*/g, ',')
+                                     .replace(/\s+and\s+/gi, ',')
+                                     .replace(/\s+or\s+/gi, ',')
+                                     .replace(/\s*&\s*/g, ',');
+            return normalized.split(',').map(s => s.trim()).filter(Boolean);
+        }
+
+        function classifyMaterial(raw) {
+            const s = raw.toLowerCase().trim();
+            // Foam group
+            if (s === 'carved foam' || s === 'carved charcoal foam' || s === 'carved charcoal' ||
+                s === 'charcoal foam' || s === 'cast foam' || s === 'foam') return { group: 'Foam', sub: raw };
+            // 3D group — TPU variants included
+            if (s === 'tpu' || s === 'foaming tpu' || s === 'pla' || s === 'abs') return { group: '3D', sub: raw };
+            // Moldable group
+            if (s === 'resin' || s === 'worbla') return { group: 'Moldable', sub: raw };
+            // Skip "hat" and unknown
+            return null;
+        }
+
+        function updateHeadBaseChart(data) {
+            const container = document.getElementById('headbase-area');
+            if (!container) return;
+
+            // Tally weighted contributions per sub-material and group
+            // subTotals: { "Carved Foam": { group, weight }, ... }
+            const subTotals = {};
+            const groupTotals = {};
+
+            data.forEach(row => {
+                if (!row.headBase) return;
+                const fursuits = (row.fursuits && !isNaN(row.fursuits)) ? row.fursuits : 1;
+                const parts = parseHeadBaseMaterials(row.headBase);
+                const classified = parts.map(p => classifyMaterial(p)).filter(Boolean);
+                if (classified.length === 0) return;
+                const share = 1 / classified.length; // fractional share per option
+
+                classified.forEach(({ group, sub }) => {
+                    const weight = share * fursuits;
+                    // Sub totals (canonical casing)
+                    const subKey = sub.trim();
+                    if (!subTotals[subKey]) subTotals[subKey] = { group, weight: 0 };
+                    subTotals[subKey].weight += weight;
+                    // Group totals
+                    if (!groupTotals[group]) groupTotals[group] = 0;
+                    groupTotals[group] += weight;
+                });
+            });
+
+            const totalWeight = Object.values(groupTotals).reduce((a, b) => a + b, 0);
+            if (totalWeight === 0) { container.innerHTML = ''; return; }
+
+            // Group definitions with colors
+            const groupDefs = [
+                { name: 'Foam',     color: '#ff8c00', subColor: '#ffb347' },
+                { name: '3D',       color: '#00d2ff', subColor: '#66e0ff' },
+                { name: 'Moldable', color: '#00E676', subColor: '#69f0ae' },
+            ];
+
+            // Build pie slices: one per GROUP (outer), subs shown in legend
+            const pieData = groupDefs
+                .filter(g => groupTotals[g.name])
+                .map(g => ({ ...g, value: groupTotals[g.name], pct: groupTotals[g.name] / totalWeight * 100 }));
+
+            // Build sub-breakdown per group for legend
+            const subsByGroup = {};
+            Object.entries(subTotals).forEach(([sub, { group, weight }]) => {
+                if (!subsByGroup[group]) subsByGroup[group] = [];
+                subsByGroup[group].push({ sub, weight, pct: weight / totalWeight * 100 });
+            });
+            Object.values(subsByGroup).forEach(arr => arr.sort((a, b) => b.weight - a.weight));
+
+            // D3 pie layout
+            const size = 220;
+            const radius = size / 2 - 10;
+
+            const arcGen = d3.arc().innerRadius(radius * 0.45).outerRadius(radius);
+            const arcHover = d3.arc().innerRadius(radius * 0.45).outerRadius(radius + 8);
+            const pie = d3.pie().value(d => d.value).sort(null);
+
+            // Build legend HTML
+            let legendHTML = '<div class="pie-legend">';
+            groupDefs.filter(g => groupTotals[g.name]).forEach(g => {
+                const gpct = (groupTotals[g.name] / totalWeight * 100).toFixed(1);
+                legendHTML += `<div class="pie-legend-item"><div class="pie-legend-swatch" style="background:${g.color};"></div><div><b style="color:${g.color}">${g.name}</b> — ${gpct}% total</div></div>`;
+                (subsByGroup[g.name] || []).forEach(({ sub, pct }) => {
+                    legendHTML += `<div class="pie-legend-group" style="color:#aaa;">↳ ${sub}: ${pct.toFixed(1)}%</div>`;
+                });
+            });
+            legendHTML += '</div>';
+
+            // Inject card HTML
+            container.innerHTML = `
+            <div class="headbase-grid">
+                <div class="promo-card" style="border-color:#7b5ea7; grid-column: span 1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                    <div class="chart-title" style="color:#b39ddb; margin-bottom:10px; align-self:flex-start;">HEAD BASE MATERIAL</div>
+                    <svg id="headbase-pie" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"></svg>
+                </div>
+                <div class="promo-card" style="border-color:#7b5ea7; grid-column: span 2;">
+                    <div class="chart-title" style="color:#b39ddb; margin-bottom:15px;">BREAKDOWN BY GROUP</div>
+                    ${legendHTML}
+                </div>
+            </div>`;
+
+            // Draw pie with D3
+            const svg = d3.select('#headbase-pie');
+            const g = svg.append('g').attr('transform', `translate(${size/2},${size/2})`);
+
+            const arcs = pie(pieData);
+
+            // Tooltip div (reuse map-style inline)
+            const tip = d3.select('body').append('div')
+                .attr('id', 'hb-tip')
+                .style('position', 'fixed')
+                .style('background', 'rgba(15,15,20,0.95)')
+                .style('border', '1px solid #b39ddb')
+                .style('color', '#fff')
+                .style('padding', '8px 12px')
+                .style('border-radius', '4px')
+                .style('font-size', '0.8em')
+                .style('pointer-events', 'none')
+                .style('opacity', 0)
+                .style('z-index', 9999);
+
+            g.selectAll('path')
+             .data(arcs)
+             .join('path')
+             .attr('d', arcGen)
+             .attr('fill', d => d.data.color)
+             .attr('stroke', '#2e2e2e')
+             .attr('stroke-width', 2)
+             .style('cursor', 'pointer')
+             .on('mouseover', function(event, d) {
+                 d3.select(this).transition().duration(150).attr('d', arcHover);
+                 const subs = (subsByGroup[d.data.name] || [])
+                     .map(s => `${s.sub}: ${s.pct.toFixed(1)}%`).join('<br>');
+                 tip.html(`<b style="color:${d.data.color}">${d.data.name}</b><br>${d.data.pct.toFixed(1)}% of total<br><hr style="border-color:#444;margin:4px 0;">${subs}`)
+                    .style('opacity', 1);
+             })
+             .on('mousemove', function(event) {
+                 tip.style('left', (event.clientX + 15) + 'px').style('top', (event.clientY - 10) + 'px');
+             })
+             .on('mouseout', function(event, d) {
+                 d3.select(this).transition().duration(150).attr('d', arcGen);
+                 tip.style('opacity', 0);
+             });
+
+            // Center label
+            g.append('text')
+             .attr('text-anchor', 'middle').attr('dy', '-0.3em')
+             .style('fill', '#aaa').style('font-size', '0.65em')
+             .text('Head Base');
+            g.append('text')
+             .attr('text-anchor', 'middle').attr('dy', '0.9em')
+             .style('fill', '#aaa').style('font-size', '0.65em')
+             .text('Material');
+
+            // Clean up old tooltip on redraw
+            d3.selectAll('#hb-tip').filter(function() { return this !== tip.node(); }).remove();
         }
 
         // --- SOCIAL ICON HELPER ---
@@ -1579,7 +1770,8 @@
                             followers: cleanNumber(row['Followers']),
                             website: row['Public Website'] || row['Website'] || "",
                             publicQueue: row['Public Queue'] || row['Open Public Queue'] || "",
-                            publicTos: row['Public Terms of Service'] || ""
+                            publicTos: row['Public Terms of Service'] || "",
+                            headBase: row['Head Base Material'] || ""
                         };
                     }).filter(row => row.maker);
                     
