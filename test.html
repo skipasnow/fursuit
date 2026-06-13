@@ -774,6 +774,7 @@
         <div id="analytics-area" class="analytics-section collapsible-section"></div>
         <div id="headbase-area" class="collapsible-section" style="margin-top:10px;"></div>
         <div id="turnaround-area" class="collapsible-section" style="margin-top:10px;"></div>
+        <div id="insights-area" class="collapsible-section" style="margin-top:10px;"></div>
     </div>
 
     <div id="table-pane">
@@ -1053,9 +1054,13 @@
             if (analytics.classList.contains('minimized')) {
                 hb.classList.add('minimized');
                 if (ta) ta.classList.add('minimized');
+                const ins = document.getElementById('insights-area');
+                if (ins) ins.classList.add('minimized');
             } else {
                 hb.classList.remove('minimized');
                 if (ta) ta.classList.remove('minimized');
+                const ins = document.getElementById('insights-area');
+                if (ins) ins.classList.remove('minimized');
             }
         });
 
@@ -1401,6 +1406,9 @@
 
             // Paid turnaround charts
             updateTurnaroundChart(data);
+
+            // Insights row
+            updateInsightsCharts(data);
         }
 
         // --- HEAD BASE MATERIAL PIE CHART ---
@@ -1819,7 +1827,325 @@
             })();
         }
 
-        // --- SOCIAL ICON HELPER ---
+        // --- INSIGHTS CHARTS ---
+        function updateInsightsCharts(data) {
+            const container = document.getElementById('insights-area');
+            if (!container) return;
+            const total = data.filter(d => d.maker).length;
+            if (total === 0) { container.innerHTML = ''; return; }
+
+            // ── Helpers ──────────────────────────────────────────────
+            function pct(n) { return (n / total * 100).toFixed(1); }
+            function countYesNo(field) {
+                let yes = 0, no = 0, none = 0;
+                data.forEach(d => {
+                    if (!d.maker) return;
+                    const v = (d[field] || '').trim().toLowerCase();
+                    if (v === 'yes') yes++;
+                    else if (v === 'no') no++;
+                    else none++;
+                });
+                return { yes, no, none };
+            }
+
+            // ── AU: Full Payment Progression ──────────────────────────
+            const fp = countYesNo('explicitFullPayment');
+
+            // ── AV: Shipping Insurance ────────────────────────────────
+            const ship = countYesNo('explicitShipping');
+
+            // ── AY: Waitlist ──────────────────────────────────────────
+            const wl = countYesNo('explicitWaitlist');
+
+            // ── AZ: Rush Offer ────────────────────────────────────────
+            const rush = countYesNo('explicitRush');
+
+            // ── AT: Terms of Service ──────────────────────────────────
+            let tosYes = 0, tosNo = 0;
+            data.forEach(d => {
+                if (!d.maker) return;
+                (d.publicTos && d.publicTos.startsWith('http')) ? tosYes++ : tosNo++;
+            });
+
+            // ── AW: Species Restriction ───────────────────────────────
+            const specCounts = {};
+            data.forEach(d => {
+                if (!d.maker) return;
+                const v = (d.explicitSpecies || 'None').trim();
+                specCounts[v] = (specCounts[v] || 0) + 1;
+            });
+
+            // ── L: Status ─────────────────────────────────────────────
+            let statusOpen = 0, statusClosed = 0;
+            const futureDates = []; // {maker, date, isoDate}
+            const today = new Date();
+            data.forEach(d => {
+                if (!d.maker) return;
+                const v = (d.status || '').trim();
+                if (v === 'Open') { statusOpen++; }
+                else if (v.startsWith('Open:')) {
+                    statusClosed++;
+                    const rawDate = v.replace('Open:','').trim();
+                    // Parse various formats: M/YYYY, M/D/YY, M/D/YYYY
+                    let dt = null;
+                    const parts = rawDate.split('/');
+                    if (parts.length === 2) {
+                        // M/YYYY or M/YY
+                        const yr = parts[1].length === 2 ? 2000 + parseInt(parts[1]) : parseInt(parts[1]);
+                        dt = new Date(yr, parseInt(parts[0]) - 1, 1);
+                    } else if (parts.length === 3) {
+                        const yr = parts[2].length === 2 ? 2000 + parseInt(parts[2]) : parseInt(parts[2]);
+                        dt = new Date(yr, parseInt(parts[0]) - 1, parseInt(parts[1]));
+                    }
+                    if (dt) futureDates.push({ maker: d.maker, date: rawDate, dt });
+                } else { statusClosed++; }
+            });
+            futureDates.sort((a, b) => a.dt - b.dt);
+
+            // ── AR: Website breakdown ─────────────────────────────────
+            const siteCats = { 'Custom Domain': 0, 'No Website': 0, 'Carrd': 0, 'Weebly': 0, 'Wix': 0, 'Linktree': 0, 'Google Sites': 0, 'Other': 0 };
+            data.forEach(d => {
+                if (!d.maker) return;
+                const url = (d.website || '').trim();
+                if (!url || !url.startsWith('http')) { siteCats['No Website']++; return; }
+                try {
+                    const host = new URL(url).hostname.replace('www.','');
+                    if (host.includes('weebly')) siteCats['Weebly']++;
+                    else if (host.includes('wixsite') || host.includes('wix.com')) siteCats['Wix']++;
+                    else if (host.includes('carrd.co')) siteCats['Carrd']++;
+                    else if (host.includes('linktr.ee')) siteCats['Linktree']++;
+                    else if (host.includes('sites.google.com') || url.includes('sites.google.com')) siteCats['Google Sites']++;
+                    else siteCats['Custom Domain']++;
+                } catch(e) { siteCats['Other']++; }
+            });
+
+            // ── AS: Queue breakdown ───────────────────────────────────
+            let qTrello = 0, qWeb = 0, qNone = 0;
+            data.forEach(d => {
+                if (!d.maker) return;
+                const url = (d.publicQueue || '').trim();
+                if (!url || !url.startsWith('http')) { qNone++; }
+                else if (url.includes('trello.com')) { qTrello++; }
+                else { qWeb++; }
+            });
+
+            // ── BB / BC / BD: Text lists ──────────────────────────────
+            const headBaseCount = {}, partsCount = {}, fabricCount = {};
+            function tallyNewlines(val, counter) {
+                if (!val) return;
+                val.split('\n').forEach(line => {
+                    const l = line.trim();
+                    if (l) counter[l] = (counter[l] || 0) + 1;
+                });
+            }
+            data.forEach(d => {
+                if (!d.maker) return;
+                tallyNewlines(d.otherHeadBase, headBaseCount);
+                tallyNewlines(d.partsPatterns, partsCount);
+                // Normalize fabric names
+                const fabVal = (d.fabric || '').replace(/\u200b/g,''); // strip zero-width space
+                tallyNewlines(fabVal, fabricCount);
+            });
+            // Merge fabric aliases
+            const fabNorm = {};
+            Object.entries(fabricCount).forEach(([k, v]) => {
+                const norm = k.trim().toLowerCase();
+                const display = norm.includes('big z') ? 'Big Z Fabric'
+                              : norm.includes('howl') ? 'Howl Fabrics (fka Fursuits By Lacey)'
+                              : norm.includes('fursuit suppli') ? 'Fursuit Supplies'
+                              : k.trim();
+                fabNorm[display] = (fabNorm[display] || 0) + v;
+            });
+            // Merge parts aliases
+            const partsNorm = {};
+            Object.entries(partsCount).forEach(([k, v]) => {
+                const norm = k.trim().toLowerCase();
+                const display = norm.includes('spiltgrapesoda') || norm === 'spiltgrapesoda' || norm === 'splitgrapesoda' || norm === 'spiltgrapesoda' ? 'SpiltGrapeSoda'
+                              : norm.includes('dream vision') ? 'Dream Vision Creations'
+                              : k.trim();
+                partsNorm[display] = (partsNorm[display] || 0) + v;
+            });
+            // Merge headbase aliases
+            const hbNorm = {};
+            Object.entries(headBaseCount).forEach(([k, v]) => {
+                const norm = k.trim().toLowerCase();
+                const display = norm.includes('fuzzbutt') || norm.includes('fuzz butt') ? 'Fuzzbutt Fursuits'
+                              : norm.includes('nukecreation') ? 'Nuke Creations'
+                              : k.trim();
+                hbNorm[display] = (hbNorm[display] || 0) + v;
+            });
+
+            function sortedEntries(obj) {
+                return Object.entries(obj).sort((a,b) => b[1]-a[1]);
+            }
+
+            // ── Colours ───────────────────────────────────────────────
+            const C = { yes: '#00E676', no: '#ff5252', none: '#555', purple: '#7b5ea7', light: '#b39ddb', orange: '#ff8c00' };
+
+            // ── Build bar utility ──────────────────────────────────────
+            function miniBar(pctVal, color) {
+                return '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">'
+                     + '<div style="flex:1;background:#1a1a2e;border-radius:3px;height:8px;overflow:hidden;">'
+                     + '<div style="width:' + pctVal + '%;background:' + color + ';height:100%;border-radius:3px;transition:width 0.6s;"></div></div>'
+                     + '<span style="font-size:0.72em;color:' + color + ';font-weight:bold;min-width:36px;">' + pctVal + '%</span></div>';
+            }
+
+            function statCard(title, cardRows, note) {
+                var rowsHTML = cardRows.map(function(r) {
+                    var label = r[0], count = r[1], color = r[2], sub = r[3];
+                    return '<div style="margin-bottom:6px;">'
+                         + '<div style="display:flex;justify-content:space-between;font-size:0.75em;color:#ccc;">'
+                         + '<span>' + label + '</span><span style="color:#888;">' + count + ' makers</span></div>'
+                         + miniBar(parseFloat(pct(count)), color)
+                         + (sub ? '<div style="font-size:0.67em;color:#888;margin-top:2px;margin-left:4px;">' + sub + '</div>' : '')
+                         + '</div>';
+                }).join('');
+                var noteHTML = note ? '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">' + note + '</div>' : '';
+                return '<div class="promo-card" style="border-color:' + C.purple + ';">'
+                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:12px;">' + title + '</div>'
+                     + rowsHTML + noteHTML + '</div>';
+            }
+
+            function listCard(title, entries, note, maxShow) {
+                var show = entries.slice(0, maxShow || 20);
+                var rowsHTML = show.map(function(e) {
+                    var label = e[0], count = e[1];
+                    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #1a1a2e;">'
+                         + '<span style="font-size:0.75em;color:#ccc;">' + label + '</span>'
+                         + '<span style="font-size:0.72em;color:' + C.orange + ';font-weight:bold;white-space:nowrap;margin-left:8px;">' + count + ' mention' + (count === 1 ? '' : 's') + '</span></div>';
+                }).join('');
+                var noteHTML = note ? '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">' + note + '</div>' : '';
+                return '<div class="promo-card" style="border-color:' + C.purple + ';">'
+                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:12px;">' + title + '</div>'
+                     + rowsHTML + noteHTML + '</div>';
+            }
+
+            // ── Calendar card ──────────────────────────────────────────
+            function calendarCard() {
+                if (futureDates.length === 0) {
+                    return '<div class="promo-card" style="border-color:' + C.purple + ';">'
+                         + '<div class="chart-title" style="color:' + C.light + ';">UPCOMING OPENINGS</div>'
+                         + '<div style="font-size:0.8em;color:#888;margin-top:10px;">No future opening dates found.</div></div>';
+                }
+                var byMonth = {};
+                futureDates.forEach(function(f) {
+                    var key = f.dt.getFullYear() + '-' + String(f.dt.getMonth()+1).padStart(2,'0');
+                    if (!byMonth[key]) byMonth[key] = [];
+                    byMonth[key].push(f);
+                });
+                var monthKeys = Object.keys(byMonth).sort();
+                var calInner = '';
+                monthKeys.forEach(function(mk) {
+                    var parts = mk.split('-').map(Number);
+                    var yr = parts[0], mo = parts[1];
+                    var monthName = new Date(yr, mo-1, 1).toLocaleString('en-US', {month:'long', year:'numeric'});
+                    var entries = byMonth[mk];
+                    var daysInMonth = new Date(yr, mo, 0).getDate();
+                    var firstDay = new Date(yr, mo-1, 1).getDay();
+                    var dayMap = {};
+                    entries.forEach(function(f) {
+                        var d = f.dt.getDate();
+                        if (!dayMap[d]) dayMap[d] = [];
+                        dayMap[d].push(f.maker);
+                    });
+                    var cells = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:6px;">';
+                    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(function(d) {
+                        cells += '<div style="text-align:center;font-size:0.58em;color:#666;padding:2px;">' + d + '</div>';
+                    });
+                    for (var i = 0; i < firstDay; i++) cells += '<div></div>';
+                    for (var d = 1; d <= daysInMonth; d++) {
+                        var makers = dayMap[d];
+                        var hasMakers = makers && makers.length > 0;
+                        var tip = hasMakers ? ' title="' + makers.join(', ').replace(/"/g, '&quot;') + '"' : '';
+                        var bg = hasMakers ? C.purple : 'transparent';
+                        var col = hasMakers ? '#fff' : '#444';
+                        var cur = hasMakers ? 'pointer' : 'default';
+                        cells += '<div' + tip + ' style="text-align:center;font-size:0.6em;padding:3px 1px;border-radius:3px;background:' + bg + ';color:' + col + ';cursor:' + cur + ';">' + d + '</div>';
+                    }
+                    cells += '</div>';
+                    var listHTML = entries.map(function(f) {
+                        return '<div style="font-size:0.7em;color:#ccc;padding:2px 0;border-bottom:1px solid #1a1a2e;">'
+                             + '<span style="color:' + C.orange + ';">' + f.date + '</span> \u2014 ' + f.maker + '</div>';
+                    }).join('');
+                    calInner += '<div style="min-width:160px;background:#0d0d1a;border:1px solid #2e2e2e;border-radius:6px;padding:10px;flex:0 0 auto;">'
+                              + '<div style="font-size:0.72em;color:' + C.light + ';font-weight:bold;margin-bottom:4px;">' + monthName + '</div>'
+                              + cells
+                              + '<div style="margin-top:8px;">' + listHTML + '</div></div>';
+                });
+                return '<div class="promo-card" style="border-color:' + C.purple + ';">'
+                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:12px;">UPCOMING COMMISSION OPENINGS '
+                     + '<span style="font-size:0.7em;color:#888;font-weight:normal;">(' + futureDates.length + ' makers scheduled)</span></div>'
+                     + '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + calInner + '</div></div>';
+            }
+
+            // ── Species breakdown ──────────────────────────────────────
+            var specRows = [
+                ['No Restriction',          specCounts['No'] || 0,                                                              C.yes],
+                ['Copyright Characters',    (specCounts['Yes - Copyright'] || 0),                                               C.no,     'Will not make characters associated with copyrighted IPs'],
+                ['Selective Copyright',     (specCounts['Yes - Selective Copyright'] || 0),                                     '#ff8c00', 'Certain IPs only — check ToS'],
+                ['No Canines',              (specCounts['Yes - No Canines'] || 0),                                              '#ff8c00'],
+                ['No Dutch Angel Dragons',  (specCounts['Yes - Copyright, Dutch Angel Dragons'] || 0) + (specCounts['Yes - Dutch Angel Dragons'] || 0), '#ff8c00'],
+                ['Other/Yes',               (specCounts['Yes'] || 0),                                                           C.no],
+                ['Not Stated',              (specCounts['None'] || specCounts['none'] || 0) + (specCounts['undefined'] || 0),   C.none]
+            ].filter(function(r){ return r[1] > 0; });
+
+            // ── Assemble page ──────────────────────────────────────────
+            var row1 =
+                statCard('FULL PAYMENT REQUIRED (AU)', [
+                    ['Full Payment Required / Prioritized', fp.yes,            C.no,   'Work does not begin or is deprioritized until invoice is paid in full'],
+                    ['Not Explicitly Stated',               fp.no + fp.none,   C.none]
+                ], 'Makers requiring full payment upfront or prioritizing fully-paid commissions effectively begin no work until payment is complete. Payment windows are typically under 6 months.')
+              + statCard('SHIPPING INSURANCE MENTIONED (AV)', [
+                    ['Insurance Mentioned in ToS', ship.yes,            C.yes],
+                    ['Not Mentioned',              ship.no + ship.none, C.no]
+                ], '&#9888; Standard carriers (UPS, FedEx, USPS Priority) do not insure packages valued over $5,000 for commissioned artwork or costumes. Only <b>UPS Parcel Pro</b> or <b>USPS Registered Mail</b> insure over $5,000 without a 3rd-party insurer such as Shipsurance. FedEx explicitly excludes commissioned artwork/costumes from high-value coverage.')
+              + statCard('EXPLICIT WAITLIST (AY)', [
+                    ['Waitlist Formally Referenced',   wl.yes,          C.yes],
+                    ['No Formal Waitlist in ToS',      wl.no + wl.none, C.no]
+                ], 'Absence of a formal waitlist does not mean there is no queue. Makers with large backlogs but no disclosed queue data represent a risk — commissioners may be unaware of how long their wait will actually be before sending a non-refundable deposit.')
+              + statCard('RUSH ORDERS AVAILABLE (AZ)', [
+                    ['Rush Option Explicitly Offered',    rush.yes,            C.yes],
+                    ['Not Offered / Not Mentioned',       rush.no + rush.none, C.no]
+                ])
+              + statCard('TERMS OF SERVICE PROVIDED (AT)', [
+                    ['Public ToS Available', tosYes, C.yes],
+                    ['No Public ToS',        tosNo,  C.no]
+                ], '&#9888; Many ToS agreements contain clauses allowing makers to retain non-refundable deposits for any reason. Some agreements also include social media restrictions, limiting a commissioner\'s ability to publicly discuss delays or unfinished work even after a payment dispute.')
+              + statCard('SPECIES RESTRICTIONS (AW)', specRows,
+                    'Makers noting "Copyright" will typically not craft characters from copyrighted franchises (Disney, Nintendo, etc.). "Selective Copyright" means only specific IPs are restricted — always verify before commissioning.');
+
+            var row2 =
+                statCard('WEBSITE PLATFORM (AR)', [
+                    ['Custom Domain',  siteCats['Custom Domain'],  C.yes],
+                    ['No Website',     siteCats['No Website'],     C.no],
+                    ['Carrd',          siteCats['Carrd'],          C.light],
+                    ['Weebly',         siteCats['Weebly'],         C.light],
+                    ['Wix',            siteCats['Wix'],            C.light],
+                    ['Linktree',       siteCats['Linktree'],       C.none],
+                    ['Google Sites',   siteCats['Google Sites'],   C.none]
+                ].filter(function(r){ return r[1] > 0; }))
+              + statCard('PUBLIC QUEUE AVAILABILITY (AS)', [
+                    ['Trello Queue',    qTrello, C.yes,    'Publicly accessible Trello board'],
+                    ['Other Web Queue', qWeb,    C.orange, 'Non-Trello public queue (Google Docs, website, etc.)'],
+                    ['No Public Queue', qNone,   C.no,     '&#9888; Queue not publicly disclosed — commission count unknown before deposit']
+                ], 'Makers without a publicly visible queue make it impossible to assess how many commissions are ahead of yours before you send a non-refundable payment. The larger the undisclosed backlog, the greater your risk.');
+
+            var row3 =
+                listCard('OTHER HEAD BASES USED (BB)', sortedEntries(hbNorm),
+                    'These are pre-made head base forms sourced from other makers and used as a foundation. Counts reflect number of mentions across all maker profiles.')
+              + listCard('PARTS & PATTERNS SUPPLIERS (BC)', sortedEntries(partsNorm),
+                    'Makers referencing these suppliers for fursuit parts, patterns, or components. SpiltGrapeSoda variants are merged. Counts reflect number of mentions.')
+              + listCard('FABRIC SUPPLIERS (BD)', sortedEntries(fabNorm),
+                    '<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly known as <b>Fursuits By Lacey</b>) is the second most common. Counts reflect number of explicit mentions in maker profiles.');
+
+            container.innerHTML =
+                '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;">'        + row1 + '</div>'
+              + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px;">' + row2 + '</div>'
+              + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:15px;">' + row3 + '</div>'
+              + '<div style="display:grid;grid-template-columns:1fr;gap:15px;margin-top:15px;">'   + calendarCard() + '</div>';
+        }
+
+                // --- SOCIAL ICON HELPER ---
         function makeSocialIcon(url) {
             if (!url) return '';
             const u = url.toLowerCase();
@@ -2041,7 +2367,15 @@
                                 row['Final Payment Turnaround'] ||
                                 row['Turnaround (Months)'] ||
                                 row['Turnaround']
-                            ) || null
+                            ) || null,
+                            explicitFullPayment: row['Explicit Full Payment Progression'] || '',
+                            explicitShipping: row['Explicit Shipping Insurance'] || '',
+                            explicitSpecies: row['Explicit Species Restriction'] || '',
+                            explicitWaitlist: row['Explicit Waitlist'] || '',
+                            explicitRush: row['Explicit Rush Offer'] || '',
+                            otherHeadBase: row['Other Head Base'] || '',
+                            partsPatterns: row['Parts & Patterns'] || '',
+                            fabric: row['Fabric'] || ''
                         };
                     }).filter(row => row.maker);
                     
