@@ -773,6 +773,7 @@
 
         <div id="analytics-area" class="analytics-section collapsible-section"></div>
         <div id="headbase-area" class="collapsible-section" style="margin-top:10px;"></div>
+        <div id="turnaround-area" class="collapsible-section" style="margin-top:10px;"></div>
     </div>
 
     <div id="table-pane">
@@ -1047,11 +1048,14 @@
         // Mirror stats toggle to headbase chart area
         document.getElementById('stats-toggle-btn').addEventListener('click', () => {
             const hb = document.getElementById('headbase-area');
+            const ta = document.getElementById('turnaround-area');
             const analytics = document.getElementById('analytics-area');
             if (analytics.classList.contains('minimized')) {
                 hb.classList.add('minimized');
+                if (ta) ta.classList.add('minimized');
             } else {
                 hb.classList.remove('minimized');
+                if (ta) ta.classList.remove('minimized');
             }
         });
 
@@ -1394,6 +1398,9 @@
 
             // Head base material pie chart
             updateHeadBaseChart(data);
+
+            // Paid turnaround charts
+            updateTurnaroundChart(data);
         }
 
         // --- HEAD BASE MATERIAL PIE CHART ---
@@ -1558,6 +1565,256 @@
 
             // Clean up old tooltip on redraw
             d3.selectAll('#hb-tip').filter(function() { return this !== tip.node(); }).remove();
+        }
+
+
+        // --- TURNAROUND CHART ---
+        function updateTurnaroundChart(data) {
+            const container = document.getElementById('turnaround-area');
+            if (!container) return;
+
+            // Filter rows with valid turnaround and fursuits
+            const valid = data.filter(d => d.paidTurnaround && d.paidTurnaround > 0 && d.fursuits > 0);
+            if (valid.length === 0) { container.innerHTML = ''; return; }
+
+            // --- Weighted average ---
+            const totalFursuits = valid.reduce((s, d) => s + d.fursuits, 0);
+            const weightedSum   = valid.reduce((s, d) => s + d.paidTurnaround * d.fursuits, 0);
+            const weightedAvg   = weightedSum / totalFursuits;
+
+            // --- Top 15 longest (by turnaround value, ties broken by maker name) ---
+            const top15 = [...valid]
+                .sort((a, b) => b.paidTurnaround - a.paidTurnaround || a.maker.localeCompare(b.maker))
+                .slice(0, 15);
+
+            // --- Bell-curve buckets ---
+            const buckets = [
+                { label: '1–4 mo',   min: 1,  max: 4  },
+                { label: '5–8 mo',   min: 5,  max: 8  },
+                { label: '9–12 mo',  min: 9,  max: 12 },
+                { label: '13–18 mo', min: 13, max: 18 },
+                { label: '19–24 mo', min: 19, max: 24 },
+                { label: '25+ mo',   min: 25, max: Infinity },
+            ];
+            const bucketCounts = buckets.map(b => ({
+                ...b,
+                count: valid.filter(d => d.paidTurnaround >= b.min && d.paidTurnaround <= b.max).length
+            }));
+            const maxCount = Math.max(...bucketCounts.map(b => b.count));
+
+            // ---- Colours ----
+            const barColor    = '#7b5ea7';
+            const barColorHov = '#b39ddb';
+            const curveColor  = '#ff8c00';
+
+            // ---- Build HTML shell ----
+            container.innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+
+              <!-- LEFT: stat + top-15 bar chart -->
+              <div class="promo-card" style="border-color:#7b5ea7; display:flex; flex-direction:column; gap:12px;">
+                <div class="chart-title" style="color:#b39ddb;">TOP 15 LONGEST TURNAROUND FOR NEW COMMISSIONER</div>
+                <div style="font-size:0.78em; color:#aaa;">
+                  Weighted avg (by fursuits): <span style="color:#ff8c00; font-weight:bold; font-size:1.15em;">${weightedAvg.toFixed(1)} months</span>
+                  &nbsp;·&nbsp; based on ${valid.length} makers / ${totalFursuits.toLocaleString()} fursuits
+                </div>
+                <svg id="ta-bar" style="width:100%; overflow:visible;"></svg>
+              </div>
+
+              <!-- RIGHT: bell-curve bucket chart -->
+              <div class="promo-card" style="border-color:#7b5ea7; display:flex; flex-direction:column; gap:12px;">
+                <div class="chart-title" style="color:#b39ddb;">ODDS OF RECEIVING FURSUIT BY TIMEFRAME</div>
+                <div style="font-size:0.75em; color:#888;">Based on ${valid.length} makers reporting turnaround time</div>
+                <svg id="ta-curve" style="width:100%; overflow:visible;"></svg>
+              </div>
+
+            </div>`;
+
+            // ========== TOP-15 HORIZONTAL BAR CHART ==========
+            (function() {
+                const svg    = d3.select('#ta-bar');
+                const node   = svg.node().parentNode;
+                const W      = node.clientWidth - 32 || 480;
+                const rowH   = 28;
+                const labelW = 160;
+                const barMaxW = W - labelW - 60;
+                const H      = rowH * top15.length + 20;
+                svg.attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+
+                const xScale = d3.scaleLinear()
+                    .domain([0, d3.max(top15, d => d.paidTurnaround)])
+                    .range([0, barMaxW]);
+
+                const tip = d3.select('#ta-tip');
+                const tipEl = tip.empty()
+                    ? d3.select('body').append('div').attr('id','ta-tip')
+                        .style('position','fixed').style('background','rgba(15,15,20,0.95)')
+                        .style('border','1px solid #b39ddb').style('color','#fff')
+                        .style('padding','7px 11px').style('border-radius','4px')
+                        .style('font-size','0.78em').style('pointer-events','none')
+                        .style('opacity',0).style('z-index',9999)
+                    : tip;
+
+                top15.forEach((d, i) => {
+                    const y = i * rowH + 10;
+                    const bw = xScale(d.paidTurnaround);
+
+                    // Label
+                    svg.append('text')
+                        .attr('x', labelW - 6).attr('y', y + rowH/2 + 4)
+                        .attr('text-anchor','end')
+                        .style('font-size','0.68em').style('fill','#ccc')
+                        .text(d.maker.length > 22 ? d.maker.slice(0,21)+'…' : d.maker);
+
+                    // Bar
+                    svg.append('rect')
+                        .attr('x', labelW).attr('y', y + 4)
+                        .attr('width', bw).attr('height', rowH - 8)
+                        .attr('rx', 3).attr('fill', barColor)
+                        .style('cursor','pointer')
+                        .on('mouseover', function(event) {
+                            d3.select(this).attr('fill', barColorHov);
+                            tipEl.html(`<b>${d.maker}</b><br>${d.paidTurnaround} months&nbsp;·&nbsp;${d.fursuits} fursuits`)
+                                 .style('opacity',1);
+                        })
+                        .on('mousemove', function(event) {
+                            tipEl.style('left',(event.clientX+15)+'px').style('top',(event.clientY-10)+'px');
+                        })
+                        .on('mouseout', function() {
+                            d3.select(this).attr('fill', barColor);
+                            tipEl.style('opacity',0);
+                        });
+
+                    // Value label
+                    svg.append('text')
+                        .attr('x', labelW + bw + 5).attr('y', y + rowH/2 + 4)
+                        .style('font-size','0.68em').style('fill','#ff8c00').style('font-weight','bold')
+                        .text(d.paidTurnaround + ' mo');
+                });
+            })();
+
+            // ========== BELL-CURVE BUCKET CHART ==========
+            (function() {
+                const svg  = d3.select('#ta-curve');
+                const node = svg.node().parentNode;
+                const W    = node.clientWidth - 32 || 480;
+                const H    = 260;
+                const pad  = { top: 20, right: 20, bottom: 55, left: 44 };
+                const iW   = W - pad.left - pad.right;
+                const iH   = H - pad.top  - pad.bottom;
+                svg.attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+
+                const totalValid = valid.length;
+                const chartData  = bucketCounts.map(b => ({ ...b, pct: b.count / totalValid * 100 }));
+
+                const xScale = d3.scaleBand()
+                    .domain(chartData.map(b => b.label))
+                    .range([0, iW]).padding(0.25);
+                const yScale = d3.scaleLinear()
+                    .domain([0, Math.max(maxCount, 1)])
+                    .range([iH, 0]).nice();
+
+                const g = svg.append('g').attr('transform', `translate(${pad.left},${pad.top})`);
+
+                // Grid lines
+                yScale.ticks(5).forEach(t => {
+                    g.append('line')
+                        .attr('x1',0).attr('x2',iW)
+                        .attr('y1',yScale(t)).attr('y2',yScale(t))
+                        .attr('stroke','#2e2e2e').attr('stroke-dasharray','3,3');
+                });
+
+                // Bars
+                const tip2El = d3.select('#ta-tip2');
+                const tipEl2 = tip2El.empty()
+                    ? d3.select('body').append('div').attr('id','ta-tip2')
+                        .style('position','fixed').style('background','rgba(15,15,20,0.95)')
+                        .style('border','1px solid #b39ddb').style('color','#fff')
+                        .style('padding','7px 11px').style('border-radius','4px')
+                        .style('font-size','0.78em').style('pointer-events','none')
+                        .style('opacity',0).style('z-index',9999)
+                    : tip2El;
+
+                g.selectAll('rect.bucket')
+                    .data(chartData)
+                    .join('rect').attr('class','bucket')
+                    .attr('x', d => xScale(d.label))
+                    .attr('y', d => yScale(d.count))
+                    .attr('width', xScale.bandwidth())
+                    .attr('height', d => iH - yScale(d.count))
+                    .attr('rx', 4)
+                    .attr('fill', barColor)
+                    .style('cursor','pointer')
+                    .on('mouseover', function(event, d) {
+                        d3.select(this).attr('fill', barColorHov);
+                        tipEl2.html(`<b>${d.label}</b><br>${d.count} makers (${d.pct.toFixed(1)}% of reported)`)
+                              .style('opacity',1);
+                    })
+                    .on('mousemove', function(event) {
+                        tipEl2.style('left',(event.clientX+15)+'px').style('top',(event.clientY-10)+'px');
+                    })
+                    .on('mouseout', function() {
+                        d3.select(this).attr('fill', barColor);
+                        tipEl2.style('opacity',0);
+                    });
+
+                // Pct labels above bars
+                g.selectAll('text.pct')
+                    .data(chartData)
+                    .join('text').attr('class','pct')
+                    .attr('x', d => xScale(d.label) + xScale.bandwidth()/2)
+                    .attr('y', d => yScale(d.count) - 5)
+                    .attr('text-anchor','middle')
+                    .style('font-size','0.68em').style('fill','#ff8c00').style('font-weight','bold')
+                    .text(d => d.count > 0 ? d.pct.toFixed(0)+'%' : '');
+
+                // Smooth bell curve overlay using D3 line + curveBasis
+                const curvePoints = chartData.map(b => ({
+                    x: xScale(b.label) + xScale.bandwidth()/2,
+                    y: yScale(b.count)
+                }));
+                const lineGen = d3.line().x(d => d.x).y(d => d.y).curve(d3.curveCatmullRom.alpha(0.5));
+                g.append('path')
+                    .datum(curvePoints)
+                    .attr('fill','none')
+                    .attr('stroke', curveColor)
+                    .attr('stroke-width', 2.5)
+                    .attr('stroke-dasharray','5,3')
+                    .attr('d', lineGen);
+
+                // Axes
+                g.append('g').attr('transform',`translate(0,${iH})`)
+                    .call(d3.axisBottom(xScale))
+                    .selectAll('text')
+                    .style('fill','#aaa').style('font-size','0.7em')
+                    .attr('dy','1.2em');
+
+                g.append('g')
+                    .call(d3.axisLeft(yScale).ticks(5).tickFormat(d3.format('d')))
+                    .selectAll('text').style('fill','#aaa').style('font-size','0.7em');
+
+                g.selectAll('.domain, .tick line').attr('stroke','#444');
+
+                // Y-axis label
+                g.append('text')
+                    .attr('transform','rotate(-90)')
+                    .attr('x', -iH/2).attr('y', -36)
+                    .attr('text-anchor','middle')
+                    .style('fill','#888').style('font-size','0.65em')
+                    .text('# of Makers');
+
+                // Avg line
+                const avgX = d3.scaleLinear().domain([0, 120]).range([0, iW])(weightedAvg);
+                g.append('line')
+                    .attr('x1', avgX).attr('x2', avgX)
+                    .attr('y1', 0).attr('y2', iH)
+                    .attr('stroke','#ff5252').attr('stroke-width',1.5)
+                    .attr('stroke-dasharray','4,3');
+                g.append('text')
+                    .attr('x', avgX + 4).attr('y', 14)
+                    .style('fill','#ff5252').style('font-size','0.62em')
+                    .text('avg ' + weightedAvg.toFixed(1) + 'mo');
+            })();
         }
 
         // --- SOCIAL ICON HELPER ---
@@ -1771,7 +2028,8 @@
                             website: row['Public Website'] || row['Website'] || "",
                             publicQueue: row['Public Queue'] || row['Open Public Queue'] || "",
                             publicTos: row['Public Terms of Service'] || "",
-                            headBase: row['Head Base Material'] || ""
+                            headBase: row['Head Base Material'] || "",
+                            paidTurnaround: parseFloat(row['Final Payment Turnaround (Months)']) || null
                         };
                     }).filter(row => row.maker);
                     
