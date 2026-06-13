@@ -793,7 +793,7 @@
                 topProd10: "Top 10 Most Productive", topProd: "Most Productive",
                 rankedBy: "(Ranked by Avg Works Per Year)", filteringBy: "Filtering by:", clearFilter: "Clear",
                 thRow: "Row", thMaker: "Maker", thLogo: "Logo", thLocation: "Location",
-                thLink: "Link", thPreview: "Preview", thStatus: "Status",
+                thLink: "Links", thPreview: "Preview", thStatus: "Status",
                 thFursuits: "Fursuits", thWorks: "Avg Works/Yr", thFollowers: "Followers",
                 thAvgPrice: "Average Price", thShip: "Shipping", thTax: "Sales Tax", thTotal: "Total Cost",
                 thWebsite: "Website", thQueue: "Queue", thTos: "ToS"
@@ -919,9 +919,6 @@
                 table.updateColumnDefinition("calculatedShip", {title: t("thShip")});
                 table.updateColumnDefinition("calculatedTax", {title: t("thTax")});
                 table.updateColumnDefinition("calculatedTotal", {title: t("thTotal")});
-                table.updateColumnDefinition("website", {title: t("thWebsite")});
-                table.updateColumnDefinition("publicQueue", {title: t("thQueue")});
-                table.updateColumnDefinition("publicTos", {title: t("thTos")});
                 updateAnalytics(table.getData("active"));
             } else {
                 updateAnalytics(loadedData);
@@ -1513,40 +1510,9 @@
                             return total > 0 ? wrapInTilt(formatCurrency(total), "color:darkorange; font-weight:bold") : "---";
                         }
                     },
-                    {
-                        title: t("thWebsite"), field: "website", hozAlign: "center",
-                        formatter: function(cell) {
-                            const url = cell.getValue();
-                            if (!url || !String(url).startsWith('http')) return "";
-                            return `<div class="social-links-cell"><a href="${url}" target="_blank" class="social-icon-link" title="${url}">🌐</a></div>`;
-                        }
-                    },
-                    {
-                        title: t("thQueue"), field: "publicQueue", hozAlign: "center",
-                        formatter: function(cell) {
-                            const url = cell.getValue();
-                            if (!url || !String(url).startsWith('http')) return "";
-                            return `<div class="social-links-cell"><a href="${url}" target="_blank" class="social-icon-link" title="${url}">
-                                <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;">
-                                  <rect width="48" height="48" rx="8" fill="#0052CC"/>
-                                  <rect x="8" y="14" width="14" height="20" rx="2" fill="#00C7E6"/>
-                                  <rect x="27" y="14" width="13" height="20" rx="2" fill="#00C7E6"/>
-                                  <rect x="9" y="16" width="12" height="5" rx="1" fill="#fff" opacity="0.9"/>
-                                  <rect x="9" y="23" width="8" height="3" rx="1" fill="#fff" opacity="0.6"/>
-                                  <rect x="28" y="16" width="11" height="5" rx="1" fill="#fff" opacity="0.9"/>
-                                  <rect x="28" y="23" width="7" height="3" rx="1" fill="#fff" opacity="0.6"/>
-                                </svg>
-                            </a></div>`;
-                        }
-                    },
-                    {
-                        title: t("thTos"), field: "publicTos", hozAlign: "center",
-                        formatter: function(cell) {
-                            const url = cell.getValue();
-                            if (!url || !String(url).startsWith('http')) return "";
-                            return `<div class="social-links-cell"><a href="${url}" target="_blank" class="social-icon-link" title="${url}">📋</a></div>`;
-                        }
-                    }
+
+
+
                 ]
             });
 
