@@ -1446,13 +1446,36 @@
                     { 
                         title: t("thLink"), field:"link", hozAlign:"center",
                         formatter: function(cell) {
+                            const data = cell.getData();
+                            let icons = '';
+
+                            // Social links (col E)
                             const url = cell.getValue();
-                            if(!url) return "";
-                            // Split by whitespace/commas to support multiple URLs in one cell
-                            const urls = String(url).split(/[\s,]+/).filter(u => u.startsWith('http') || u.startsWith('www'));
-                            if (urls.length === 0) return "";
-                            const icons = urls.map(u => makeSocialIcon(u)).join('');
-                            return `<div class="social-links-cell">${icons}</div>`;
+                            if (url) {
+                                const urls = String(url).split(/[\s,]+/).filter(u => u.startsWith('http') || u.startsWith('www'));
+                                icons += urls.map(u => makeSocialIcon(u)).join('');
+                            }
+
+                            // Website (col AR) — globe
+                            const site = data.website;
+                            if (site && String(site).startsWith('http')) {
+                                icons += '<a href="' + site + '" target="_blank" class="social-icon-link" title="' + site + '">\u{1F310}</a>';
+                            }
+
+                            // Public Queue (col AS) — Trello icon
+                            const queue = data.publicQueue;
+                            if (queue && String(queue).startsWith('http')) {
+                                icons += '<a href="' + queue + '" target="_blank" class="social-icon-link" title="' + queue + '"><svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><rect width="48" height="48" rx="8" fill="#0052CC"/><rect x="8" y="14" width="14" height="20" rx="2" fill="#00C7E6"/><rect x="27" y="14" width="13" height="20" rx="2" fill="#00C7E6"/><rect x="9" y="16" width="12" height="5" rx="1" fill="#fff" opacity="0.9"/><rect x="9" y="23" width="8" height="3" rx="1" fill="#fff" opacity="0.6"/><rect x="28" y="16" width="11" height="5" rx="1" fill="#fff" opacity="0.9"/><rect x="28" y="23" width="7" height="3" rx="1" fill="#fff" opacity="0.6"/></svg></a>';
+                            }
+
+                            // Public ToS (col AT) — memo
+                            const tos = data.publicTos;
+                            if (tos && String(tos).startsWith('http')) {
+                                icons += '<a href="' + tos + '" target="_blank" class="social-icon-link" title="' + tos + '">\u{1F4CB}</a>';
+                            }
+
+                            if (!icons) return "";
+                            return '<div class="social-links-cell">' + icons + '</div>';
                         }
                     },
                     { 
