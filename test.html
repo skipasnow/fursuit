@@ -820,7 +820,9 @@
                 thLink: "連結", thPreview: "預覽", thStatus: "狀態",
                 thFursuits: "獸裝數", thWorks: "年均作品", thFollowers: "粉絲數",
                 thAvgPrice: "平均價格", thShip: "運費", thTax: "銷售稅", thTotal: "總成本",
-                thWebsite: "網站", thQueue: "候補名單", thTos: "服務條款" {
+                thWebsite: "網站", thQueue: "候補名單", thTos: "服務條款"
+            },
+            "zh-CN": {
                 navUs: "> 美系兽装", navAsia: "> 日系兽装", navMaintenance: "> 维护",
                 headerTitle: "美系兽装制作者", legendPremium: "制作者成本溢价",
                 low: "低", high: "高", usPricing: "美国定价",
@@ -1560,7 +1562,16 @@
              document.getElementById("results-counter").innerHTML = "Loading data...";
              Papa.parse(url, {
                 download: true, header: true, dynamicTyping: true,
+                error: function(err) {
+                    document.getElementById("results-counter").innerHTML =
+                        `<span style="color:#ff5252;">⚠ Failed to load data. Check that the Google Sheet is published to the web. (${err.message || err})</span>`;
+                },
                 complete: function(results) {
+                    if (!results.data || results.data.length === 0) {
+                        document.getElementById("results-counter").innerHTML =
+                            '<span style="color:#ff5252;">⚠ No data returned. Verify the Google Sheet is published: File → Share → Publish to web → CSV.</span>';
+                        return;
+                    }
                     const data = results.data.map(row => {
                         const rawPrice = cleanNumber(row['Average Price']);
                         return {
@@ -1577,8 +1588,8 @@
                             activitySymbol: row['Symbol'],
                             country: typeof row['Location'] === 'string' ? row['Location'].trim() : row['Location'],
                             followers: cleanNumber(row['Followers']),
-                            website: row['Website'] || "",
-                            publicQueue: row['Public Queue'] || "",
+                            website: row['Public Website'] || row['Website'] || "",
+                            publicQueue: row['Public Queue'] || row['Open Public Queue'] || "",
                             publicTos: row['Public Terms of Service'] || ""
                         };
                     }).filter(row => row.maker);
