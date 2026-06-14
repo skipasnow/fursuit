@@ -235,6 +235,7 @@
 
         /* --- HEAD BASE PIE CHART --- */
         #headbase-area .promo-card { height: auto; min-height: 320px; }
+        .analytics-section .promo-card { height: 290px; overflow: hidden; }
         .headbase-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -338,7 +339,7 @@
         .promo-card {
             background: #1f1f1f; border: 1px solid #444; border-radius: 6px; padding: 20px; 
             display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
-            position: relative; overflow: hidden; height: 290px; box-sizing: border-box;
+            position: relative; overflow: visible; height: auto; min-height: 290px; box-sizing: border-box;
         }
 
         .chart-title { font-size: 0.85em; font-weight: bold; color: #aaa; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 4px; }
@@ -426,6 +427,12 @@
         .tabulator .tabulator-header-filter input:focus,
         .tabulator .tabulator-header-filter select:focus { border-color: #7b5ea7 !important; outline: none !important; }
         .tabulator-col-sorter { color: #7b5ea7 !important; }
+        /* Allow custom multi-select dropdown to escape header/cell clipping */
+        .tabulator .tabulator-header { overflow: visible !important; }
+        .tabulator .tabulator-header .tabulator-col { overflow: visible !important; }
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-content { overflow: visible !important; }
+        .tabulator .tabulator-header-filter { overflow: visible !important; }
+        .tabulator .tabulator-headers { overflow: visible !important; }
         .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; font-size: 16px; }
         .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
         .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
@@ -1742,8 +1749,8 @@
                 const svg  = d3.select('#ta-curve');
                 const node = svg.node().parentNode;
                 const W    = node.clientWidth - 32 || 480;
-                const H    = 260;
-                const pad  = { top: 20, right: 20, bottom: 55, left: 44 };
+                const H    = 300;
+                const pad  = { top: 20, right: 20, bottom: 70, left: 44 };
                 const iW   = W - pad.left - pad.right;
                 const iH   = H - pad.top  - pad.bottom;
                 svg.attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
@@ -1847,49 +1854,17 @@
                     .style('fill','#888').style('font-size','0.65em')
                     .text('# of Makers');
 
-                // ── Position helper: map months → x using bucket boundaries ──
-                const bucketMins = [1, 5, 9, 13, 19, 25];
-                const nBuckets = buckets.length;
-                function monthsToX(months) {
-                    for (var bi = 0; bi < nBuckets; bi++) {
-                        var bMin = bucketMins[bi];
-                        var bMax = bi < nBuckets - 1 ? bucketMins[bi+1] - 1 : 999;
-                        if (months <= bMax) {
-                            var frac = Math.min(Math.max((months - bMin) / (bMax - bMin + 1), 0), 1);
-                            return xScale(chartData[bi].label) + frac * xScale.bandwidth();
-                        }
-                    }
-                    return iW;
-                }
-
-                // ── All-makers weighted avg line (red) ──
-                const avgXpos = monthsToX(weightedAvg);
+                // Avg line
+                const avgX = d3.scaleLinear().domain([0, 120]).range([0, iW])(weightedAvg);
                 g.append('line')
-                    .attr('x1', avgXpos).attr('x2', avgXpos)
+                    .attr('x1', avgX).attr('x2', avgX)
                     .attr('y1', 0).attr('y2', iH)
                     .attr('stroke','#ff5252').attr('stroke-width',1.5)
                     .attr('stroke-dasharray','4,3');
                 g.append('text')
-                    .attr('x', avgXpos + 4).attr('y', 14)
+                    .attr('x', avgX + 4).attr('y', 14)
                     .style('fill','#ff5252').style('font-size','0.62em')
-                    .text('All makers avg: ' + weightedAvg.toFixed(1) + ' mo');
-
-                // ── Open-now weighted avg line (green) ──
-                const openOnly = valid.filter(d => d.status === 'Open');
-                if (openOnly.length > 0) {
-                    const openFursuits = openOnly.reduce((s,d) => s + (d.fursuits||1), 0);
-                    const openWAvg = openOnly.reduce((s,d) => s + d.paidTurnaround*(d.fursuits||1), 0) / openFursuits;
-                    const openXpos = monthsToX(openWAvg);
-                    g.append('line')
-                        .attr('x1', openXpos).attr('x2', openXpos)
-                        .attr('y1', 0).attr('y2', iH)
-                        .attr('stroke','#00E676').attr('stroke-width',1.5)
-                        .attr('stroke-dasharray','4,3');
-                    g.append('text')
-                        .attr('x', openXpos + 4).attr('y', 28)
-                        .style('fill','#00E676').style('font-size','0.62em')
-                        .text('Open now avg: ' + openWAvg.toFixed(1) + ' mo');
-                }
+                    .text('avg ' + weightedAvg.toFixed(1) + 'mo');
             })();
         }
 
@@ -1996,52 +1971,53 @@
             });
 
             // ── BB / BC / BD: Text lists ──────────────────────────────
-            const hbMakers = {}, partsMakers = {}, fabMakers = {};
-            function tallyWithMakers(val, makerName, makerMap) {
+            const headBaseCount = {}, partsCount = {}, fabricCount = {};
+            function tallyNewlines(val, counter) {
                 if (!val) return;
-                val.split('\n').forEach(function(line) {
-                    var l = line.trim();
-                    if (!l) return;
-                    if (!makerMap[l]) makerMap[l] = [];
-                    if (!makerMap[l].includes(makerName)) makerMap[l].push(makerName);
+                val.split('\n').forEach(line => {
+                    const l = line.trim();
+                    if (l) counter[l] = (counter[l] || 0) + 1;
                 });
             }
-            data.forEach(function(d) {
+            data.forEach(d => {
                 if (!d.maker) return;
-                tallyWithMakers(d.otherHeadBase, d.maker, hbMakers);
-                tallyWithMakers(d.partsPatterns, d.maker, partsMakers);
-                var fabVal = (d.fabric || '').replace(/\u200b/g,'');
-                tallyWithMakers(fabVal, d.maker, fabMakers);
+                tallyNewlines(d.otherHeadBase, headBaseCount);
+                tallyNewlines(d.partsPatterns, partsCount);
+                // Normalize fabric names
+                const fabVal = (d.fabric || '').replace(/\u200b/g,''); // strip zero-width space
+                tallyNewlines(fabVal, fabricCount);
             });
-            function normaliseMakerMap(raw, normFn) {
-                var out = {};
-                Object.entries(raw).forEach(function(entry) {
-                    var k = entry[0], makers = entry[1];
-                    var display = normFn(k);
-                    if (!out[display]) out[display] = [];
-                    makers.forEach(function(m) { if (!out[display].includes(m)) out[display].push(m); });
-                });
-                return out;
-            }
-            const hbNorm = normaliseMakerMap(hbMakers, function(k) {
-                var n = k.trim().toLowerCase();
-                return n.includes('fuzzbutt') || n.includes('fuzz butt') ? 'Fuzzbutt Fursuits'
-                     : n.includes('nukecreation') ? 'Nuke Creations' : k.trim();
+            // Merge fabric aliases
+            const fabNorm = {};
+            Object.entries(fabricCount).forEach(([k, v]) => {
+                const norm = k.trim().toLowerCase();
+                const display = norm.includes('big z') ? 'Big Z Fabric'
+                              : norm.includes('howl') ? 'Howl Fabrics (fka Fursuits By Lacey)'
+                              : norm.includes('fursuit suppli') ? 'Fursuit Supplies'
+                              : k.trim();
+                fabNorm[display] = (fabNorm[display] || 0) + v;
             });
-            const partsNorm = normaliseMakerMap(partsMakers, function(k) {
-                var n = k.trim().toLowerCase();
-                return n.includes('spiltgrapesoda') || n.includes('splitgrapesoda') ? 'SpiltGrapeSoda'
-                     : n.includes('dream vision') ? 'Dream Vision Creations' : k.trim();
+            // Merge parts aliases
+            const partsNorm = {};
+            Object.entries(partsCount).forEach(([k, v]) => {
+                const norm = k.trim().toLowerCase();
+                const display = norm.includes('spiltgrapesoda') || norm === 'spiltgrapesoda' || norm === 'splitgrapesoda' || norm === 'spiltgrapesoda' ? 'SpiltGrapeSoda'
+                              : norm.includes('dream vision') ? 'Dream Vision Creations'
+                              : k.trim();
+                partsNorm[display] = (partsNorm[display] || 0) + v;
             });
-            const fabNorm = normaliseMakerMap(fabMakers, function(k) {
-                var n = k.trim().toLowerCase();
-                return n.includes('big z') ? 'Big Z Fabric'
-                     : n.includes('howl') ? 'Howl Fabrics (fka Fursuits By Lacey)'
-                     : n.includes('fursuit suppli') ? 'Fursuit Supplies' : k.trim();
+            // Merge headbase aliases
+            const hbNorm = {};
+            Object.entries(headBaseCount).forEach(([k, v]) => {
+                const norm = k.trim().toLowerCase();
+                const display = norm.includes('fuzzbutt') || norm.includes('fuzz butt') ? 'Fuzzbutt Fursuits'
+                              : norm.includes('nukecreation') ? 'Nuke Creations'
+                              : k.trim();
+                hbNorm[display] = (hbNorm[display] || 0) + v;
             });
 
             function sortedEntries(obj) {
-                return Object.entries(obj).sort(function(a,b){ return b[1].length - a[1].length; });
+                return Object.entries(obj).sort((a,b) => b[1]-a[1]);
             }
 
             // ── Colours ───────────────────────────────────────────────
@@ -2073,21 +2049,18 @@
                 </div>`;
             }
 
-            function listCard(title, entries, note) {
-                const rowsHTML = entries.map(function(e) {
-                    var label = e[0], makers = e[1];
-                    var count = makers.length;
-                    var tipText = makers.slice().sort().join(', ').replace(/"/g, '&quot;');
-                    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #1a1a2e;">'
-                         + '<span style="font-size:0.75em;color:#ccc;flex:1;padding-right:6px;">' + label + '</span>'
-                         + '<span title="' + tipText + '" style="font-size:0.72em;color:' + C.orange + ';font-weight:bold;white-space:nowrap;cursor:help;border-bottom:1px dotted ' + C.orange + ';">'
-                         + count + ' Maker' + (count === 1 ? '' : 's') + '</span></div>';
-                }).join('');
-                const noteHTML = note ? '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">' + note + '</div>' : '';
-                return '<div class="promo-card" style="border-color:' + C.purple + ';display:flex;flex-direction:column;">'
-                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:8px;">' + title + '</div>'
-                     + '<div style="flex:1;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:' + C.purple + ' #1a1a2e;">' + rowsHTML + '</div>'
-                     + noteHTML + '</div>';
+            function listCard(title, entries, note, maxShow) {
+                const show = entries.slice(0, maxShow || 20);
+                const rowsHTML = show.map(([label, count]) => `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #1a1a2e;">
+                        <span style="font-size:0.75em;color:#ccc;">${label}</span>
+                        <span style="font-size:0.72em;color:${C.orange};font-weight:bold;white-space:nowrap;margin-left:8px;">${count} mention${count===1?'':'s'}</span>
+                    </div>`).join('');
+                const noteHTML = note ? `<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">${note}</div>` : '';
+                return `<div class="promo-card" style="border-color:${C.purple};">
+                    <div class="chart-title" style="color:${C.light};margin-bottom:12px;">${title}</div>
+                    ${rowsHTML}${noteHTML}
+                </div>`;
             }
 
             // ── Calendar card ──────────────────────────────────────────
@@ -2103,9 +2076,9 @@
                 });
                 const monthKeys = Object.keys(byMonth).sort();
 
-                let calHTML = `<div class="promo-card" style="border-color:${C.purple};grid-column:span 2;">
+                let calHTML = `<div class="promo-card" style="border-color:${C.purple};">
                     <div class="chart-title" style="color:${C.light};margin-bottom:12px;">UPCOMING COMMISSION OPENINGS <span style="font-size:0.7em;color:#888;font-weight:normal;">(${futureDates.length} makers scheduled)</span></div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;">`;
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;">`;
 
                 monthKeys.forEach(mk => {
                     const [yr, mo] = mk.split('-').map(Number);
@@ -2143,10 +2116,10 @@
                             <span style="color:${C.orange};">${f.date}</span> — ${f.maker}
                         </div>`).join('');
 
-                    calHTML += `<div style="min-width:160px;background:#0d0d1a;border:1px solid #2e2e2e;border-radius:6px;padding:10px;flex:0 0 auto;">
+                    calHTML += `<div style="width:170px;background:#0d0d1a;border:1px solid #2e2e2e;border-radius:6px;padding:10px;flex:0 0 auto;">
                         <div style="font-size:0.72em;color:${C.light};font-weight:bold;margin-bottom:4px;">${monthName}</div>
                         ${cells}
-                        <div style="margin-top:8px;">${listHTML}</div>
+                        <div style="margin-top:8px;max-height:150px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:${C.purple} #0d0d1a;">${listHTML}</div>
                     </div>`;
                 });
                 calHTML += '</div></div>';
@@ -2195,7 +2168,8 @@
                 ${statCard('RUSH ORDERS AVAILABLE', [
                     ['Rush Option Explicitly Offered', rush.yes, C.yes],
                     ['Not Offered / Not Mentioned', rush.no + rush.none, C.no],
-                ])}
+                ],
+                'Rush orders are often provided as an option to meet deadlines. These typically incur an additional percentage-based fee upon the total value of the commission.')}
 
                 ${statCard('TERMS OF SERVICE PROVIDED', [
                     ['Public ToS Available', tosYes, C.yes],
@@ -2232,13 +2206,13 @@
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:15px;">
 
                 ${listCard('OTHER HEAD BASES USED', sortedEntries(hbNorm),
-                'Pre-made head base forms sourced from other makers. Hover over "Makers" to see which makers have used each head base.')}
+                'These are pre-made head base forms sourced from other makers and used as a foundation. Counts reflect number of mentions across all maker profiles.')}
 
                 ${listCard('PARTS & PATTERNS SUPPLIERS', sortedEntries(partsNorm),
-                'Suppliers for fursuit parts, patterns, and components. SpiltGrapeSoda variants are merged. Hover over "Makers" to see which makers referenced each supplier.')}
+                'Makers referencing these suppliers for fursuit parts, patterns, or components. SpiltGrapeSoda variants are merged. Counts reflect number of mentions.')}
 
                 ${listCard('FABRIC SUPPLIERS', sortedEntries(fabNorm),
-                '<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly <b>Fursuits By Lacey</b>) is second. Hover over "Makers" to see which makers use each supplier.')}
+                '<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly known as <b>Fursuits By Lacey</b>) is the second most common. Counts reflect number of explicit mentions in maker profiles.')}
 
             </div>
 
@@ -2278,10 +2252,8 @@
         }
 
         // --- CUSTOM MULTI-SELECT DROPDOWN HEADER FILTER ---
-        // Renders a text box plus a dropdown checklist of distinct column values.
         function multiSelectFilterEditor(cell, onRendered, success, cancel, editorParams) {
             var field = cell.getColumn().getField();
-
             var container = document.createElement('div');
             container.style.cssText = 'display:flex;align-items:center;gap:2px;width:100%;position:relative;';
 
@@ -2291,17 +2263,15 @@
             input.style.cssText = 'flex:1;min-width:0;background:#0d0d1a;color:#ccc;border:1px solid #444;border-radius:3px;font-size:0.72em;padding:2px 4px;box-sizing:border-box;';
 
             var btn = document.createElement('div');
-            btn.innerHTML = '&#9662;'; // ▾
+            btn.innerHTML = '&#9662;';
             btn.title = 'Select values';
             btn.style.cssText = 'cursor:pointer;color:#7b5ea7;font-size:0.9em;padding:0 3px;user-select:none;flex-shrink:0;';
 
             var dropdown = document.createElement('div');
-            dropdown.style.cssText = 'display:none;position:absolute;top:100%;right:0;z-index:10001;background:#1a1a2e;border:1px solid #7b5ea7;border-radius:4px;max-height:260px;overflow-y:auto;min-width:180px;box-shadow:0 6px 20px rgba(0,0,0,0.6);padding:4px;scrollbar-width:thin;scrollbar-color:#7b5ea7 #1a1a2e;';
+            dropdown.style.cssText = 'display:none;position:absolute;top:100%;right:0;z-index:99999;background:#1a1a2e;border:1px solid #7b5ea7;border-radius:4px;max-height:260px;overflow-y:auto;min-width:190px;box-shadow:0 6px 20px rgba(0,0,0,0.7);padding:4px;scrollbar-width:thin;scrollbar-color:#7b5ea7 #1a1a2e;';
 
-            // Selected set (null = all allowed)
             var selected = null;
 
-            // Distinct values for this column, from current table data
             function getDistinct() {
                 var vals = {};
                 (table ? table.getData() : []).forEach(function(row) {
@@ -2315,7 +2285,6 @@
 
             function applyFilter() {
                 var typed = input.value.trim().toLowerCase();
-                // Combined predicate stored via success() custom function value
                 success({ typed: typed, selected: selected ? Object.assign({}, selected) : null });
             }
 
@@ -2323,22 +2292,17 @@
                 dropdown.innerHTML = '';
                 var distinct = getDistinct();
 
-                // Sort controls
                 var sortRow = document.createElement('div');
                 sortRow.style.cssText = 'display:flex;gap:4px;padding:2px 4px 6px;border-bottom:1px solid #333;margin-bottom:4px;';
-                ['A→Z','Z→A'].forEach(function(lbl, i) {
+                ['A\u2192Z','Z\u2192A'].forEach(function(lbl, i) {
                     var s = document.createElement('div');
                     s.textContent = lbl;
                     s.style.cssText = 'flex:1;text-align:center;font-size:0.7em;color:#b39ddb;cursor:pointer;border:1px solid #444;border-radius:3px;padding:2px;';
-                    s.onclick = function(e) {
-                        e.stopPropagation();
-                        table.setSort(field, i === 0 ? 'asc' : 'desc');
-                    };
+                    s.onclick = function(e) { e.stopPropagation(); table.setSort(field, i === 0 ? 'asc' : 'desc'); };
                     sortRow.appendChild(s);
                 });
                 dropdown.appendChild(sortRow);
 
-                // Select all / clear
                 var ctrlRow = document.createElement('div');
                 ctrlRow.style.cssText = 'display:flex;gap:4px;padding:0 4px 6px;border-bottom:1px solid #333;margin-bottom:4px;';
                 var selAll = document.createElement('div');
@@ -2363,11 +2327,7 @@
                     cb.style.cssText = 'accent-color:#7b5ea7;flex-shrink:0;';
                     cb.onclick = function(e) {
                         e.stopPropagation();
-                        if (selected === null) {
-                            // Was "all" — start from full set then toggle this one off
-                            selected = {};
-                            distinct.forEach(function(d){ selected[d] = true; });
-                        }
+                        if (selected === null) { selected = {}; distinct.forEach(function(d){ selected[d] = true; }); }
                         if (cb.checked) selected[val] = true; else delete selected[val];
                         applyFilter();
                     };
@@ -2388,15 +2348,10 @@
 
             btn.onclick = function(e) {
                 e.stopPropagation();
-                if (dropdown.style.display === 'none') {
-                    buildDropdown();
-                    dropdown.style.display = 'block';
-                } else {
-                    dropdown.style.display = 'none';
-                }
+                if (dropdown.style.display === 'none') { buildDropdown(); dropdown.style.display = 'block'; }
+                else { dropdown.style.display = 'none'; }
             };
 
-            // Close dropdown when clicking elsewhere
             document.addEventListener('click', function docClick(ev) {
                 if (!container.contains(ev.target)) dropdown.style.display = 'none';
             });
@@ -2410,15 +2365,12 @@
             return container;
         }
 
-        // Filter predicate: matches typed substring AND selected-set membership
         function multiSelectFilterFunc(headerValue, rowValue, rowData, filterParams) {
             if (!headerValue) return true;
             var v = (rowValue === null || rowValue === undefined) ? '' : String(rowValue).trim();
-            // Typed substring
             if (headerValue.typed) {
                 if (v.toLowerCase().indexOf(headerValue.typed) === -1) return false;
             }
-            // Selected checklist
             if (headerValue.selected) {
                 if (!headerValue.selected[v]) return false;
             }
