@@ -995,6 +995,8 @@
         // Global State Vars
         let table = null;
         let filterState = { priceMin: 1000, priceMax: 20000, showNA: true, status: "", states: new Set() };
+        let activeTurnaroundBucket = null; // {min, max, label} or null
+        let fullTurnaroundData = []; // full dataset for turnaround chart (unaffected by bucket filter)
         let totalDataCount = 0;
         let loadedData = []; 
         let currentTaxRate = parseFloat(document.getElementById('state-select').value);
@@ -1420,8 +1422,13 @@
             // Head base material pie chart
             updateHeadBaseChart(data);
 
-            // Paid turnaround charts
-            updateTurnaroundChart(data);
+            // Paid turnaround charts — keep using the FULL dataset for the buckets/curve
+            // so the chart shows the whole distribution even while a bucket filter is applied.
+            // Capture the broadest dataset we've seen (when no bucket filter is active).
+            if (!activeTurnaroundBucket) {
+                fullTurnaroundData = data;
+            }
+            updateTurnaroundChart(activeTurnaroundBucket ? fullTurnaroundData : data);
 
             // Insights row
             updateInsightsCharts(data);
@@ -1593,6 +1600,21 @@
 
 
         // --- TURNAROUND CHART ---
+        // Apply/clear the turnaround bucket filter on the table
+        function turnaroundFilterFunc(data) {
+            if (!activeTurnaroundBucket) return true;
+            var v = data.paidTurnaround;
+            if (v === null || v === undefined || isNaN(v)) return false;
+            return v >= activeTurnaroundBucket.min && v <= activeTurnaroundBucket.max;
+        }
+        function applyTurnaroundFilter() {
+            if (!table) return;
+            try { table.removeFilter(turnaroundFilterFunc); } catch (e) { /* filter not present */ }
+            if (activeTurnaroundBucket) {
+                table.addFilter(turnaroundFilterFunc);
+            }
+        }
+
         function updateTurnaroundChart(data) {
             const container = document.getElementById('turnaround-area');
             if (!container) return;
@@ -1701,6 +1723,13 @@
                         const rows = table.getRows();
                         const match = rows.find(r => r.getData().maker === makerName);
                         if (!match) return;
+                        // If this row is already the selected one, toggle it off
+                        const currentlySelected = table.getSelectedRows();
+                        const isAlready = currentlySelected.length === 1 && currentlySelected[0] === match;
+                        table.deselectRow(); // clear all selections first
+                        if (isAlready) {
+                            return; // was selected → now deselected, done
+                        }
                         table.scrollToRow(match, 'top', true);
                         match.select();
                         const el = match.getElement();
@@ -1794,18 +1823,31 @@
                     .attr('width', xScale.bandwidth())
                     .attr('height', d => iH - yScale(d.count))
                     .attr('rx', 4)
-                    .attr('fill', barColor)
+                    .attr('fill', d => (activeTurnaroundBucket && activeTurnaroundBucket.label === d.label) ? '#ff8c00' : barColor)
+                    .attr('stroke', d => (activeTurnaroundBucket && activeTurnaroundBucket.label === d.label) ? '#fff' : 'none')
+                    .attr('stroke-width', 1.5)
                     .style('cursor','pointer')
                     .on('mouseover', function(event, d) {
-                        d3.select(this).attr('fill', barColorHov);
-                        tipEl2.html(`<b>${d.label}</b><br>${d.count} makers (${d.pct.toFixed(1)}% of reported)`)
+                        if (!(activeTurnaroundBucket && activeTurnaroundBucket.label === d.label)) d3.select(this).attr('fill', barColorHov);
+                        var active = (activeTurnaroundBucket && activeTurnaroundBucket.label === d.label);
+                        tipEl2.html(`<b>${d.label}</b><br>${d.count} makers (${d.pct.toFixed(1)}% of reported)<br><span style="color:#aaa;font-size:0.9em;">${active ? 'Click to clear filter' : 'Click to filter table'}</span>`)
                               .style('opacity',1);
                     })
                     .on('mousemove', function(event) {
                         tipEl2.style('left',(event.clientX+15)+'px').style('top',(event.clientY-10)+'px');
                     })
-                    .on('mouseout', function() {
-                        d3.select(this).attr('fill', barColor);
+                    .on('mouseout', function(event, d) {
+                        d3.select(this).attr('fill', (activeTurnaroundBucket && activeTurnaroundBucket.label === d.label) ? '#ff8c00' : barColor);
+                        tipEl2.style('opacity',0);
+                    })
+                    .on('click', function(event, d) {
+                        // Toggle: clicking active bucket clears the filter
+                        if (activeTurnaroundBucket && activeTurnaroundBucket.label === d.label) {
+                            activeTurnaroundBucket = null;
+                        } else {
+                            activeTurnaroundBucket = { min: d.min, max: d.max, label: d.label };
+                        }
+                        applyTurnaroundFilter();
                         tipEl2.style('opacity',0);
                     });
 
@@ -2302,7 +2344,8 @@
             btn.style.cssText = 'cursor:pointer;color:#7b5ea7;font-size:0.9em;padding:0 3px;user-select:none;flex-shrink:0;';
 
             var dropdown = document.createElement('div');
-            dropdown.style.cssText = 'display:none;position:absolute;top:100%;right:0;z-index:99999;background:#1a1a2e;border:1px solid #7b5ea7;border-radius:4px;max-height:260px;overflow-y:auto;min-width:190px;box-shadow:0 6px 20px rgba(0,0,0,0.7);padding:4px;scrollbar-width:thin;scrollbar-color:#7b5ea7 #1a1a2e;';
+            dropdown.style.cssText = 'display:none;position:fixed;z-index:2147483647;background:#1a1a2e;border:1px solid #7b5ea7;border-radius:4px;max-height:300px;overflow-y:auto;min-width:190px;box-shadow:0 6px 20px rgba(0,0,0,0.7);padding:4px;scrollbar-width:thin;scrollbar-color:#7b5ea7 #1a1a2e;';
+            document.body.appendChild(dropdown);
 
             var selected = null;
 
@@ -2380,22 +2423,39 @@
                 }
             }
 
+            function positionDropdown() {
+                var rect = btn.getBoundingClientRect();
+                var dw = 200;
+                var left = rect.right - dw;
+                if (left < 4) left = 4;
+                dropdown.style.left = left + 'px';
+                dropdown.style.top = (rect.bottom + 2) + 'px';
+                dropdown.style.minWidth = dw + 'px';
+            }
+
             btn.onclick = function(e) {
                 e.stopPropagation();
-                if (dropdown.style.display === 'none') { buildDropdown(); dropdown.style.display = 'block'; }
-                else { dropdown.style.display = 'none'; }
+                if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+                    buildDropdown();
+                    positionDropdown();
+                    dropdown.style.display = 'block';
+                } else {
+                    dropdown.style.display = 'none';
+                }
             };
 
             document.addEventListener('click', function docClick(ev) {
-                if (!container.contains(ev.target)) dropdown.style.display = 'none';
+                if (!container.contains(ev.target) && !dropdown.contains(ev.target)) dropdown.style.display = 'none';
             });
+            // Reposition on scroll/resize while open
+            window.addEventListener('scroll', function(){ if (dropdown.style.display === 'block') positionDropdown(); }, true);
+            window.addEventListener('resize', function(){ if (dropdown.style.display === 'block') positionDropdown(); });
 
             input.addEventListener('input', applyFilter);
             input.addEventListener('keydown', function(e){ if (e.key === 'Enter') applyFilter(); });
 
             container.appendChild(input);
             container.appendChild(btn);
-            container.appendChild(dropdown);
             return container;
         }
 
@@ -2429,6 +2489,13 @@
                 placeholder:"No Data Available",
                 height: "100%", 
                 initialSort:[ {column:"rank", dir:"asc"} ],
+                rowClick: function(e, row) {
+                    // Single-select toggle: clicking the selected row deselects it
+                    const sel = table.getSelectedRows();
+                    const isSelected = sel.length === 1 && sel[0] === row;
+                    table.deselectRow();
+                    if (!isSelected) { row.select(); }
+                },
                 dataFiltered: function(filters, rows) { 
                     const activeData = rows.map(r => r.getData());
                     updateResultCounter(activeData.length, totalDataCount); 
