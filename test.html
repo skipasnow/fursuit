@@ -783,6 +783,9 @@
 
           <div class="controls-footer">
               <div id="results-counter" class="results-counter">Loading data...</div>
+              <button id="reset-filters-btn" onclick="resetAllChartFilters()" style="display:none;align-items:center;gap:6px;background:#ff8c00;color:#1a1a1a;border:none;border-radius:5px;padding:6px 14px;font-size:0.85em;font-weight:bold;cursor:pointer;box-shadow:0 2px 8px rgba(255,140,0,0.4);">
+                  ✕ Reset all chart filters (<span class="reset-count">0</span>)
+              </button>
               <div class="sort-hint" data-i18n="sortHint">*Hold <b>Shift</b> and click column headers to sort by multiple columns.</div>
           </div>
         </div>
@@ -997,6 +1000,130 @@
         let filterState = { priceMin: 1000, priceMax: 20000, showNA: true, status: "", states: new Set() };
         let activeTurnaroundBucket = null; // {min, max, label} or null
         let fullTurnaroundData = []; // full dataset for turnaround chart (unaffected by bucket filter)
+        let fullAnalyticsData = []; // broadest dataset seen, for charts that shouldn't self-collapse
+
+        // ── UNIFIED CHART FILTER REGISTRY ──────────────────────────────
+        // Each entry: key -> { predicate: fn(rowData)->bool, label: string }
+        // All active predicates are AND-ed together via one Tabulator filter.
+        const chartFilters = {};
+
+        function chartFilterMaster(rowData) {
+            for (var k in chartFilters) {
+                if (!chartFilters[k]) continue;
+                try { if (!chartFilters[k].predicate(rowData)) return false; }
+                catch (e) { /* ignore bad predicate */ }
+            }
+            return true;
+        }
+
+        function refreshChartFilters() {
+            if (!table) return;
+            try { table.removeFilter(chartFilterMaster); } catch (e) {}
+            if (Object.keys(chartFilters).length > 0) {
+                table.addFilter(chartFilterMaster);
+            }
+            updateResetButton();
+        }
+
+        function setChartFilter(key, predicate, label) {
+            chartFilters[key] = { predicate: predicate, label: label || key };
+            refreshChartFilters();
+        }
+        function clearChartFilter(key) {
+            delete chartFilters[key];
+            refreshChartFilters();
+        }
+        function toggleChartFilter(key, predicate, label) {
+            if (chartFilters[key]) { clearChartFilter(key); return false; }
+            setChartFilter(key, predicate, label); return true;
+        }
+        function isChartFilterActive(key) { return !!chartFilters[key]; }
+
+        function resetAllChartFilters() {
+            for (var k in chartFilters) delete chartFilters[k];
+            activeTurnaroundBucket = null;
+            refreshChartFilters(); // triggers dataFiltered → updateAnalytics, which re-renders charts
+        }
+
+        function updateResetButton() {
+            var btn = document.getElementById('reset-filters-btn');
+            if (!btn) return;
+            var n = Object.keys(chartFilters).length;
+            if (n > 0) {
+                btn.style.display = 'inline-flex';
+                btn.querySelector('.reset-count').textContent = n;
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+
+        // Global store of predicates for stat/list rows, populated each render
+        window.__statPredicates = window.__statPredicates || {};
+        window.__listPredicates = window.__listPredicates || {};
+
+        // Delegated click for stat rows
+        document.addEventListener('click', function(e) {
+            var sr = e.target.closest('.stat-row');
+            if (sr) {
+                var key = sr.getAttribute('data-filter-key');
+                var entry = window.__statPredicates[key];
+                if (entry) {
+                    if (isChartFilterActive(key)) clearChartFilter(key);
+                    else setChartFilter(key, entry.predicate, entry.label);
+                }
+                return;
+            }
+            var lr = e.target.closest('.list-row');
+            if (lr) {
+                var key2 = lr.getAttribute('data-filter-key');
+                var field = lr.getAttribute('data-field');
+                var item = lr.getAttribute('data-item');
+                if (isChartFilterActive(key2)) {
+                    clearChartFilter(key2);
+                } else {
+                    var itemLC = (item||'').toLowerCase();
+                    setChartFilter(key2, function(row) {
+                        var val = (row[field] || '');
+                        // match any newline-separated entry equal to item (case-insensitive, alias-aware via substring)
+                        return String(val).split('\n').some(function(line){
+                            var l = line.trim().toLowerCase();
+                            return l === itemLC || l.indexOf(itemLC) !== -1 || itemLC.indexOf(l) !== -1 && l.length > 3;
+                        });
+                    }, key2);
+                }
+            }
+        });
+
+        // ── Jump to a maker's row in the table (single-select toggle) ──
+        function jumpToMakerRow(makerName) {
+            if (!table) return;
+            var rows = table.getRows();
+            var match = rows.find(function(r){ return r.getData().maker === makerName; });
+            if (!match) return;
+            var sel = table.getSelectedRows();
+            var isAlready = sel.length === 1 && sel[0] === match;
+            table.deselectRow();
+            if (isAlready) return; // toggle off
+            table.scrollToRow(match, 'top', true);
+            match.select();
+            var el = match.getElement();
+            if (el) {
+                el.style.transition = 'box-shadow 0.15s';
+                el.style.boxShadow = '0 0 0 2px #ff8c00 inset';
+                setTimeout(function(){ el.style.boxShadow = ''; }, 1800);
+            }
+            var tp = document.getElementById('table-pane');
+            if (tp) tp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Delegated click handler for any element with class "jump-row" or "[data-jump-maker]"
+        document.addEventListener('click', function(e) {
+            var jr = e.target.closest('.jump-row, [data-jump-maker]');
+            if (jr) {
+                var maker = jr.getAttribute('data-maker') || jr.getAttribute('data-jump-maker');
+                if (maker) { jumpToMakerRow(maker); }
+            }
+        });
         let totalDataCount = 0;
         let loadedData = []; 
         let currentTaxRate = parseFloat(document.getElementById('state-select').value);
@@ -1359,13 +1486,13 @@
             const fmtTotalFursuits = totalFursuitsSum.toLocaleString();
 
             const maxExp = topExpensive.length ? topExpensive[0].price : 1;
-            let htmlTopExp = topExpensive.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-price" style="width:${(d.price/maxExp)*100}%;"></div></div><div class="mini-bar-value">${formatCurrency(d.price)}</div></div>`).join('');
+            let htmlTopExp = topExpensive.map(d => `<div class="mini-bar-row jump-row" data-maker="${(d.maker||'').replace(/"/g,'&quot;')}" style="cursor:pointer;"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-price" style="width:${(d.price/maxExp)*100}%;"></div></div><div class="mini-bar-value">${formatCurrency(d.price)}</div></div>`).join('');
 
             const maxSuits = topFursuits.length ? topFursuits[0].fursuits : 1;
-            let htmlTopSuits = topFursuits.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-suits" style="width:${(d.fursuits/maxSuits)*100}%;"></div></div><div class="mini-bar-value">${d.fursuits}</div></div>`).join('');
+            let htmlTopSuits = topFursuits.map(d => `<div class="mini-bar-row jump-row" data-maker="${(d.maker||'').replace(/"/g,'&quot;')}" style="cursor:pointer;"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-suits" style="width:${(d.fursuits/maxSuits)*100}%;"></div></div><div class="mini-bar-value">${d.fursuits}</div></div>`).join('');
 
             const maxProd = topProductive.length ? topProductive[0].worksPerYear : 1;
-            let htmlTopProd = topProductive.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-prod" style="width:${(d.worksPerYear/maxProd)*100}%;"></div></div><div class="mini-bar-value">${d.worksPerYear}</div></div>`).join('');
+            let htmlTopProd = topProductive.map(d => `<div class="mini-bar-row jump-row" data-maker="${(d.maker||'').replace(/"/g,'&quot;')}" style="cursor:pointer;"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-prod" style="width:${(d.worksPerYear/maxProd)*100}%;"></div></div><div class="mini-bar-value">${d.worksPerYear}</div></div>`).join('');
 
             // Dynamic Sub-Titles
             const topSuitsTitle = topFursuits.length >= 5 ? t("topSuits5") : t("topSuits");
@@ -1420,18 +1547,19 @@
             }
 
             // Head base material pie chart
-            updateHeadBaseChart(data);
+            updateHeadBaseChart(Object.keys(chartFilters).length > 0 ? fullAnalyticsData : data);
 
-            // Paid turnaround charts — keep using the FULL dataset for the buckets/curve
-            // so the chart shows the whole distribution even while a bucket filter is applied.
-            // Capture the broadest dataset we've seen (when no bucket filter is active).
-            if (!activeTurnaroundBucket) {
+            // Capture broadest dataset (when no chart filters active) for charts that shouldn't self-collapse
+            if (Object.keys(chartFilters).length === 0) {
                 fullTurnaroundData = data;
+                fullAnalyticsData = data;
             }
-            updateTurnaroundChart(activeTurnaroundBucket ? fullTurnaroundData : data);
 
-            // Insights row
-            updateInsightsCharts(data);
+            // Paid turnaround charts — always render from full distribution
+            updateTurnaroundChart(Object.keys(chartFilters).length > 0 ? fullTurnaroundData : data);
+
+            // Insights row — render from full data so options/highlights persist while filtering
+            updateInsightsCharts(Object.keys(chartFilters).length > 0 ? fullAnalyticsData : data);
         }
 
         // --- HEAD BASE MATERIAL PIE CHART ---
@@ -1517,13 +1645,15 @@
             const arcHover = d3.arc().innerRadius(radius * 0.45).outerRadius(radius + 8);
             const pie = d3.pie().value(d => d.value).sort(null);
 
-            // Build legend HTML
+            // Build legend HTML (clickable)
             let legendHTML = '<div class="pie-legend">';
             groupDefs.filter(g => groupTotals[g.name]).forEach(g => {
                 const gpct = (groupTotals[g.name] / totalWeight * 100).toFixed(1);
-                legendHTML += `<div class="pie-legend-item"><div class="pie-legend-swatch" style="background:${g.color};"></div><div><b style="color:${g.color}">${g.name}</b> — ${gpct}% total</div></div>`;
+                const gActive = isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === g.name;
+                legendHTML += `<div class="pie-legend-item hb-group-row" data-group="${g.name}" style="cursor:pointer;${gActive?'background:rgba(255,140,0,0.15);border-radius:3px;':''}"><div class="pie-legend-swatch" style="background:${gActive?'#ff8c00':g.color};"></div><div><b style="color:${gActive?'#ff8c00':g.color}">${g.name}</b> — ${gpct}% total</div></div>`;
                 (subsByGroup[g.name] || []).forEach(({ sub, pct }) => {
-                    legendHTML += `<div class="pie-legend-group" style="color:#aaa;">↳ ${sub}: ${pct.toFixed(1)}%</div>`;
+                    const sActive = isChartFilterActive('headbase-sub') && chartFilters['headbase-sub'].subName === sub;
+                    legendHTML += `<div class="pie-legend-group hb-sub-row" data-sub="${sub.replace(/"/g,'&quot;')}" style="cursor:pointer;color:${sActive?'#ff8c00':'#aaa'};${sActive?'font-weight:bold;':''}">↳ ${sub}: ${pct.toFixed(1)}%</div>`;
                 });
             });
             legendHTML += '</div>';
@@ -1565,15 +1695,16 @@
              .data(arcs)
              .join('path')
              .attr('d', arcGen)
-             .attr('fill', d => d.data.color)
-             .attr('stroke', '#2e2e2e')
+             .attr('fill', d => isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === d.data.name ? '#ff8c00' : d.data.color)
+             .attr('stroke', d => isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === d.data.name ? '#fff' : '#2e2e2e')
              .attr('stroke-width', 2)
              .style('cursor', 'pointer')
              .on('mouseover', function(event, d) {
                  d3.select(this).transition().duration(150).attr('d', arcHover);
                  const subs = (subsByGroup[d.data.name] || [])
                      .map(s => `${s.sub}: ${s.pct.toFixed(1)}%`).join('<br>');
-                 tip.html(`<b style="color:${d.data.color}">${d.data.name}</b><br>${d.data.pct.toFixed(1)}% of total<br><hr style="border-color:#444;margin:4px 0;">${subs}`)
+                 var act = isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === d.data.name;
+                 tip.html(`<b style="color:${d.data.color}">${d.data.name}</b><br>${d.data.pct.toFixed(1)}% of total<br><hr style="border-color:#444;margin:4px 0;">${subs}<br><span style="color:#aaa;font-size:0.9em;">${act ? 'Click to clear filter' : 'Click to filter by group'}</span>`)
                     .style('opacity', 1);
              })
              .on('mousemove', function(event) {
@@ -1581,6 +1712,22 @@
              })
              .on('mouseout', function(event, d) {
                  d3.select(this).transition().duration(150).attr('d', arcGen);
+                 tip.style('opacity', 0);
+             })
+             .on('click', function(event, d) {
+                 var groupName = d.data.name;
+                 if (isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === groupName) {
+                     clearChartFilter('headbase-group');
+                 } else {
+                     var f = function(row) {
+                         if (!row.headBase) return false;
+                         var parts = parseHeadBaseMaterials(row.headBase);
+                         return parts.some(function(p){ var c = classifyMaterial(p); return c && c.group === groupName; });
+                     };
+                     f.groupName = groupName; // tag for highlight check
+                     setChartFilter('headbase-group', f, 'Head Base Group: ' + groupName);
+                     chartFilters['headbase-group'].groupName = groupName;
+                 }
                  tip.style('opacity', 0);
              });
 
@@ -1596,22 +1743,56 @@
 
             // Clean up old tooltip on redraw
             d3.selectAll('#hb-tip').filter(function() { return this !== tip.node(); }).remove();
+
+            // Legend click handlers (group + sub) — attach to this container
+            container.querySelectorAll('.hb-group-row').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    var groupName = el.getAttribute('data-group');
+                    if (isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === groupName) {
+                        clearChartFilter('headbase-group');
+                    } else {
+                        var f = function(row) {
+                            if (!row.headBase) return false;
+                            var parts = parseHeadBaseMaterials(row.headBase);
+                            return parts.some(function(p){ var c = classifyMaterial(p); return c && c.group === groupName; });
+                        };
+                        f.groupName = groupName;
+                        setChartFilter('headbase-group', f, 'Head Base Group: ' + groupName);
+                        chartFilters['headbase-group'].groupName = groupName;
+                    }
+                });
+            });
+            container.querySelectorAll('.hb-sub-row').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    var subName = el.getAttribute('data-sub');
+                    if (isChartFilterActive('headbase-sub') && chartFilters['headbase-sub'].subName === subName) {
+                        clearChartFilter('headbase-sub');
+                    } else {
+                        var f = function(row) {
+                            if (!row.headBase) return false;
+                            var parts = parseHeadBaseMaterials(row.headBase);
+                            return parts.some(function(p){ return p.trim().toLowerCase() === subName.toLowerCase(); });
+                        };
+                        f.subName = subName;
+                        setChartFilter('headbase-sub', f, 'Head Base: ' + subName);
+                        chartFilters['headbase-sub'].subName = subName;
+                    }
+                });
+            });
         }
 
 
         // --- TURNAROUND CHART ---
-        // Apply/clear the turnaround bucket filter on the table
-        function turnaroundFilterFunc(data) {
-            if (!activeTurnaroundBucket) return true;
-            var v = data.paidTurnaround;
-            if (v === null || v === undefined || isNaN(v)) return false;
-            return v >= activeTurnaroundBucket.min && v <= activeTurnaroundBucket.max;
-        }
         function applyTurnaroundFilter() {
-            if (!table) return;
-            try { table.removeFilter(turnaroundFilterFunc); } catch (e) { /* filter not present */ }
             if (activeTurnaroundBucket) {
-                table.addFilter(turnaroundFilterFunc);
+                var b = activeTurnaroundBucket;
+                setChartFilter('turnaround', function(row) {
+                    var v = row.paidTurnaround;
+                    if (v === null || v === undefined || isNaN(v)) return false;
+                    return v >= b.min && v <= b.max;
+                }, 'Turnaround: ' + b.label);
+            } else {
+                clearChartFilter('turnaround');
             }
         }
 
@@ -1717,30 +1898,8 @@
                         .on('click', function() { jumpToMaker(d.maker); })
                         .text(d.maker.length > 22 ? d.maker.slice(0,21)+'…' : d.maker);
 
-                    // Click helper — scroll table to matching maker row
-                    function jumpToMaker(makerName) {
-                        if (!table) return;
-                        const rows = table.getRows();
-                        const match = rows.find(r => r.getData().maker === makerName);
-                        if (!match) return;
-                        // If this row is already the selected one, toggle it off
-                        const currentlySelected = table.getSelectedRows();
-                        const isAlready = currentlySelected.length === 1 && currentlySelected[0] === match;
-                        table.deselectRow(); // clear all selections first
-                        if (isAlready) {
-                            return; // was selected → now deselected, done
-                        }
-                        table.scrollToRow(match, 'top', true);
-                        match.select();
-                        const el = match.getElement();
-                        if (el) {
-                            el.style.transition = 'box-shadow 0.15s';
-                            el.style.boxShadow = '0 0 0 2px #ff8c00 inset';
-                            setTimeout(() => { el.style.boxShadow = ''; }, 1800);
-                        }
-                        // Scroll page to table
-                        document.getElementById('table-pane').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
+                    // Click helper — delegate to global
+                    function jumpToMaker(makerName) { jumpToMakerRow(makerName); }
 
                     // Bar
                     svg.append('rect')
@@ -2018,20 +2177,23 @@
             futureDates.sort((a, b) => a.dt - b.dt);
 
             // ── AR: Website breakdown ─────────────────────────────────
+            function classifySite(rawUrl) {
+                var url = (rawUrl || '').trim();
+                if (!url || !url.startsWith('http')) return 'No Website';
+                try {
+                    var host = new URL(url).hostname.replace('www.','');
+                    if (host.includes('weebly')) return 'Weebly';
+                    if (host.includes('wixsite') || host.includes('wix.com')) return 'Wix';
+                    if (host.includes('carrd.co')) return 'Carrd';
+                    if (host.includes('linktr.ee')) return 'Linktree';
+                    if (host.includes('sites.google.com') || url.includes('sites.google.com')) return 'Google Sites';
+                    return 'Custom Domain';
+                } catch(e) { return 'Other'; }
+            }
             const siteCats = { 'Custom Domain': 0, 'No Website': 0, 'Carrd': 0, 'Weebly': 0, 'Wix': 0, 'Linktree': 0, 'Google Sites': 0, 'Other': 0 };
             data.forEach(d => {
                 if (!d.maker) return;
-                const url = (d.website || '').trim();
-                if (!url || !url.startsWith('http')) { siteCats['No Website']++; return; }
-                try {
-                    const host = new URL(url).hostname.replace('www.','');
-                    if (host.includes('weebly')) siteCats['Weebly']++;
-                    else if (host.includes('wixsite') || host.includes('wix.com')) siteCats['Wix']++;
-                    else if (host.includes('carrd.co')) siteCats['Carrd']++;
-                    else if (host.includes('linktr.ee')) siteCats['Linktree']++;
-                    else if (host.includes('sites.google.com') || url.includes('sites.google.com')) siteCats['Google Sites']++;
-                    else siteCats['Custom Domain']++;
-                } catch(e) { siteCats['Other']++; }
+                siteCats[classifySite(d.website)]++;
             });
 
             // ── AS: Queue breakdown ───────────────────────────────────
@@ -2106,30 +2268,48 @@
                 </div>`;
             }
 
+            // statCard rows: [label, count, color, sub, filterKey, predicate]
+            //   if filterKey + predicate present, the row becomes clickable to filter
             function statCard(title, rows, note) {
-                const rowsHTML = rows.map(([label, count, color, sub]) => `
-                    <div style="margin-bottom:6px;">
-                        <div style="display:flex;justify-content:space-between;font-size:0.75em;color:#ccc;">
-                            <span>${label}</span><span style="color:#888;">${count} makers</span>
-                        </div>
-                        ${miniBar(parseFloat(pct(count)), color)}
-                        ${sub ? `<div style="font-size:0.67em;color:#888;margin-top:2px;margin-left:4px;">${sub}</div>` : ''}
-                    </div>`).join('');
-                const noteHTML = note ? `<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">${note}</div>` : '';
-                return `<div class="promo-card" style="border-color:${C.purple};">
-                    <div class="chart-title" style="color:${C.light};margin-bottom:12px;">${title}</div>
-                    ${rowsHTML}${noteHTML}
-                </div>`;
+                const rowsHTML = rows.map(function(r) {
+                    var label = r[0], count = r[1], color = r[2], sub = r[3], filterKey = r[4], predicate = r[5];
+                    var clickable = filterKey && predicate;
+                    if (clickable) { window.__statPredicates[filterKey] = { predicate: predicate, label: title + ': ' + label }; }
+                    var active = clickable && isChartFilterActive(filterKey);
+                    var rowStyle = 'margin-bottom:6px;padding:4px;border-radius:4px;'
+                                 + (clickable ? 'cursor:pointer;' : '')
+                                 + (active ? 'background:rgba(255,140,0,0.12);outline:1px solid #ff8c00;' : '');
+                    var dataAttr = clickable ? (' class="stat-row" data-filter-key="' + filterKey + '"') : '';
+                    return '<div' + dataAttr + ' style="' + rowStyle + '">'
+                         + '<div style="display:flex;justify-content:space-between;font-size:0.75em;color:#ccc;">'
+                         + '<span>' + label + (active ? ' <span style="color:#ff8c00;">\u2715</span>' : '') + '</span><span style="color:#888;">' + count + ' makers</span></div>'
+                         + miniBar(parseFloat(pct(count)), active ? '#ff8c00' : color)
+                         + (sub ? '<div style="font-size:0.67em;color:#888;margin-top:2px;margin-left:4px;">' + sub + '</div>' : '')
+                         + '</div>';
+                }).join('');
+                const noteHTML = note ? '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">' + note + '</div>' : '';
+                return '<div class="promo-card" style="border-color:' + C.purple + ';">'
+                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:12px;">' + title + '</div>'
+                     + rowsHTML + noteHTML + '</div>';
             }
 
-            function listCard(title, entries, note) {
+            // listCard rows clickable: filterKeyBase + field; clicking filters rows whose
+            // field text contains that item (newline-aware), toggle on/off.
+            function listCard(title, entries, note, filterKeyBase, fieldName) {
                 const rowsHTML = entries.map(function(e) {
                     var label = e[0], makers = e[1];
                     var count = makers.length;
                     var tipText = makers.slice().sort().join(', ').replace(/"/g, '&quot;');
-                    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #1a1a2e;">'
-                         + '<span style="font-size:0.75em;color:#ccc;flex:1;padding-right:6px;">' + label + '</span>'
-                         + '<span title="' + tipText + '" style="font-size:0.72em;color:' + C.orange + ';font-weight:bold;white-space:nowrap;cursor:help;border-bottom:1px dotted ' + C.orange + ';">'
+                    var fk = filterKeyBase ? (filterKeyBase + ':' + label) : '';
+                    var active = fk && isChartFilterActive(fk);
+                    var clickable = !!filterKeyBase;
+                    var rowStyle = 'display:flex;justify-content:space-between;align-items:center;padding:3px 4px;border-bottom:1px solid #1a1a2e;border-radius:3px;'
+                                 + (clickable ? 'cursor:pointer;' : '')
+                                 + (active ? 'background:rgba(255,140,0,0.12);' : '');
+                    var dataAttr = clickable ? (' class="list-row" data-filter-key="' + fk.replace(/"/g,'&quot;') + '" data-field="' + fieldName + '" data-item="' + label.replace(/"/g,'&quot;') + '"') : '';
+                    return '<div' + dataAttr + ' style="' + rowStyle + '">'
+                         + '<span style="font-size:0.75em;color:' + (active?'#ff8c00':'#ccc') + ';flex:1;padding-right:6px;">' + (active?'\u2715 ':'') + label + '</span>'
+                         + '<span title="' + tipText + '" style="font-size:0.72em;color:' + (active?'#ff8c00':C.orange) + ';font-weight:bold;white-space:nowrap;cursor:help;border-bottom:1px dotted ' + C.orange + ';">'
                          + count + ' Maker' + (count === 1 ? '' : 's') + '</span></div>';
                 }).join('');
                 const noteHTML = note ? '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">' + note + '</div>' : '';
@@ -2188,8 +2368,8 @@
                     cells += '</div>';
 
                     const listHTML = entries.map(f =>
-                        `<div style="font-size:0.7em;color:#ccc;padding:2px 0;border-bottom:1px solid #1a1a2e;">
-                            <span style="color:${C.orange};">${f.date}</span> — ${f.maker}
+                        `<div class="jump-row" data-maker="${(f.maker||'').replace(/"/g,'&quot;')}" style="font-size:0.7em;color:#ccc;padding:2px 0;border-bottom:1px solid #1a1a2e;cursor:pointer;">
+                            <span style="color:${C.orange};">${f.date}</span> — <span style="border-bottom:1px dotted #666;">${f.maker}</span>
                         </div>`).join('');
 
                     calHTML += `<div style="width:170px;background:#0d0d1a;border:1px solid #2e2e2e;border-radius:6px;padding:10px;flex:0 0 auto;">
@@ -2203,14 +2383,15 @@
             }
 
             // ── Species breakdown ──────────────────────────────────────
+            function specMatch(r, val){ return (r.explicitSpecies||'').trim() === val; }
             const specRows = [
-                ['No Restriction', specCounts['No'] || 0, C.yes],
-                ['Copyright Characters', (specCounts['Yes - Copyright'] || 0), C.no, 'Will not make characters associated with copyrighted IPs'],
-                ['Selective Copyright', (specCounts['Yes - Selective Copyright'] || 0), '#ff8c00', 'Certain IPs only — check ToS'],
-                ['No Canines', (specCounts['Yes - No Canines'] || 0), '#ff8c00'],
-                ['No Dutch Angel Dragons', (specCounts['Yes - Copyright, Dutch Angel Dragons'] || 0) + (specCounts['Yes - Dutch Angel Dragons'] || 0), '#ff8c00'],
-                ['Other/Yes', (specCounts['Yes'] || 0), C.no],
-                ['Not Stated', (specCounts['None'] || specCounts['none'] || 0) + (specCounts['undefined'] || 0), C.none],
+                ['No Restriction', specCounts['No'] || 0, C.yes, '', 'species-no', function(r){ return specMatch(r,'No'); }],
+                ['Copyright Characters', (specCounts['Yes - Copyright'] || 0), C.no, 'Will not make characters associated with copyrighted IPs', 'species-copyright', function(r){ return specMatch(r,'Yes - Copyright'); }],
+                ['Selective Copyright', (specCounts['Yes - Selective Copyright'] || 0), '#ff8c00', 'Certain IPs only — check ToS', 'species-selective', function(r){ return specMatch(r,'Yes - Selective Copyright'); }],
+                ['No Canines', (specCounts['Yes - No Canines'] || 0), '#ff8c00', '', 'species-nocanine', function(r){ return specMatch(r,'Yes - No Canines'); }],
+                ['No Dutch Angel Dragons', (specCounts['Yes - Copyright, Dutch Angel Dragons'] || 0) + (specCounts['Yes - Dutch Angel Dragons'] || 0), '#ff8c00', '', 'species-dad', function(r){ var v=(r.explicitSpecies||'').trim(); return v==='Yes - Copyright, Dutch Angel Dragons' || v==='Yes - Dutch Angel Dragons'; }],
+                ['Other/Yes', (specCounts['Yes'] || 0), C.no, '', 'species-yes', function(r){ return specMatch(r,'Yes'); }],
+                ['Not Stated', (specCounts['None'] || specCounts['none'] || 0) + (specCounts['undefined'] || 0), C.none, '', 'species-none', function(r){ var v=(r.explicitSpecies||'').trim(); return v==='' || v==='None' || v==='none'; }],
             ].filter(r => r[1] > 0);
 
             // ── Assemble page ──────────────────────────────────────────
@@ -2218,14 +2399,14 @@
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;">
 
                 ${statCard('FULL PAYMENT REQUIRED', [
-                    ['Full Payment Required / Prioritized', fp.yes, C.no, 'Work does not begin or is deprioritized until invoice is paid in full'],
-                    ['Not Explicitly Stated', fp.no + fp.none, C.none],
+                    ['Full Payment Required / Prioritized', fp.yes, C.no, 'Work does not begin or is deprioritized until invoice is paid in full', 'fullpay-yes', function(r){ return (r.explicitFullPayment||'').trim().toLowerCase()==='yes'; }],
+                    ['Not Explicitly Stated', fp.no + fp.none, C.none, '', 'fullpay-no', function(r){ return (r.explicitFullPayment||'').trim().toLowerCase()!=='yes'; }],
                 ],
-                'Makers requiring full payment upfront or prioritizing fully-paid commissions effectively begin no work until payment is complete. Payment windows are typically under 6 months.')}
+                'Makers requiring full payment upfront, prioritizing full-paid commissions, or providing payment plans within a few months results in no work being done until payment is complete.')}
 
                 ${statCard('SHIPPING INSURANCE', [
-                    ['Insurance Mentioned in ToS', ship.yes, C.yes],
-                    ['Not Mentioned',              ship.no + ship.none, C.no]
+                    ['Insurance Mentioned in ToS', ship.yes, C.yes, '', 'ship-yes', function(r){ return (r.explicitShipping||'').trim().toLowerCase()==='yes'; }],
+                    ['Not Mentioned',              ship.no + ship.none, C.no, '', 'ship-no', function(r){ return (r.explicitShipping||'').trim().toLowerCase()!=='yes'; }]
                 ], '<b>Important:</b> Declared value is NOT insurance — it requires burden of proof to collect, and carriers can deny or reduce claims. Luxury goods communities frequently cite USPS Registered Mail as the safest option due to the significant physical security involved with every handoff.' +
                 '<br><br>UPS declared value covers transit damage, loss, and theft, but delivery theft (porch piracy) is not covered. A required signature on delivery reduces risk. A high-value shipment summary must be provided to UPS to file a claim.' +
                 '<br><br>USPS Priority Mail only covers up to $5,000. USPS Priority Registered Mail covers up to $50,000 declared value and requires signed handling and documentation at every step of delivery — making it the most secure domestic option for high-value fursuits.' +
@@ -2236,20 +2417,20 @@
                 '<br><a href=\'https://faq.usps.com/s/article/Registered-Mail-The-Basics\' target=\'_blank\' style=\'color:#7b5ea7;\'>usps.com &#8212; Registered Mail: The Basics</a>', 480)}
 
                 ${statCard('EXPLICIT WAITLIST', [
-                    ['Waitlist Formally Referenced', wl.yes, C.yes],
-                    ['No Formal Waitlist in ToS', wl.no + wl.none, C.no],
+                    ['Waitlist Formally Referenced', wl.yes, C.yes, '', 'waitlist-yes', function(r){ return (r.explicitWaitlist||'').trim().toLowerCase()==='yes'; }],
+                    ['No Formal Waitlist in ToS', wl.no + wl.none, C.no, '', 'waitlist-no', function(r){ return (r.explicitWaitlist||'').trim().toLowerCase()!=='yes'; }],
                 ],
                 'Absence of a formal waitlist does not mean there is no queue. Makers with large backlogs but no disclosed queue data represent a risk — commissioners may be unaware of how long their wait will actually be before sending a non-refundable deposit.')}
 
                 ${statCard('RUSH ORDERS AVAILABLE', [
-                    ['Rush Option Explicitly Offered', rush.yes, C.yes],
-                    ['Not Offered / Not Mentioned', rush.no + rush.none, C.no],
+                    ['Rush Option Explicitly Offered', rush.yes, C.yes, '', 'rush-yes', function(r){ return (r.explicitRush||'').trim().toLowerCase()==='yes'; }],
+                    ['Not Offered / Not Mentioned', rush.no + rush.none, C.no, '', 'rush-no', function(r){ return (r.explicitRush||'').trim().toLowerCase()!=='yes'; }],
                 ],
                 'Rush orders are often provided as an option to meet deadlines. These typically incur an additional percentage-based fee upon the total value of the commission.')}
 
                 ${statCard('TERMS OF SERVICE PROVIDED', [
-                    ['Public ToS Available', tosYes, C.yes],
-                    ['No Public ToS', tosNo, C.no],
+                    ['Public ToS Available', tosYes, C.yes, '', 'tos-yes', function(r){ return r.publicTos && String(r.publicTos).startsWith('http'); }],
+                    ['No Public ToS', tosNo, C.no, '', 'tos-no', function(r){ return !(r.publicTos && String(r.publicTos).startsWith('http')); }],
                 ],
                 '⚠ Many ToS agreements contain clauses allowing makers to retain non-refundable deposits for any reason. Some agreements also include social media restrictions, limiting a commissioner\'s ability to publicly discuss delays or unfinished work even after a payment dispute.')}
 
@@ -2261,19 +2442,19 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px;">
 
                 ${statCard('WEBSITE PLATFORM', [
-                    ['Custom Domain', siteCats['Custom Domain'], C.yes],
-                    ['No Website', siteCats['No Website'], C.no],
-                    ['Carrd', siteCats['Carrd'], C.light],
-                    ['Weebly', siteCats['Weebly'], C.light],
-                    ['Wix', siteCats['Wix'], C.light],
-                    ['Linktree', siteCats['Linktree'], C.none],
-                    ['Google Sites', siteCats['Google Sites'], C.none],
+                    ['Custom Domain', siteCats['Custom Domain'], C.yes, '', 'web-custom', function(r){ return classifySite(r.website)==='Custom Domain'; }],
+                    ['No Website', siteCats['No Website'], C.no, '', 'web-none', function(r){ return classifySite(r.website)==='No Website'; }],
+                    ['Carrd', siteCats['Carrd'], C.light, '', 'web-carrd', function(r){ return classifySite(r.website)==='Carrd'; }],
+                    ['Weebly', siteCats['Weebly'], C.light, '', 'web-weebly', function(r){ return classifySite(r.website)==='Weebly'; }],
+                    ['Wix', siteCats['Wix'], C.light, '', 'web-wix', function(r){ return classifySite(r.website)==='Wix'; }],
+                    ['Linktree', siteCats['Linktree'], C.none, '', 'web-linktree', function(r){ return classifySite(r.website)==='Linktree'; }],
+                    ['Google Sites', siteCats['Google Sites'], C.none, '', 'web-gsites', function(r){ return classifySite(r.website)==='Google Sites'; }],
                 ].filter(r => r[1] > 0))}
 
                 ${statCard('PUBLIC QUEUE AVAILABILITY', [
-                    ['Trello Queue', qTrello, C.yes, 'Publicly accessible Trello board'],
-                    ['Other Web Queue', qWeb, C.orange, 'Non-Trello public queue (Google Docs, website, etc.)'],
-                    ['No Public Queue', qNone, C.no, '⚠ Queue not publicly disclosed — commission count unknown before deposit'],
+                    ['Trello Queue', qTrello, C.yes, 'Publicly accessible Trello board', 'queue-trello', function(r){ var u=(r.publicQueue||'').trim(); return u.startsWith('http') && u.includes('trello.com'); }],
+                    ['Other Web Queue', qWeb, C.orange, 'Non-Trello public queue (Google Docs, website, etc.)', 'queue-web', function(r){ var u=(r.publicQueue||'').trim(); return u.startsWith('http') && !u.includes('trello.com'); }],
+                    ['No Public Queue', qNone, C.no, '⚠ Queue not publicly disclosed — commission count unknown before deposit', 'queue-none', function(r){ var u=(r.publicQueue||'').trim(); return !u.startsWith('http'); }],
                 ],
                 'Makers without a publicly visible queue make it impossible to assess how many commissions are ahead of yours before you send a non-refundable payment. The larger the undisclosed backlog, the greater your risk.')}
 
@@ -2282,13 +2463,13 @@
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:15px;">
 
                 ${listCard('OTHER HEAD BASES USED', sortedEntries(hbNorm),
-                'Pre-made head base forms sourced from other makers. Hover over "Makers" to see which makers have used each head base.')}
+                'Pre-made head base forms sourced from other makers. Click a row to filter; hover "Makers" to see who used each.', 'hbase', 'otherHeadBase')}
 
                 ${listCard('PARTS & PATTERNS SUPPLIERS', sortedEntries(partsNorm),
-                'Suppliers for fursuit parts, patterns, and components. SpiltGrapeSoda variants are merged. Hover over "Makers" to see which makers referenced each supplier.')}
+                'Suppliers for fursuit parts, patterns, and components. Click a row to filter; hover "Makers" to see who referenced each.', 'parts', 'partsPatterns')}
 
                 ${listCard('FABRIC SUPPLIERS', sortedEntries(fabNorm),
-                '<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly <b>Fursuits By Lacey</b>) is second. Hover over "Makers" to see which makers use each supplier.')}
+                '<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly <b>Fursuits By Lacey</b>) is second. Click a row to filter; hover "Makers" to see who uses each.', 'fabric', 'fabric')}
 
             </div>
 
