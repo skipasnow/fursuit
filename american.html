@@ -5,6 +5,45 @@
     <title>American Fursuit Makers & Pricing Estimator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <!-- ============================================================
+         LINK PREVIEW / SOCIAL EMBED META TAGS (Open Graph + Twitter)
+         These control the preview card shown when the page URL is
+         pasted into Discord, Twitter/X, Facebook, iMessage, Slack, etc.
+
+         >>> BEFORE PUBLISHING, REPLACE THE TWO PLACEHOLDER URLS BELOW <<<
+         1. og:url      -> the public URL where this page lives
+         2. og:image    -> a public, absolute URL to a preview image
+                           (recommended 1200x630px PNG or JPG, < 8 MB,
+                            must start with https:// — not a local path)
+         Discord/Twitter fetch the image from this URL; they do NOT
+         screenshot your page, so the image must be hosted somewhere
+         publicly reachable.
+         ============================================================ -->
+
+    <!-- Standard description (also used as fallback) -->
+    <meta name="description" content="Compare 250+ American fursuit makers: pricing, turnaround times, queues & terms of service.">
+
+    <!-- Open Graph (Discord, Facebook, iMessage, Slack, LinkedIn) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="American Fursuit Makers">
+    <meta property="og:title" content="American Fursuit Makers & Pricing Estimator">
+    <meta property="og:description" content="Compare 250+ American fursuit makers: pricing, turnaround times, queues & terms of service.">
+    <meta property="og:url" content="https://furmono.com/american">
+    <meta property="og:image" content="https://assets.furmono.com/ussamples/uspreview.png">
+    <meta property="og:image:width" content="2498">
+    <meta property="og:image:height" content="1300">
+    <meta property="og:image:alt" content="American Fursuit Makers pricing and analytics dashboard">
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="American Fursuit Makers & Pricing Estimator">
+    <meta name="twitter:description" content="Compare 250+ American fursuit makers: pricing, turnaround times, queues & terms of service.">
+    <meta name="twitter:image" content="https://assets.furmono.com/ussamples/uspreview.png">
+
+    <!-- Discord accent color for the embed's left bar -->
+    <meta name="theme-color" content="#7b5ea7">
+
+
     <link href="https://unpkg.com/tabulator-tables@5.6.0/dist/css/tabulator_midnight.min.css" rel="stylesheet">
     <script src="https://unpkg.com/tabulator-tables@5.6.0/dist/js/tabulator.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -46,6 +85,50 @@
             display: block; 
             overflow-y: auto; 
             overflow-x: hidden;
+        }
+
+        /* =========================================
+           SOCIAL LINK ICON SPIN ANIMATIONS
+           ========================================= */
+        .social-links-cell {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+            justify-content: center;
+            padding: 2px;
+        }
+        .social-icon-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.3em;
+            line-height: 1;
+            cursor: pointer;
+            animation: icon-spin-3d 3s ease-in-out infinite;
+            transform-style: preserve-3d;
+            will-change: transform;
+            transition: filter 0.2s;
+        }
+        .social-icon-link:hover {
+            filter: drop-shadow(0 0 6px rgba(255,200,50,0.9));
+            animation-play-state: paused;
+        }
+        /* Stagger delays so icons don't all spin in sync */
+        .social-icon-link:nth-child(1) { animation-delay: 0s; }
+        .social-icon-link:nth-child(2) { animation-delay: 0.4s; }
+        .social-icon-link:nth-child(3) { animation-delay: 0.8s; }
+        .social-icon-link:nth-child(4) { animation-delay: 1.2s; }
+        .social-icon-link:nth-child(5) { animation-delay: 1.6s; }
+
+        @keyframes icon-spin-3d {
+            0%   { transform: perspective(200px) rotateY(0deg) scale(1); }
+            20%  { transform: perspective(200px) rotateY(90deg) scale(0.6) scaleX(0.05); }
+            25%  { transform: perspective(200px) rotateY(180deg) scale(1); }
+            45%  { transform: perspective(200px) rotateY(270deg) scale(0.6) scaleX(0.05); }
+            50%  { transform: perspective(200px) rotateY(360deg) scale(1); }
+            100% { transform: perspective(200px) rotateY(360deg) scale(1); }
         }
 
         /* Scrollbar Styling */
@@ -181,13 +264,42 @@
         .collapsible-section {
             width: 100%; margin-bottom: 20px; 
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden; max-height: 2000px; opacity: 1;
+            overflow: hidden; max-height: 5000px; opacity: 1;
         }
         .collapsible-section.minimized {
             max-height: 0 !important;
             padding-top: 0 !important; padding-bottom: 0 !important; margin-bottom: 0 !important;
             border: none !important; opacity: 0 !important;
         }
+
+        /* --- HEAD BASE PIE CHART --- */
+        #headbase-area .promo-card { height: auto; min-height: 320px; }
+        .analytics-section .promo-card { height: 290px; overflow: hidden; }
+        .headbase-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+        @media (max-width: 1024px) { .headbase-grid { grid-template-columns: 1fr; } }
+        .pie-legend { display: flex; flex-direction: column; gap: 6px; justify-content: center; }
+        .pie-legend-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.8em; line-height: 1.3; }
+        .pie-legend-swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+        .pie-legend-group { font-size: 0.75em; color: #888; margin-left: 20px; }
+
+        /* --- CLICKABLE FILTER GLOW HOVER --- */
+        .stat-row, .list-row, .hb-group-row, .hb-sub-row, .jump-row {
+            transition: box-shadow 0.18s ease, background-color 0.18s ease, transform 0.12s ease;
+        }
+        .stat-row:hover, .list-row:hover, .hb-group-row:hover, .hb-sub-row:hover, .jump-row:hover {
+            box-shadow: 0 0 10px 1px rgba(255, 140, 0, 0.65), inset 0 0 0 1px rgba(255,140,0,0.5);
+            background-color: rgba(255, 140, 0, 0.10) !important;
+            border-radius: 4px;
+        }
+        .jump-row:hover .mini-bar-label { color: #ff8c00 !important; }
+        .hb-sub-row:hover, .hb-group-row:hover { color: #ff8c00 !important; }
+        /* SVG clickable elements (pie slices + bell-curve bars) */
+        svg .filter-glow { transition: filter 0.18s ease; cursor: pointer; }
+        svg .filter-glow:hover { filter: drop-shadow(0 0 6px rgba(255, 140, 0, 0.9)); }
 
         /* --- MAP SECTION --- */
         .map-section {
@@ -281,7 +393,7 @@
         .promo-card {
             background: #1f1f1f; border: 1px solid #444; border-radius: 6px; padding: 20px; 
             display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
-            position: relative; overflow: hidden; height: 290px; box-sizing: border-box;
+            position: relative; overflow: visible; height: auto; min-height: 290px; box-sizing: border-box;
         }
 
         .chart-title { font-size: 0.85em; font-weight: bold; color: #aaa; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 4px; }
@@ -360,6 +472,21 @@
         #creator-table { width: 100%; height: 100%; border: none; }
         
         .tabulator .tabulator-header { background-color: #1f1f1f !important; font-weight: bold !important; border-bottom: 1px solid #444; }
+        .tabulator .tabulator-header-filter input,
+        .tabulator .tabulator-header-filter select {
+            background: #0d0d1a !important; color: #ccc !important;
+            border: 1px solid #444 !important; border-radius: 3px !important;
+            font-size: 0.72em !important; padding: 2px 4px !important; width: 100% !important; box-sizing: border-box !important;
+        }
+        .tabulator .tabulator-header-filter input:focus,
+        .tabulator .tabulator-header-filter select:focus { border-color: #7b5ea7 !important; outline: none !important; }
+        .tabulator-col-sorter { color: #7b5ea7 !important; }
+        /* Allow custom multi-select dropdown to escape header/cell clipping */
+        .tabulator .tabulator-header { overflow: visible !important; }
+        .tabulator .tabulator-header .tabulator-col { overflow: visible !important; }
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-content { overflow: visible !important; }
+        .tabulator .tabulator-header-filter { overflow: visible !important; }
+        .tabulator .tabulator-headers { overflow: visible !important; }
         .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; font-size: 16px; }
         .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
         .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
@@ -710,11 +837,17 @@
 
           <div class="controls-footer">
               <div id="results-counter" class="results-counter">Loading data...</div>
+              <button id="reset-filters-btn" onclick="resetAllChartFilters()" style="display:none;align-items:center;gap:6px;background:#ff8c00;color:#1a1a1a;border:none;border-radius:5px;padding:6px 14px;font-size:0.85em;font-weight:bold;cursor:pointer;box-shadow:0 2px 8px rgba(255,140,0,0.4);">
+                  ✕ <span data-i18n="resetFilters">Reset all chart filters</span> (<span class="reset-count">0</span>)
+              </button>
               <div class="sort-hint" data-i18n="sortHint">*Hold <b>Shift</b> and click column headers to sort by multiple columns.</div>
           </div>
         </div>
 
         <div id="analytics-area" class="analytics-section collapsible-section"></div>
+        <div id="headbase-area" class="collapsible-section" style="margin-top:10px;"></div>
+        <div id="turnaround-area" class="collapsible-section" style="margin-top:10px;"></div>
+        <div id="insights-area" class="collapsible-section" style="margin-top:10px;"></div>
     </div>
 
     <div id="table-pane">
@@ -749,9 +882,58 @@
                 topProd10: "Top 10 Most Productive", topProd: "Most Productive",
                 rankedBy: "(Ranked by Avg Works Per Year)", filteringBy: "Filtering by:", clearFilter: "Clear",
                 thRow: "Row", thMaker: "Maker", thLogo: "Logo", thLocation: "Location",
-                thLink: "Link", thPreview: "Preview", thStatus: "Status",
+                thLink: "Links", thPreview: "Preview", thStatus: "Status",
                 thFursuits: "Fursuits", thWorks: "Avg Works/Yr", thFollowers: "Followers",
-                thAvgPrice: "Average Price", thShip: "Shipping", thTax: "Sales Tax", thTotal: "Total Cost"
+                thAvgPrice: "Average Price", thShip: "Shipping", thTax: "Sales Tax", thTotal: "Total Cost",
+                thWebsite: "Website", thQueue: "Queue", thTos: "ToS",
+                hbMaterial: "HEAD BASE MATERIAL", hbBreakdown: "BREAKDOWN BY GROUP",
+                hbCenter1: "Head Base", hbCenter2: "Material",
+                taTop25: "TOP 25 LONGEST TURNAROUNDS FOR NEW COMMISSIONERS",
+                taOdds: "ODDS OF RECEIVING FURSUIT BY TIMEFRAME",
+                taWeightedAvg: "Weighted avg (by fursuits):", taMonths: "months",
+                taBasedOnMakers: "based on", taMakers: "makers", taFursuits: "fursuits",
+                taOddsBasedOn: "Based on", taReporting: "makers reporting turnaround time",
+                taClickJump: "Click to jump to row", taNumMakers: "# of Makers",
+                taAllAvg: "All makers avg:", taOpenAvg: "Open now avg:",
+                taClickFilter: "Click to filter table", taClickClear: "Click to clear filter",
+                fullPayTitle: "FULL PAYMENT REQUIRED",
+                fullPayYes: "Full Payment Required / Prioritized", fullPayNo: "Not Explicitly Stated",
+                fullPaySub: "Work does not begin or is deprioritized until invoice is paid in full",
+                fullPayNote: "Makers requiring full payment upfront, prioritizing full-paid commissions, or providing payment plans within a few months results in no work being done until payment is complete.",
+                shipTitle: "SHIPPING INSURANCE",
+                shipYes: "Insurance Mentioned in ToS", shipNo: "Not Mentioned",
+                shipNote: "<b>Important:</b> Declared value is NOT insurance — it requires burden of proof to collect, and carriers can deny or reduce claims. Luxury goods communities frequently cite USPS Registered Mail as the safest option due to the significant physical security involved with every handoff.<br><br>UPS declared value covers transit damage, loss, and theft, but delivery theft (porch piracy) is not covered. A required signature on delivery reduces risk. A high-value shipment summary must be provided to UPS to file a claim.<br><br>USPS Priority Mail only covers up to $5,000. USPS Priority Registered Mail covers up to $50,000 declared value and requires signed handling and documentation at every step of delivery — making it the most secure domestic option for high-value fursuits.<br><br>FedEx cannot insure commissioned products with values difficult to ascertain beyond $1,000. FedEx explicitly excludes commissioned artwork and costumes from high-value coverage.",
+                shipSources: "Sources:",
+                waitTitle: "EXPLICIT WAITLIST",
+                waitYes: "Waitlist Formally Referenced", waitNo: "No Formal Waitlist in ToS",
+                waitNote: "Absence of a formal waitlist does not mean there is no queue. Makers with large backlogs but no disclosed queue data represent a risk — commissioners may be unaware of how long their wait will actually be before sending a non-refundable deposit.",
+                rushTitle: "RUSH ORDERS AVAILABLE",
+                rushYes: "Rush Option Explicitly Offered", rushNo: "Not Offered / Not Mentioned",
+                rushNote: "Rush orders are often provided as an option to meet deadlines. These typically incur an additional percentage-based fee upon the total value of the commission.",
+                tosTitle: "TERMS OF SERVICE PROVIDED",
+                tosYesL: "Public ToS Available", tosNoL: "No Public ToS",
+                tosNote: "⚠ Many ToS agreements contain clauses allowing makers to retain non-refundable deposits for any reason. Some agreements also include social media restrictions, limiting a commissioner's ability to publicly discuss delays or unfinished work even after a payment dispute.",
+                specTitle: "SPECIES RESTRICTIONS",
+                specNoRes: "No Restriction", specCopyright: "Copyright Characters", specSelective: "Selective Copyright",
+                specNoCanine: "No Canines", specNoDAD: "No Dutch Angel Dragons", specOther: "Other/Yes", specNotStated: "Not Stated",
+                specCopyrightSub: "Will not make characters associated with copyrighted IPs", specSelectiveSub: "Certain IPs only — check ToS",
+                specNote: "Makers noting \"Copyright\" will typically not craft characters from copyrighted franchises (Disney, Nintendo, etc.). \"Selective Copyright\" means only specific IPs are restricted — always verify before commissioning.",
+                webTitle: "WEBSITE PLATFORM",
+                webCustom: "Custom Domain", webNone: "No Website", webCarrd: "Carrd", webWeebly: "Weebly", webWix: "Wix", webLinktree: "Linktree", webGSites: "Google Sites",
+                queueTitle: "PUBLIC QUEUE AVAILABILITY",
+                queueTrello: "Trello Queue", queueWeb: "Other Web Queue", queueNone: "No Public Queue",
+                queueTrelloSub: "Publicly accessible Trello board", queueWebSub: "Non-Trello public queue (Google Docs, website, etc.)",
+                queueNoneSub: "⚠ Queue not publicly disclosed — commission count unknown before deposit",
+                queueNote: "Makers without a publicly visible queue make it impossible to assess how many commissions are ahead of yours before you send a non-refundable payment. The larger the undisclosed backlog, the greater your risk.",
+                hbasesTitle: "OTHER HEAD BASES USED",
+                hbasesNote: "Pre-made head base forms sourced from other makers. Click a row to filter; hover \"Makers\" to see who used each.",
+                partsTitle: "PARTS & PATTERNS SUPPLIERS",
+                partsNote: "Suppliers for fursuit parts, patterns, and components. Click a row to filter; hover \"Makers\" to see who referenced each.",
+                fabricTitle: "FABRIC SUPPLIERS",
+                fabricNote: "<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly <b>Fursuits By Lacey</b>) is second. Click a row to filter; hover \"Makers\" to see who uses each.",
+                calTitle: "UPCOMING COMMISSION OPENINGS", calScheduled: "makers scheduled", calNoDates: "No future opening dates found.",
+                wkSu: "Su", wkMo: "Mo", wkTu: "Tu", wkWe: "We", wkTh: "Th", wkFr: "Fr", wkSa: "Sa",
+                makersWord: "Makers", resetFilters: "Reset all chart filters"
             },
             "zh-TW": {
                 navUs: "> 美系獸裝", navAsia: "> 日系獸裝", navMaintenance: "> 維護",
@@ -774,7 +956,56 @@
                 thRow: "行", thMaker: "製作者", thLogo: "標誌", thLocation: "地點",
                 thLink: "連結", thPreview: "預覽", thStatus: "狀態",
                 thFursuits: "獸裝數", thWorks: "年均作品", thFollowers: "粉絲數",
-                thAvgPrice: "平均價格", thShip: "運費", thTax: "銷售稅", thTotal: "總成本"
+                thAvgPrice: "平均價格", thShip: "運費", thTax: "銷售稅", thTotal: "總成本",
+                thWebsite: "網站", thQueue: "候補名單", thTos: "服務條款",
+                hbMaterial: "頭基材料", hbBreakdown: "分組明細",
+                hbCenter1: "頭基", hbCenter2: "材料",
+                taTop25: "新委託者最長交付時間前25名",
+                taOdds: "依時間範圍獲得獸裝的機率",
+                taWeightedAvg: "加權平均 (依獸裝數):", taMonths: "個月",
+                taBasedOnMakers: "基於", taMakers: "位製作者", taFursuits: "套獸裝",
+                taOddsBasedOn: "基於", taReporting: "位製作者回報的交付時間",
+                taClickJump: "點擊跳至該列", taNumMakers: "製作者數",
+                taAllAvg: "全體平均:", taOpenAvg: "目前開放平均:",
+                taClickFilter: "點擊以篩選表格", taClickClear: "點擊以清除篩選",
+                fullPayTitle: "需全額付款",
+                fullPayYes: "需全額付款 / 優先處理", fullPayNo: "未明確說明",
+                fullPaySub: "在發票全額付清前不會開始或會被降低優先順序",
+                fullPayNote: "要求預先全額付款、優先處理已付清委託，或提供數月內付款計劃的製作者，實際上在付款完成前不會進行任何工作。",
+                shipTitle: "運送保險",
+                shipYes: "服務條款中提及保險", shipNo: "未提及",
+                shipNote: "<b>重要：</b>申報價值並非保險——索賠需要舉證責任，且承運商可拒絕或減少賠償。奢侈品社群常因每次交接時的嚴密實體安全性而推薦USPS掛號郵件作為最安全的選項。<br><br>UPS申報價值涵蓋運輸損壞、遺失與失竊，但不涵蓋送達後的失竊（門口包裹失竊）。送達需簽收可降低風險。索賠須向UPS提供高價值貨物摘要。<br><br>USPS優先郵件僅承保至$5,000。USPS優先掛號郵件承保至$50,000申報價值，並要求在每個遞送環節都有簽收處理——使其成為高價值獸裝最安全的國內選項。<br><br>FedEx無法為價值難以確定且超過$1,000的委託產品投保。FedEx明確將委託藝術品與服裝排除於高價值保障之外。",
+                shipSources: "資料來源:",
+                waitTitle: "明確的候補名單",
+                waitYes: "正式提及候補名單", waitNo: "服務條款中無正式候補名單",
+                waitNote: "沒有正式候補名單不代表沒有排隊。有大量積壓但未公開排隊資料的製作者具有風險——委託者在支付不可退還的訂金前可能無從得知實際等待時間。",
+                rushTitle: "提供加急服務",
+                rushYes: "明確提供加急選項", rushNo: "未提供 / 未提及",
+                rushNote: "加急訂單通常作為趕上截止期限的選項提供。這些通常會根據委託總價值收取額外的百分比費用。",
+                tosTitle: "提供服務條款",
+                tosYesL: "提供公開服務條款", tosNoL: "無公開服務條款",
+                tosNote: "⚠ 許多服務條款包含允許製作者以任何理由保留不可退還訂金的條款。部分協議還包含社群媒體限制，限制委託者在付款爭議後公開討論延誤或未完成作品的能力。",
+                specTitle: "物種限制",
+                specNoRes: "無限制", specCopyright: "版權角色", specSelective: "選擇性版權",
+                specNoCanine: "不接受犬科", specNoDAD: "不接受荷蘭天使龍", specOther: "其他/是", specNotStated: "未說明",
+                specCopyrightSub: "不會製作與版權IP相關的角色", specSelectiveSub: "僅限特定IP——請查看服務條款",
+                specNote: "標註「版權」的製作者通常不會製作來自版權作品（迪士尼、任天堂等）的角色。「選擇性版權」表示僅限制特定IP——委託前請務必確認。",
+                webTitle: "網站平台",
+                webCustom: "自訂網域", webNone: "無網站", webCarrd: "Carrd", webWeebly: "Weebly", webWix: "Wix", webLinktree: "Linktree", webGSites: "Google Sites",
+                queueTitle: "公開排隊資料",
+                queueTrello: "Trello 排隊", queueWeb: "其他網頁排隊", queueNone: "無公開排隊",
+                queueTrelloSub: "公開可存取的Trello看板", queueWebSub: "非Trello的公開排隊 (Google文件、網站等)",
+                queueNoneSub: "⚠ 排隊未公開——付訂前無法得知委託數量",
+                queueNote: "沒有公開排隊資料的製作者會讓您無法在支付不可退還款項前評估有多少委託排在您前面。未公開的積壓越多，您的風險越大。",
+                hbasesTitle: "使用的其他頭基",
+                hbasesNote: "來自其他製作者的預製頭基。點擊一列以篩選；將滑鼠停在「製作者」上可查看誰使用過。",
+                partsTitle: "零件與版型供應商",
+                partsNote: "獸裝零件、版型與組件的供應商。點擊一列以篩選；將滑鼠停在「製作者」上可查看誰引用過。",
+                fabricTitle: "布料供應商",
+                fabricNote: "<b>Big Z Fabric</b> 是最常被引用的獸裝布料供應商。<b>Howl Fabrics</b>（前身為 <b>Fursuits By Lacey</b>）位居第二。點擊一列以篩選；將滑鼠停在「製作者」上可查看誰使用。",
+                calTitle: "即將開放的委託", calScheduled: "位製作者已排定", calNoDates: "找不到未來的開放日期。",
+                wkSu: "日", wkMo: "一", wkTu: "二", wkWe: "三", wkTh: "四", wkFr: "五", wkSa: "六",
+                makersWord: "製作者", resetFilters: "重置所有圖表篩選"
             },
             "zh-CN": {
                 navUs: "> 美系兽装", navAsia: "> 日系兽装", navMaintenance: "> 维护",
@@ -797,7 +1028,56 @@
                 thRow: "行", thMaker: "制作者", thLogo: "标志", thLocation: "地点",
                 thLink: "链接", thPreview: "预览", thStatus: "状态",
                 thFursuits: "兽装数", thWorks: "年均作品", thFollowers: "粉丝数",
-                thAvgPrice: "平均价格", thShip: "运费", thTax: "销售税", thTotal: "总成本"
+                thAvgPrice: "平均价格", thShip: "运费", thTax: "销售税", thTotal: "总成本",
+                thWebsite: "网站", thQueue: "候补名单", thTos: "服务条款",
+                hbMaterial: "头基材料", hbBreakdown: "分组明细",
+                hbCenter1: "头基", hbCenter2: "材料",
+                taTop25: "新委托者最长交付时间前25名",
+                taOdds: "按时间范围获得兽装的概率",
+                taWeightedAvg: "加权平均 (按兽装数):", taMonths: "个月",
+                taBasedOnMakers: "基于", taMakers: "位制作者", taFursuits: "套兽装",
+                taOddsBasedOn: "基于", taReporting: "位制作者报告的交付时间",
+                taClickJump: "点击跳至该行", taNumMakers: "制作者数",
+                taAllAvg: "全体平均:", taOpenAvg: "当前开放平均:",
+                taClickFilter: "点击以筛选表格", taClickClear: "点击以清除筛选",
+                fullPayTitle: "需全额付款",
+                fullPayYes: "需全额付款 / 优先处理", fullPayNo: "未明确说明",
+                fullPaySub: "在发票全额付清前不会开始或会被降低优先顺序",
+                fullPayNote: "要求预先全额付款、优先处理已付清委托，或提供数月内付款计划的制作者，实际上在付款完成前不会进行任何工作。",
+                shipTitle: "运送保险",
+                shipYes: "服务条款中提及保险", shipNo: "未提及",
+                shipNote: "<b>重要：</b>申报价值并非保险——索赔需要举证责任，且承运商可拒绝或减少赔偿。奢侈品社群常因每次交接时的严密实体安全性而推荐USPS挂号邮件作为最安全的选项。<br><br>UPS申报价值涵盖运输损坏、遗失与失窃，但不涵盖送达后的失窃（门口包裹失窃）。送达需签收可降低风险。索赔须向UPS提供高价值货物摘要。<br><br>USPS优先邮件仅承保至$5,000。USPS优先挂号邮件承保至$50,000申报价值，并要求在每个递送环节都有签收处理——使其成为高价值兽装最安全的国内选项。<br><br>FedEx无法为价值难以确定且超过$1,000的委托产品投保。FedEx明确将委托艺术品与服装排除于高价值保障之外。",
+                shipSources: "资料来源:",
+                waitTitle: "明确的候补名单",
+                waitYes: "正式提及候补名单", waitNo: "服务条款中无正式候补名单",
+                waitNote: "没有正式候补名单不代表没有排队。有大量积压但未公开排队资料的制作者具有风险——委托者在支付不可退还的订金前可能无从得知实际等待时间。",
+                rushTitle: "提供加急服务",
+                rushYes: "明确提供加急选项", rushNo: "未提供 / 未提及",
+                rushNote: "加急订单通常作为赶上截止期限的选项提供。这些通常会根据委托总价值收取额外的百分比费用。",
+                tosTitle: "提供服务条款",
+                tosYesL: "提供公开服务条款", tosNoL: "无公开服务条款",
+                tosNote: "⚠ 许多服务条款包含允许制作者以任何理由保留不可退还订金的条款。部分协议还包含社群媒体限制，限制委托者在付款争议后公开讨论延误或未完成作品的能力。",
+                specTitle: "物种限制",
+                specNoRes: "无限制", specCopyright: "版权角色", specSelective: "选择性版权",
+                specNoCanine: "不接受犬科", specNoDAD: "不接受荷兰天使龙", specOther: "其他/是", specNotStated: "未说明",
+                specCopyrightSub: "不会制作与版权IP相关的角色", specSelectiveSub: "仅限特定IP——请查看服务条款",
+                specNote: "标注「版权」的制作者通常不会制作来自版权作品（迪士尼、任天堂等）的角色。「选择性版权」表示仅限制特定IP——委托前请务必确认。",
+                webTitle: "网站平台",
+                webCustom: "自定义域名", webNone: "无网站", webCarrd: "Carrd", webWeebly: "Weebly", webWix: "Wix", webLinktree: "Linktree", webGSites: "Google Sites",
+                queueTitle: "公开排队资料",
+                queueTrello: "Trello 排队", queueWeb: "其他网页排队", queueNone: "无公开排队",
+                queueTrelloSub: "公开可访问的Trello看板", queueWebSub: "非Trello的公开排队 (Google文档、网站等)",
+                queueNoneSub: "⚠ 排队未公开——付订前无法得知委托数量",
+                queueNote: "没有公开排队资料的制作者会让您无法在支付不可退还款项前评估有多少委托排在您前面。未公开的积压越多，您的风险越大。",
+                hbasesTitle: "使用的其他头基",
+                hbasesNote: "来自其他制作者的预制头基。点击一行以筛选；将鼠标停在「制作者」上可查看谁使用过。",
+                partsTitle: "零件与版型供应商",
+                partsNote: "兽装零件、版型与组件的供应商。点击一行以筛选；将鼠标停在「制作者」上可查看谁引用过。",
+                fabricTitle: "布料供应商",
+                fabricNote: "<b>Big Z Fabric</b> 是最常被引用的兽装布料供应商。<b>Howl Fabrics</b>（前身为 <b>Fursuits By Lacey</b>）位居第二。点击一行以筛选；将鼠标停在「制作者」上可查看谁使用。",
+                calTitle: "即将开放的委托", calScheduled: "位制作者已排定", calNoDates: "找不到未来的开放日期。",
+                wkSu: "日", wkMo: "一", wkTu: "二", wkWe: "三", wkTh: "四", wkFr: "五", wkSa: "六",
+                makersWord: "制作者", resetFilters: "重置所有图表筛选"
             },
             "ko": {
                 navUs: "> 미국 퍼수트", navAsia: "> 아시아 퍼수트", navMaintenance: "> 유지보수",
@@ -820,7 +1100,56 @@
                 thRow: "행", thMaker: "제작자", thLogo: "로고", thLocation: "위치",
                 thLink: "링크", thPreview: "미리보기", thStatus: "상태",
                 thFursuits: "퍼수트 수", thWorks: "연간 작품", thFollowers: "팔로워",
-                thAvgPrice: "평균 가격", thShip: "배송비", thTax: "판매세", thTotal: "총 비용"
+                thAvgPrice: "평균 가격", thShip: "배송비", thTax: "판매세", thTotal: "총 비용",
+                thWebsite: "웹사이트", thQueue: "대기 목록", thTos: "이용 약관",
+                hbMaterial: "헤드 베이스 재료", hbBreakdown: "그룹별 분석",
+                hbCenter1: "헤드", hbCenter2: "베이스",
+                taTop25: "신규 의뢰자 기준 최장 작업 기간 상위 25",
+                taOdds: "기간별 퍼수트 수령 확률",
+                taWeightedAvg: "가중 평균 (퍼수트 기준):", taMonths: "개월",
+                taBasedOnMakers: "기준", taMakers: "명의 제작자", taFursuits: "개 퍼수트",
+                taOddsBasedOn: "기준", taReporting: "명의 제작자가 보고한 작업 기간",
+                taClickJump: "클릭하여 행으로 이동", taNumMakers: "제작자 수",
+                taAllAvg: "전체 평균:", taOpenAvg: "현재 오픈 평균:",
+                taClickFilter: "클릭하여 표 필터링", taClickClear: "클릭하여 필터 해제",
+                fullPayTitle: "전액 결제 필요",
+                fullPayYes: "전액 결제 필요 / 우선 처리", fullPayNo: "명시되지 않음",
+                fullPaySub: "청구서가 전액 결제될 때까지 작업이 시작되지 않거나 후순위로 밀립니다",
+                fullPayNote: "선결제 전액을 요구하거나, 완납된 커미션을 우선 처리하거나, 수개월 내 결제 플랜을 제공하는 제작자는 사실상 결제가 완료될 때까지 작업을 진행하지 않습니다.",
+                shipTitle: "배송 보험",
+                shipYes: "이용 약관에 보험 언급", shipNo: "언급 없음",
+                shipNote: "<b>중요:</b> 신고 가액은 보험이 아닙니다 — 청구하려면 입증 책임이 필요하며, 운송사는 청구를 거부하거나 줄일 수 있습니다. 명품 커뮤니티에서는 모든 인계 단계의 강력한 물리적 보안 때문에 USPS 등기우편을 가장 안전한 옵션으로 자주 권장합니다.<br><br>UPS 신고 가액은 운송 중 손상, 분실, 도난을 보장하지만 배송 후 도난(현관 도난)은 보장하지 않습니다. 배송 시 서명 요구로 위험을 줄일 수 있습니다. 청구하려면 UPS에 고가 화물 명세서를 제출해야 합니다.<br><br>USPS 우선우편은 최대 $5,000까지만 보장합니다. USPS 우선 등기우편은 최대 $50,000 신고 가액까지 보장하며 배송의 모든 단계에서 서명 처리와 문서화를 요구합니다 — 고가 퍼수트에 가장 안전한 국내 옵션입니다.<br><br>FedEx는 $1,000을 초과하는 가치 산정이 어려운 커미션 제품을 보험에 가입할 수 없습니다. FedEx는 커미션 작품과 의상을 고가 보장에서 명시적으로 제외합니다.",
+                shipSources: "출처:",
+                waitTitle: "명시적 대기 목록",
+                waitYes: "대기 목록 공식 언급", waitNo: "이용 약관에 공식 대기 목록 없음",
+                waitNote: "공식 대기 목록이 없다고 해서 대기열이 없는 것은 아닙니다. 백로그가 많지만 대기열 정보를 공개하지 않은 제작자는 위험합니다 — 의뢰자는 환불 불가 보증금을 보내기 전에 실제 대기 시간을 알지 못할 수 있습니다.",
+                rushTitle: "급행 주문 가능",
+                rushYes: "급행 옵션 명시적 제공", rushNo: "미제공 / 언급 없음",
+                rushNote: "급행 주문은 마감일을 맞추기 위한 옵션으로 자주 제공됩니다. 일반적으로 커미션 총액에 대한 추가 비율 수수료가 부과됩니다.",
+                tosTitle: "이용 약관 제공",
+                tosYesL: "공개 이용 약관 있음", tosNoL: "공개 이용 약관 없음",
+                tosNote: "⚠ 많은 이용 약관에는 제작자가 어떤 이유로든 환불 불가 보증금을 보유할 수 있는 조항이 포함되어 있습니다. 일부 약관에는 소셜 미디어 제한도 포함되어, 결제 분쟁 후에도 의뢰자가 지연이나 미완성 작업을 공개적으로 논의할 수 있는 권리를 제한합니다.",
+                specTitle: "종 제한",
+                specNoRes: "제한 없음", specCopyright: "저작권 캐릭터", specSelective: "선택적 저작권",
+                specNoCanine: "개과 불가", specNoDAD: "더치 엔젤 드래곤 불가", specOther: "기타/예", specNotStated: "미기재",
+                specCopyrightSub: "저작권 IP와 관련된 캐릭터는 제작하지 않음", specSelectiveSub: "특정 IP만 — 이용 약관 확인",
+                specNote: "\"저작권\"으로 표시한 제작자는 일반적으로 저작권 프랜차이즈(디즈니, 닌텐도 등)의 캐릭터를 제작하지 않습니다. \"선택적 저작권\"은 특정 IP만 제한됨을 의미합니다 — 의뢰 전 항상 확인하세요.",
+                webTitle: "웹사이트 플랫폼",
+                webCustom: "맞춤 도메인", webNone: "웹사이트 없음", webCarrd: "Carrd", webWeebly: "Weebly", webWix: "Wix", webLinktree: "Linktree", webGSites: "Google Sites",
+                queueTitle: "공개 대기열 여부",
+                queueTrello: "Trello 대기열", queueWeb: "기타 웹 대기열", queueNone: "공개 대기열 없음",
+                queueTrelloSub: "공개적으로 접근 가능한 Trello 보드", queueWebSub: "Trello가 아닌 공개 대기열 (Google 문서, 웹사이트 등)",
+                queueNoneSub: "⚠ 대기열 미공개 — 보증금 전 커미션 수 알 수 없음",
+                queueNote: "공개 대기열이 없는 제작자는 환불 불가 결제를 보내기 전에 앞에 얼마나 많은 커미션이 있는지 평가하는 것을 불가능하게 만듭니다. 미공개 백로그가 클수록 위험이 커집니다.",
+                hbasesTitle: "사용된 기타 헤드 베이스",
+                hbasesNote: "다른 제작자에게서 조달한 기성 헤드 베이스 폼. 행을 클릭하여 필터링하고, \"제작자\"에 마우스를 올려 누가 사용했는지 확인하세요.",
+                partsTitle: "부품 및 패턴 공급업체",
+                partsNote: "퍼수트 부품, 패턴, 구성품 공급업체. 행을 클릭하여 필터링하고, \"제작자\"에 마우스를 올려 누가 참조했는지 확인하세요.",
+                fabricTitle: "원단 공급업체",
+                fabricNote: "<b>Big Z Fabric</b>은 가장 흔히 참조되는 퍼수트 원단 공급업체입니다. <b>Howl Fabrics</b>(이전 명칭 <b>Fursuits By Lacey</b>)가 두 번째입니다. 행을 클릭하여 필터링하고, \"제작자\"에 마우스를 올려 누가 사용하는지 확인하세요.",
+                calTitle: "예정된 커미션 오픈", calScheduled: "명의 제작자 예정", calNoDates: "향후 오픈 날짜를 찾을 수 없습니다.",
+                wkSu: "일", wkMo: "월", wkTu: "화", wkWe: "수", wkTh: "목", wkFr: "금", wkSa: "토",
+                makersWord: "제작자", resetFilters: "모든 차트 필터 초기화"
             },
             "ja": {
                 navUs: "> 米国の着ぐるみ", navAsia: "> アジアの着ぐるみ", navMaintenance: "> メンテナンス",
@@ -843,7 +1172,56 @@
                 thRow: "行", thMaker: "クリエイター", thLogo: "ロゴ", thLocation: "場所",
                 thLink: "リンク", thPreview: "プレビュー", thStatus: "ステータス",
                 thFursuits: "着ぐるみ数", thWorks: "年間作品", thFollowers: "フォロワー",
-                thAvgPrice: "平均価格", thShip: "送料", thTax: "売上税", thTotal: "総費用"
+                thAvgPrice: "平均価格", thShip: "送料", thTax: "売上税", thTotal: "総費用",
+                thWebsite: "ウェブサイト", thQueue: "待機リスト", thTos: "利用規約",
+                hbMaterial: "ヘッドベース素材", hbBreakdown: "グループ別内訳",
+                hbCenter1: "ヘッド", hbCenter2: "ベース",
+                taTop25: "新規依頼者向け制作期間が最も長い上位25",
+                taOdds: "期間別の着ぐるみ受領確率",
+                taWeightedAvg: "加重平均 (着ぐるみ数基準):", taMonths: "ヶ月",
+                taBasedOnMakers: "基準", taMakers: "名のクリエイター", taFursuits: "着の着ぐるみ",
+                taOddsBasedOn: "基準", taReporting: "名のクリエイターが報告した制作期間",
+                taClickJump: "クリックで行へ移動", taNumMakers: "クリエイター数",
+                taAllAvg: "全体平均:", taOpenAvg: "現在受付中の平均:",
+                taClickFilter: "クリックで表をフィルタ", taClickClear: "クリックでフィルタ解除",
+                fullPayTitle: "全額前払い必須",
+                fullPayYes: "全額前払い必須 / 優先処理", fullPayNo: "明記なし",
+                fullPaySub: "請求書が全額支払われるまで作業は開始されないか、優先度が下げられます",
+                fullPayNote: "前払い全額を要求する、支払い済みコミッションを優先する、または数ヶ月以内の分割払いを提供するクリエイターは、実質的に支払い完了まで作業を行いません。",
+                shipTitle: "配送保険",
+                shipYes: "利用規約に保険の記載あり", shipNo: "記載なし",
+                shipNote: "<b>重要：</b>申告価額は保険ではありません——請求には立証責任が必要で、運送業者は請求を拒否または減額できます。高級品コミュニティでは、各受け渡し時の厳重な物理的セキュリティのため、USPS書留郵便を最も安全な選択肢として頻繁に推奨しています。<br><br>UPSの申告価額は輸送中の破損、紛失、盗難をカバーしますが、配達後の盗難（玄関先の盗難）はカバーしません。配達時の署名要求でリスクを軽減できます。請求にはUPSに高額貨物明細書を提出する必要があります。<br><br>USPSプライオリティメールは最大$5,000までしか補償しません。USPSプライオリティ書留郵便は最大$50,000の申告価額を補償し、配達の各段階で署名処理と文書化を要求します——高額な着ぐるみに最も安全な国内オプションです。<br><br>FedExは価値の確定が困難で$1,000を超えるコミッション製品を保険対象にできません。FedExはコミッション作品と衣装を高額補償から明示的に除外しています。",
+                shipSources: "出典:",
+                waitTitle: "明示的な待機リスト",
+                waitYes: "待機リストの正式な記載あり", waitNo: "利用規約に正式な待機リストなし",
+                waitNote: "正式な待機リストがないことは、列がないことを意味しません。大量のバックログがあるが待機列データを公開していないクリエイターはリスクがあります——依頼者は返金不可の手付金を送る前に、実際の待ち時間を把握できない場合があります。",
+                rushTitle: "特急注文対応",
+                rushYes: "特急オプションを明示的に提供", rushNo: "未提供 / 記載なし",
+                rushNote: "特急注文は締め切りに間に合わせるためのオプションとして頻繁に提供されます。通常、コミッション総額に対する追加の割合料金が発生します。",
+                tosTitle: "利用規約の提供",
+                tosYesL: "公開利用規約あり", tosNoL: "公開利用規約なし",
+                tosNote: "⚠ 多くの利用規約には、クリエイターがいかなる理由でも返金不可の手付金を保持できる条項が含まれています。一部の規約にはソーシャルメディアの制限も含まれ、支払い紛争後でも依頼者が遅延や未完成の作業を公に議論する能力を制限します。",
+                specTitle: "種族制限",
+                specNoRes: "制限なし", specCopyright: "著作権キャラクター", specSelective: "選択的著作権",
+                specNoCanine: "犬科不可", specNoDAD: "ダッチエンジェルドラゴン不可", specOther: "その他/はい", specNotStated: "記載なし",
+                specCopyrightSub: "著作権IPに関連するキャラクターは制作しません", specSelectiveSub: "特定のIPのみ——利用規約を確認",
+                specNote: "「著作権」と記載するクリエイターは通常、著作権作品（ディズニー、任天堂など）のキャラクターを制作しません。「選択的著作権」は特定のIPのみが制限されることを意味します——依頼前に必ず確認してください。",
+                webTitle: "ウェブサイトプラットフォーム",
+                webCustom: "独自ドメイン", webNone: "ウェブサイトなし", webCarrd: "Carrd", webWeebly: "Weebly", webWix: "Wix", webLinktree: "Linktree", webGSites: "Google Sites",
+                queueTitle: "公開待機列の有無",
+                queueTrello: "Trello 待機列", queueWeb: "その他のウェブ待機列", queueNone: "公開待機列なし",
+                queueTrelloSub: "公開アクセス可能なTrelloボード", queueWebSub: "Trello以外の公開待機列 (Googleドキュメント、ウェブサイトなど)",
+                queueNoneSub: "⚠ 待機列が非公開——手付金前にコミッション数が不明",
+                queueNote: "公開待機列のないクリエイターでは、返金不可の支払いを送る前に、あなたの前にいくつのコミッションがあるかを評価することが不可能になります。非公開のバックログが大きいほど、リスクが高まります。",
+                hbasesTitle: "使用されたその他のヘッドベース",
+                hbasesNote: "他のクリエイターから調達した既製ヘッドベースフォーム。行をクリックしてフィルタし、「クリエイター」にカーソルを合わせて誰が使用したかを確認してください。",
+                partsTitle: "パーツ＆パターン供給元",
+                partsNote: "着ぐるみのパーツ、パターン、コンポーネントの供給元。行をクリックしてフィルタし、「クリエイター」にカーソルを合わせて誰が参照したかを確認してください。",
+                fabricTitle: "生地供給元",
+                fabricNote: "<b>Big Z Fabric</b> は最も頻繁に参照される着ぐるみ生地供給元です。<b>Howl Fabrics</b>（旧称 <b>Fursuits By Lacey</b>）が2番目です。行をクリックしてフィルタし、「クリエイター」にカーソルを合わせて誰が使用しているかを確認してください。",
+                calTitle: "今後のコミッション受付", calScheduled: "名のクリエイターが予定", calNoDates: "今後の受付日が見つかりません。",
+                wkSu: "日", wkMo: "月", wkTu: "火", wkWe: "水", wkTh: "木", wkFr: "金", wkSa: "土",
+                makersWord: "クリエイター", resetFilters: "すべてのグラフフィルタをリセット"
             }
         };
 
@@ -914,6 +1292,132 @@
         // Global State Vars
         let table = null;
         let filterState = { priceMin: 1000, priceMax: 20000, showNA: true, status: "", states: new Set() };
+        let activeTurnaroundBucket = null; // {min, max, label} or null
+        let fullTurnaroundData = []; // full dataset for turnaround chart (unaffected by bucket filter)
+        let fullAnalyticsData = []; // broadest dataset seen, for charts that shouldn't self-collapse
+
+        // ── UNIFIED CHART FILTER REGISTRY ──────────────────────────────
+        // Each entry: key -> { predicate: fn(rowData)->bool, label: string }
+        // All active predicates are AND-ed together via one Tabulator filter.
+        const chartFilters = {};
+
+        function chartFilterMaster(rowData) {
+            for (var k in chartFilters) {
+                if (!chartFilters[k]) continue;
+                try { if (!chartFilters[k].predicate(rowData)) return false; }
+                catch (e) { /* ignore bad predicate */ }
+            }
+            return true;
+        }
+
+        function refreshChartFilters() {
+            if (!table) return;
+            try { table.removeFilter(chartFilterMaster); } catch (e) {}
+            if (Object.keys(chartFilters).length > 0) {
+                table.addFilter(chartFilterMaster);
+            }
+            updateResetButton();
+        }
+
+        function setChartFilter(key, predicate, label) {
+            chartFilters[key] = { predicate: predicate, label: label || key };
+            refreshChartFilters();
+        }
+        function clearChartFilter(key) {
+            delete chartFilters[key];
+            refreshChartFilters();
+        }
+        function toggleChartFilter(key, predicate, label) {
+            if (chartFilters[key]) { clearChartFilter(key); return false; }
+            setChartFilter(key, predicate, label); return true;
+        }
+        function isChartFilterActive(key) { return !!chartFilters[key]; }
+
+        function resetAllChartFilters() {
+            for (var k in chartFilters) delete chartFilters[k];
+            activeTurnaroundBucket = null;
+            refreshChartFilters(); // triggers dataFiltered → updateAnalytics, which re-renders charts
+        }
+
+        function updateResetButton() {
+            var btn = document.getElementById('reset-filters-btn');
+            if (!btn) return;
+            var n = Object.keys(chartFilters).length;
+            if (n > 0) {
+                btn.style.display = 'inline-flex';
+                btn.querySelector('.reset-count').textContent = n;
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+
+        // Global store of predicates for stat/list rows, populated each render
+        window.__statPredicates = window.__statPredicates || {};
+        window.__listPredicates = window.__listPredicates || {};
+
+        // Delegated click for stat rows
+        document.addEventListener('click', function(e) {
+            var sr = e.target.closest('.stat-row');
+            if (sr) {
+                var key = sr.getAttribute('data-filter-key');
+                var entry = window.__statPredicates[key];
+                if (entry) {
+                    if (isChartFilterActive(key)) clearChartFilter(key);
+                    else setChartFilter(key, entry.predicate, entry.label);
+                }
+                return;
+            }
+            var lr = e.target.closest('.list-row');
+            if (lr) {
+                var key2 = lr.getAttribute('data-filter-key');
+                var field = lr.getAttribute('data-field');
+                var item = lr.getAttribute('data-item');
+                if (isChartFilterActive(key2)) {
+                    clearChartFilter(key2);
+                } else {
+                    var itemLC = (item||'').toLowerCase();
+                    setChartFilter(key2, function(row) {
+                        var val = (row[field] || '');
+                        // match any newline-separated entry equal to item (case-insensitive, alias-aware via substring)
+                        return String(val).split('\n').some(function(line){
+                            var l = line.trim().toLowerCase();
+                            return l === itemLC || l.indexOf(itemLC) !== -1 || itemLC.indexOf(l) !== -1 && l.length > 3;
+                        });
+                    }, key2);
+                }
+            }
+        });
+
+        // ── Jump to a maker's row in the table (single-select toggle) ──
+        function jumpToMakerRow(makerName) {
+            if (!table) return;
+            var rows = table.getRows();
+            var match = rows.find(function(r){ return r.getData().maker === makerName; });
+            if (!match) return;
+            var sel = table.getSelectedRows();
+            var isAlready = sel.length === 1 && sel[0] === match;
+            table.deselectRow();
+            if (isAlready) return; // toggle off
+            table.scrollToRow(match, 'top', true);
+            match.select();
+            var el = match.getElement();
+            if (el) {
+                el.style.transition = 'box-shadow 0.15s';
+                el.style.boxShadow = '0 0 0 2px #ff8c00 inset';
+                setTimeout(function(){ el.style.boxShadow = ''; }, 1800);
+            }
+            var tp = document.getElementById('table-pane');
+            if (tp) tp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Delegated click handler for any element with class "jump-row" or "[data-jump-maker]"
+        document.addEventListener('click', function(e) {
+            var jr = e.target.closest('.jump-row, [data-jump-maker]');
+            if (jr) {
+                var maker = jr.getAttribute('data-maker') || jr.getAttribute('data-jump-maker');
+                if (maker) { jumpToMakerRow(maker); }
+            }
+        });
         let totalDataCount = 0;
         let loadedData = []; 
         let currentTaxRate = parseFloat(document.getElementById('state-select').value);
@@ -981,6 +1485,23 @@
         }
         setupToggle('map-toggle-btn', 'interactive-map-area', 'Map: ENABLED', 'Map: DISABLED');
         setupToggle('stats-toggle-btn', 'analytics-area', 'Stats: ENABLED', 'Stats: DISABLED');
+        // Mirror stats toggle to headbase chart area
+        document.getElementById('stats-toggle-btn').addEventListener('click', () => {
+            const hb = document.getElementById('headbase-area');
+            const ta = document.getElementById('turnaround-area');
+            const analytics = document.getElementById('analytics-area');
+            if (analytics.classList.contains('minimized')) {
+                hb.classList.add('minimized');
+                if (ta) ta.classList.add('minimized');
+                const ins = document.getElementById('insights-area');
+                if (ins) ins.classList.add('minimized');
+            } else {
+                hb.classList.remove('minimized');
+                if (ta) ta.classList.remove('minimized');
+                const ins = document.getElementById('insights-area');
+                if (ins) ins.classList.remove('minimized');
+            }
+        });
 
         // --- FILTER LOGIC ---
         function masterFilter(data, filterParams) {
@@ -1259,13 +1780,13 @@
             const fmtTotalFursuits = totalFursuitsSum.toLocaleString();
 
             const maxExp = topExpensive.length ? topExpensive[0].price : 1;
-            let htmlTopExp = topExpensive.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-price" style="width:${(d.price/maxExp)*100}%;"></div></div><div class="mini-bar-value">${formatCurrency(d.price)}</div></div>`).join('');
+            let htmlTopExp = topExpensive.map(d => `<div class="mini-bar-row jump-row" data-maker="${(d.maker||'').replace(/"/g,'&quot;')}" style="cursor:pointer;"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-price" style="width:${(d.price/maxExp)*100}%;"></div></div><div class="mini-bar-value">${formatCurrency(d.price)}</div></div>`).join('');
 
             const maxSuits = topFursuits.length ? topFursuits[0].fursuits : 1;
-            let htmlTopSuits = topFursuits.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-suits" style="width:${(d.fursuits/maxSuits)*100}%;"></div></div><div class="mini-bar-value">${d.fursuits}</div></div>`).join('');
+            let htmlTopSuits = topFursuits.map(d => `<div class="mini-bar-row jump-row" data-maker="${(d.maker||'').replace(/"/g,'&quot;')}" style="cursor:pointer;"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-suits" style="width:${(d.fursuits/maxSuits)*100}%;"></div></div><div class="mini-bar-value">${d.fursuits}</div></div>`).join('');
 
             const maxProd = topProductive.length ? topProductive[0].worksPerYear : 1;
-            let htmlTopProd = topProductive.map(d => `<div class="mini-bar-row"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-prod" style="width:${(d.worksPerYear/maxProd)*100}%;"></div></div><div class="mini-bar-value">${d.worksPerYear}</div></div>`).join('');
+            let htmlTopProd = topProductive.map(d => `<div class="mini-bar-row jump-row" data-maker="${(d.maker||'').replace(/"/g,'&quot;')}" style="cursor:pointer;"><div class="mini-bar-label" title="${d.maker}">${d.maker}</div><div class="mini-bar-track"><div class="mini-bar-fill fill-prod" style="width:${(d.worksPerYear/maxProd)*100}%;"></div></div><div class="mini-bar-value">${d.worksPerYear}</div></div>`).join('');
 
             // Dynamic Sub-Titles
             const topSuitsTitle = topFursuits.length >= 5 ? t("topSuits5") : t("topSuits");
@@ -1318,6 +1839,1110 @@
                 const area = d3.area().x(d => xCurv(d.x0 + (d.x1 - d.x0) / 2)).y0(height).y1(d => yCurv(d.length)).curve(d3.curveBasis); 
                 svgCurve.append("path").datum(bins).attr("class", "promo-bg-curve").attr("d", area);
             }
+
+            // Head base material pie chart
+            updateHeadBaseChart(Object.keys(chartFilters).length > 0 ? fullAnalyticsData : data);
+
+            // Capture broadest dataset (when no chart filters active) for charts that shouldn't self-collapse
+            if (Object.keys(chartFilters).length === 0) {
+                fullTurnaroundData = data;
+                fullAnalyticsData = data;
+            }
+
+            // Paid turnaround charts — always render from full distribution
+            updateTurnaroundChart(Object.keys(chartFilters).length > 0 ? fullTurnaroundData : data);
+
+            // Insights row — render from full data so options/highlights persist while filtering
+            updateInsightsCharts(Object.keys(chartFilters).length > 0 ? fullAnalyticsData : data);
+        }
+
+        // --- HEAD BASE MATERIAL PIE CHART ---
+        function parseHeadBaseMaterials(rawStr) {
+            // Normalize separators: " or ", " and ", " & ", " / ", ","
+            const normalized = rawStr.replace(/\s*\/\s*/g, ',')
+                                     .replace(/\s+and\s+/gi, ',')
+                                     .replace(/\s+or\s+/gi, ',')
+                                     .replace(/\s*&\s*/g, ',');
+            return normalized.split(',').map(s => s.trim()).filter(Boolean);
+        }
+
+        function classifyMaterial(raw) {
+            const s = raw.toLowerCase().trim();
+            // Foam group
+            if (s === 'carved foam' || s === 'carved charcoal foam' || s === 'carved charcoal' ||
+                s === 'charcoal foam' || s === 'cast foam' || s === 'foam') return { group: 'Foam', sub: raw };
+            // 3D group — TPU variants included
+            if (s === 'tpu' || s === 'foaming tpu' || s === 'pla' || s === 'abs') return { group: '3D', sub: raw };
+            // Moldable group
+            if (s === 'resin' || s === 'worbla') return { group: 'Moldable', sub: raw };
+            // Skip "hat" and unknown
+            return null;
+        }
+
+        function updateHeadBaseChart(data) {
+            const container = document.getElementById('headbase-area');
+            if (!container) return;
+
+            // Tally weighted contributions per sub-material and group
+            // subTotals: { "Carved Foam": { group, weight }, ... }
+            const subTotals = {};
+            const groupTotals = {};
+
+            data.forEach(row => {
+                if (!row.headBase) return;
+                const fursuits = (row.fursuits && !isNaN(row.fursuits)) ? row.fursuits : 1;
+                const parts = parseHeadBaseMaterials(row.headBase);
+                const classified = parts.map(p => classifyMaterial(p)).filter(Boolean);
+                if (classified.length === 0) return;
+                const share = 1 / classified.length; // fractional share per option
+
+                classified.forEach(({ group, sub }) => {
+                    const weight = share * fursuits;
+                    // Sub totals (canonical casing)
+                    const subKey = sub.trim();
+                    if (!subTotals[subKey]) subTotals[subKey] = { group, weight: 0 };
+                    subTotals[subKey].weight += weight;
+                    // Group totals
+                    if (!groupTotals[group]) groupTotals[group] = 0;
+                    groupTotals[group] += weight;
+                });
+            });
+
+            const totalWeight = Object.values(groupTotals).reduce((a, b) => a + b, 0);
+            if (totalWeight === 0) { container.innerHTML = ''; return; }
+
+            // Group definitions with colors
+            const groupDefs = [
+                { name: 'Foam',     color: '#ff8c00', subColor: '#ffb347' },
+                { name: '3D',       color: '#00d2ff', subColor: '#66e0ff' },
+                { name: 'Moldable', color: '#00E676', subColor: '#69f0ae' },
+            ];
+
+            // Build pie slices: one per GROUP (outer), subs shown in legend
+            const pieData = groupDefs
+                .filter(g => groupTotals[g.name])
+                .map(g => ({ ...g, value: groupTotals[g.name], pct: groupTotals[g.name] / totalWeight * 100 }));
+
+            // Build sub-breakdown per group for legend
+            const subsByGroup = {};
+            Object.entries(subTotals).forEach(([sub, { group, weight }]) => {
+                if (!subsByGroup[group]) subsByGroup[group] = [];
+                subsByGroup[group].push({ sub, weight, pct: weight / totalWeight * 100 });
+            });
+            Object.values(subsByGroup).forEach(arr => arr.sort((a, b) => b.weight - a.weight));
+
+            // D3 pie layout
+            const size = 220;
+            const radius = size / 2 - 10;
+
+            const arcGen = d3.arc().innerRadius(radius * 0.45).outerRadius(radius);
+            const arcHover = d3.arc().innerRadius(radius * 0.45).outerRadius(radius + 8);
+            const pie = d3.pie().value(d => d.value).sort(null);
+
+            // Build legend HTML (clickable)
+            let legendHTML = '<div class="pie-legend">';
+            groupDefs.filter(g => groupTotals[g.name]).forEach(g => {
+                const gpct = (groupTotals[g.name] / totalWeight * 100).toFixed(1);
+                const gActive = isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === g.name;
+                legendHTML += `<div class="pie-legend-item hb-group-row" data-group="${g.name}" style="cursor:pointer;${gActive?'background:rgba(255,140,0,0.15);border-radius:3px;':''}"><div class="pie-legend-swatch" style="background:${gActive?'#ff8c00':g.color};"></div><div><b style="color:${gActive?'#ff8c00':g.color}">${g.name}</b> — ${gpct}% total</div></div>`;
+                (subsByGroup[g.name] || []).forEach(({ sub, pct }) => {
+                    const sActive = isChartFilterActive('headbase-sub') && chartFilters['headbase-sub'].subName === sub;
+                    legendHTML += `<div class="pie-legend-group hb-sub-row" data-sub="${sub.replace(/"/g,'&quot;')}" style="cursor:pointer;color:${sActive?'#ff8c00':'#aaa'};${sActive?'font-weight:bold;':''}">↳ ${sub}: ${pct.toFixed(1)}%</div>`;
+                });
+            });
+            legendHTML += '</div>';
+
+            // Inject card HTML
+            container.innerHTML = `
+            <div class="headbase-grid">
+                <div class="promo-card" style="border-color:#7b5ea7; grid-column: span 1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                    <div class="chart-title" style="color:#b39ddb; margin-bottom:10px; align-self:flex-start;">${t('hbMaterial')}</div>
+                    <svg id="headbase-pie" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"></svg>
+                </div>
+                <div class="promo-card" style="border-color:#7b5ea7; grid-column: span 2;">
+                    <div class="chart-title" style="color:#b39ddb; margin-bottom:15px;">${t('hbBreakdown')}</div>
+                    ${legendHTML}
+                </div>
+            </div>`;
+
+            // Draw pie with D3
+            const svg = d3.select('#headbase-pie');
+            const g = svg.append('g').attr('transform', `translate(${size/2},${size/2})`);
+
+            const arcs = pie(pieData);
+
+            // Tooltip div (reuse map-style inline)
+            const tip = d3.select('body').append('div')
+                .attr('id', 'hb-tip')
+                .style('position', 'fixed')
+                .style('background', 'rgba(15,15,20,0.95)')
+                .style('border', '1px solid #b39ddb')
+                .style('color', '#fff')
+                .style('padding', '8px 12px')
+                .style('border-radius', '4px')
+                .style('font-size', '0.8em')
+                .style('pointer-events', 'none')
+                .style('opacity', 0)
+                .style('z-index', 9999);
+
+            g.selectAll('path')
+             .data(arcs)
+             .join('path')
+             .attr('class', 'filter-glow')
+             .attr('d', arcGen)
+             .attr('fill', d => isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === d.data.name ? '#ff8c00' : d.data.color)
+             .attr('stroke', d => isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === d.data.name ? '#fff' : '#2e2e2e')
+             .attr('stroke-width', 2)
+             .style('cursor', 'pointer')
+             .on('mouseover', function(event, d) {
+                 d3.select(this).transition().duration(150).attr('d', arcHover);
+                 const subs = (subsByGroup[d.data.name] || [])
+                     .map(s => `${s.sub}: ${s.pct.toFixed(1)}%`).join('<br>');
+                 var act = isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === d.data.name;
+                 tip.html(`<b style="color:${d.data.color}">${d.data.name}</b><br>${d.data.pct.toFixed(1)}% of total<br><hr style="border-color:#444;margin:4px 0;">${subs}<br><span style="color:#aaa;font-size:0.9em;">${act ? t('taClickClear') : t('taClickFilter')}</span>`)
+                    .style('opacity', 1);
+             })
+             .on('mousemove', function(event) {
+                 tip.style('left', (event.clientX + 15) + 'px').style('top', (event.clientY - 10) + 'px');
+             })
+             .on('mouseout', function(event, d) {
+                 d3.select(this).transition().duration(150).attr('d', arcGen);
+                 tip.style('opacity', 0);
+             })
+             .on('click', function(event, d) {
+                 var groupName = d.data.name;
+                 if (isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === groupName) {
+                     clearChartFilter('headbase-group');
+                 } else {
+                     var f = function(row) {
+                         if (!row.headBase) return false;
+                         var parts = parseHeadBaseMaterials(row.headBase);
+                         return parts.some(function(p){ var c = classifyMaterial(p); return c && c.group === groupName; });
+                     };
+                     f.groupName = groupName; // tag for highlight check
+                     setChartFilter('headbase-group', f, 'Head Base Group: ' + groupName);
+                     chartFilters['headbase-group'].groupName = groupName;
+                 }
+                 tip.style('opacity', 0);
+             });
+
+            // Center label
+            g.append('text')
+             .attr('text-anchor', 'middle').attr('dy', '-0.3em')
+             .style('fill', '#aaa').style('font-size', '0.65em')
+             .text(t('hbCenter1'));
+            g.append('text')
+             .attr('text-anchor', 'middle').attr('dy', '0.9em')
+             .style('fill', '#aaa').style('font-size', '0.65em')
+             .text(t('hbCenter2'));
+
+            // Clean up old tooltip on redraw
+            d3.selectAll('#hb-tip').filter(function() { return this !== tip.node(); }).remove();
+
+            // Legend click handlers (group + sub) — attach to this container
+            container.querySelectorAll('.hb-group-row').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    var groupName = el.getAttribute('data-group');
+                    if (isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === groupName) {
+                        clearChartFilter('headbase-group');
+                    } else {
+                        var f = function(row) {
+                            if (!row.headBase) return false;
+                            var parts = parseHeadBaseMaterials(row.headBase);
+                            return parts.some(function(p){ var c = classifyMaterial(p); return c && c.group === groupName; });
+                        };
+                        f.groupName = groupName;
+                        setChartFilter('headbase-group', f, 'Head Base Group: ' + groupName);
+                        chartFilters['headbase-group'].groupName = groupName;
+                    }
+                });
+            });
+            container.querySelectorAll('.hb-sub-row').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    var subName = el.getAttribute('data-sub');
+                    if (isChartFilterActive('headbase-sub') && chartFilters['headbase-sub'].subName === subName) {
+                        clearChartFilter('headbase-sub');
+                    } else {
+                        var f = function(row) {
+                            if (!row.headBase) return false;
+                            var parts = parseHeadBaseMaterials(row.headBase);
+                            return parts.some(function(p){ return p.trim().toLowerCase() === subName.toLowerCase(); });
+                        };
+                        f.subName = subName;
+                        setChartFilter('headbase-sub', f, 'Head Base: ' + subName);
+                        chartFilters['headbase-sub'].subName = subName;
+                    }
+                });
+            });
+        }
+
+
+        // --- TURNAROUND CHART ---
+        function applyTurnaroundFilter() {
+            if (activeTurnaroundBucket) {
+                var b = activeTurnaroundBucket;
+                setChartFilter('turnaround', function(row) {
+                    var v = row.paidTurnaround;
+                    if (v === null || v === undefined || isNaN(v)) return false;
+                    return v >= b.min && v <= b.max;
+                }, 'Turnaround: ' + b.label);
+            } else {
+                clearChartFilter('turnaround');
+            }
+        }
+
+        function updateTurnaroundChart(data) {
+            const container = document.getElementById('turnaround-area');
+            if (!container) return;
+
+            // Filter rows with valid turnaround and fursuits
+            const valid = data.filter(d => d.paidTurnaround && d.paidTurnaround > 0 && d.fursuits > 0);
+            if (valid.length === 0) { container.innerHTML = ''; return; }
+
+            // --- Weighted average ---
+            const totalFursuits = valid.reduce((s, d) => s + d.fursuits, 0);
+            const weightedSum   = valid.reduce((s, d) => s + d.paidTurnaround * d.fursuits, 0);
+            const weightedAvg   = weightedSum / totalFursuits;
+
+            // --- Top 25 longest (by turnaround value, ties broken by maker name) ---
+            const top15 = [...valid]
+                .sort((a, b) => b.paidTurnaround - a.paidTurnaround || a.maker.localeCompare(b.maker))
+                .slice(0, 25);
+
+            // --- Bell-curve buckets ---
+            const buckets = [
+                { label: '1–4 mo',   min: 1,  max: 4  },
+                { label: '5–8 mo',   min: 5,  max: 8  },
+                { label: '9–12 mo',  min: 9,  max: 12 },
+                { label: '13–18 mo', min: 13, max: 18 },
+                { label: '19–24 mo', min: 19, max: 24 },
+                { label: '25+ mo',   min: 25, max: Infinity },
+            ];
+            const bucketCounts = buckets.map(b => ({
+                ...b,
+                count: valid.filter(d => d.paidTurnaround >= b.min && d.paidTurnaround <= b.max).length
+            }));
+            const maxCount = Math.max(...bucketCounts.map(b => b.count));
+
+            // ---- Colours ----
+            const barColor    = '#7b5ea7';
+            const barColorHov = '#b39ddb';
+            const curveColor  = '#ff8c00';
+
+            // ---- Build HTML shell ----
+            container.innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+
+              <!-- LEFT: stat + top-15 bar chart -->
+              <div class="promo-card" style="border-color:#7b5ea7; display:flex; flex-direction:column; gap:12px;">
+                <div class="chart-title" style="color:#b39ddb;">${t('taTop25')}</div>
+                <div style="font-size:0.78em; color:#aaa;">
+                  ${t('taWeightedAvg')} <span style="color:#ff8c00; font-weight:bold; font-size:1.15em;">${weightedAvg.toFixed(1)} ${t('taMonths')}</span>
+                  &nbsp;·&nbsp; ${t('taBasedOnMakers')} ${valid.length} ${t('taMakers')} / ${totalFursuits.toLocaleString()} ${t('taFursuits')}
+                </div>
+                <div id="ta-bar-scroll" style="height:340px; overflow-y:auto; overflow-x:hidden; scrollbar-width:thin; scrollbar-color:#7b5ea7 #1a1a2e;">
+                  <svg id="ta-bar" style="width:100%; display:block;"></svg>
+                </div>
+              </div>
+
+              <!-- RIGHT: bell-curve bucket chart -->
+              <div class="promo-card" style="border-color:#7b5ea7; display:flex; flex-direction:column; gap:12px;">
+                <div class="chart-title" style="color:#b39ddb;">${t('taOdds')}</div>
+                <div style="font-size:0.75em; color:#888;">${t('taOddsBasedOn')} ${valid.length} ${t('taReporting')}</div>
+                <svg id="ta-curve" style="width:100%; overflow:visible;"></svg>
+              </div>
+
+            </div>`;
+
+            // ========== TOP-15 HORIZONTAL BAR CHART ==========
+            (function() {
+                const svg    = d3.select('#ta-bar');
+                const node   = svg.node().parentNode;
+                const W      = node.clientWidth - 32 || 480;
+                const rowH   = 28;
+                const labelW = 160;
+                const barMaxW = W - labelW - 60;
+                const H      = rowH * top15.length + 20;
+                svg.attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+
+                const xScale = d3.scaleLinear()
+                    .domain([0, d3.max(top15, d => d.paidTurnaround)])
+                    .range([0, barMaxW]);
+
+                const tip = d3.select('#ta-tip');
+                const tipEl = tip.empty()
+                    ? d3.select('body').append('div').attr('id','ta-tip')
+                        .style('position','fixed').style('background','rgba(15,15,20,0.95)')
+                        .style('border','1px solid #b39ddb').style('color','#fff')
+                        .style('padding','7px 11px').style('border-radius','4px')
+                        .style('font-size','0.78em').style('pointer-events','none')
+                        .style('opacity',0).style('z-index',9999)
+                    : tip;
+
+                top15.forEach((d, i) => {
+                    const y = i * rowH + 10;
+                    const bw = xScale(d.paidTurnaround);
+
+                    // Label (clickable)
+                    svg.append('text')
+                        .attr('x', labelW - 6).attr('y', y + rowH/2 + 4)
+                        .attr('text-anchor','end')
+                        .style('font-size','0.68em').style('fill','#ccc').style('cursor','pointer')
+                        .on('mouseover', function() { d3.select(this).style('fill','#ff8c00'); })
+                        .on('mouseout',  function() { d3.select(this).style('fill','#ccc'); })
+                        .on('click', function() { jumpToMaker(d.maker); })
+                        .text(d.maker.length > 22 ? d.maker.slice(0,21)+'…' : d.maker);
+
+                    // Click helper — delegate to global
+                    function jumpToMaker(makerName) { jumpToMakerRow(makerName); }
+
+                    // Bar
+                    svg.append('rect')
+                        .attr('class', 'filter-glow')
+                        .attr('x', labelW).attr('y', y + 4)
+                        .attr('width', bw).attr('height', rowH - 8)
+                        .attr('rx', 3).attr('fill', barColor)
+                        .style('cursor','pointer')
+                        .on('mouseover', function(event) {
+                            d3.select(this).attr('fill', barColorHov);
+                            tipEl.html(`<b>${d.maker}</b><br>${d.paidTurnaround} months&nbsp;·&nbsp;${d.fursuits} fursuits<br><span style="color:#aaa;font-size:0.9em;">${t('taClickJump')}</span>`)
+                                 .style('opacity',1);
+                        })
+                        .on('mousemove', function(event) {
+                            tipEl.style('left',(event.clientX+15)+'px').style('top',(event.clientY-10)+'px');
+                        })
+                        .on('mouseout', function() {
+                            d3.select(this).attr('fill', barColor);
+                            tipEl.style('opacity',0);
+                        })
+                        .on('click', function() { jumpToMaker(d.maker); });
+
+                    // Maker name label (also clickable)
+                    svg.select('text:last-of-type');  // reference already appended label
+
+                    // Value label
+                    svg.append('text')
+                        .attr('x', labelW + bw + 5).attr('y', y + rowH/2 + 4)
+                        .style('font-size','0.68em').style('fill','#ff8c00').style('font-weight','bold')
+                        .text(d.paidTurnaround + ' mo');
+                });
+            })();
+
+            // ========== BELL-CURVE BUCKET CHART ==========
+            (function() {
+                const svg  = d3.select('#ta-curve');
+                const node = svg.node().parentNode;
+                const W    = node.clientWidth - 32 || 480;
+                const H    = 300;
+                const pad  = { top: 20, right: 20, bottom: 70, left: 44 };
+                const iW   = W - pad.left - pad.right;
+                const iH   = H - pad.top  - pad.bottom;
+                svg.attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+
+                const totalValid = valid.length;
+                const chartData  = bucketCounts.map(b => ({ ...b, pct: b.count / totalValid * 100 }));
+
+                const xScale = d3.scaleBand()
+                    .domain(chartData.map(b => b.label))
+                    .range([0, iW]).padding(0.25);
+                const yScale = d3.scaleLinear()
+                    .domain([0, Math.max(maxCount, 1)])
+                    .range([iH, 0]).nice();
+
+                const g = svg.append('g').attr('transform', `translate(${pad.left},${pad.top})`);
+
+                // Grid lines
+                yScale.ticks(5).forEach(t => {
+                    g.append('line')
+                        .attr('x1',0).attr('x2',iW)
+                        .attr('y1',yScale(t)).attr('y2',yScale(t))
+                        .attr('stroke','#2e2e2e').attr('stroke-dasharray','3,3');
+                });
+
+                // Bars
+                const tip2El = d3.select('#ta-tip2');
+                const tipEl2 = tip2El.empty()
+                    ? d3.select('body').append('div').attr('id','ta-tip2')
+                        .style('position','fixed').style('background','rgba(15,15,20,0.95)')
+                        .style('border','1px solid #b39ddb').style('color','#fff')
+                        .style('padding','7px 11px').style('border-radius','4px')
+                        .style('font-size','0.78em').style('pointer-events','none')
+                        .style('opacity',0).style('z-index',9999)
+                    : tip2El;
+
+                g.selectAll('rect.bucket')
+                    .data(chartData)
+                    .join('rect').attr('class','bucket filter-glow')
+                    .attr('x', d => xScale(d.label))
+                    .attr('y', d => yScale(d.count))
+                    .attr('width', xScale.bandwidth())
+                    .attr('height', d => iH - yScale(d.count))
+                    .attr('rx', 4)
+                    .attr('fill', d => (activeTurnaroundBucket && activeTurnaroundBucket.label === d.label) ? '#ff8c00' : barColor)
+                    .attr('stroke', d => (activeTurnaroundBucket && activeTurnaroundBucket.label === d.label) ? '#fff' : 'none')
+                    .attr('stroke-width', 1.5)
+                    .style('cursor','pointer')
+                    .on('mouseover', function(event, d) {
+                        if (!(activeTurnaroundBucket && activeTurnaroundBucket.label === d.label)) d3.select(this).attr('fill', barColorHov);
+                        var active = (activeTurnaroundBucket && activeTurnaroundBucket.label === d.label);
+                        tipEl2.html(`<b>${d.label}</b><br>${d.count} makers (${d.pct.toFixed(1)}% of reported)<br><span style="color:#aaa;font-size:0.9em;">${active ? t('taClickClear') : t('taClickFilter')}</span>`)
+                              .style('opacity',1);
+                    })
+                    .on('mousemove', function(event) {
+                        tipEl2.style('left',(event.clientX+15)+'px').style('top',(event.clientY-10)+'px');
+                    })
+                    .on('mouseout', function(event, d) {
+                        d3.select(this).attr('fill', (activeTurnaroundBucket && activeTurnaroundBucket.label === d.label) ? '#ff8c00' : barColor);
+                        tipEl2.style('opacity',0);
+                    })
+                    .on('click', function(event, d) {
+                        // Toggle: clicking active bucket clears the filter
+                        if (activeTurnaroundBucket && activeTurnaroundBucket.label === d.label) {
+                            activeTurnaroundBucket = null;
+                        } else {
+                            activeTurnaroundBucket = { min: d.min, max: d.max, label: d.label };
+                        }
+                        applyTurnaroundFilter();
+                        tipEl2.style('opacity',0);
+                    });
+
+                // Pct labels above bars
+                g.selectAll('text.pct')
+                    .data(chartData)
+                    .join('text').attr('class','pct')
+                    .attr('x', d => xScale(d.label) + xScale.bandwidth()/2)
+                    .attr('y', d => yScale(d.count) - 5)
+                    .attr('text-anchor','middle')
+                    .style('font-size','0.68em').style('fill','#ff8c00').style('font-weight','bold')
+                    .text(d => d.count > 0 ? d.pct.toFixed(0)+'%' : '');
+
+                // Smooth bell curve overlay using D3 line + curveBasis
+                const curvePoints = chartData.map(b => ({
+                    x: xScale(b.label) + xScale.bandwidth()/2,
+                    y: yScale(b.count)
+                }));
+                const lineGen = d3.line().x(d => d.x).y(d => d.y).curve(d3.curveCatmullRom.alpha(0.5));
+                g.append('path')
+                    .datum(curvePoints)
+                    .attr('fill','none')
+                    .attr('stroke', curveColor)
+                    .attr('stroke-width', 2.5)
+                    .attr('stroke-dasharray','5,3')
+                    .attr('d', lineGen);
+
+                // Axes
+                g.append('g').attr('transform',`translate(0,${iH})`)
+                    .call(d3.axisBottom(xScale))
+                    .selectAll('text')
+                    .style('fill','#aaa').style('font-size','0.7em')
+                    .attr('dy','1.2em');
+
+                g.append('g')
+                    .call(d3.axisLeft(yScale).ticks(5).tickFormat(d3.format('d')))
+                    .selectAll('text').style('fill','#aaa').style('font-size','0.7em');
+
+                g.selectAll('.domain, .tick line').attr('stroke','#444');
+
+                // Y-axis label
+                g.append('text')
+                    .attr('transform','rotate(-90)')
+                    .attr('x', -iH/2).attr('y', -36)
+                    .attr('text-anchor','middle')
+                    .style('fill','#888').style('font-size','0.65em')
+                    .text(t('taNumMakers'));
+
+                // ── Position helper: map months → x using bucket boundaries ──
+                const bucketMins = [1, 5, 9, 13, 19, 25];
+                const nBuckets = buckets.length;
+                function monthsToX(months) {
+                    for (var bi = 0; bi < nBuckets; bi++) {
+                        var bMin = bucketMins[bi];
+                        var bMax = bi < nBuckets - 1 ? bucketMins[bi+1] - 1 : 999;
+                        if (months <= bMax) {
+                            var frac = Math.min(Math.max((months - bMin) / (bMax - bMin + 1), 0), 1);
+                            return xScale(chartData[bi].label) + frac * xScale.bandwidth();
+                        }
+                    }
+                    return iW;
+                }
+
+                // ── All-makers weighted avg line (red) ──
+                const avgXpos = monthsToX(weightedAvg);
+                g.append('line')
+                    .attr('x1', avgXpos).attr('x2', avgXpos)
+                    .attr('y1', 0).attr('y2', iH)
+                    .attr('stroke','#ff5252').attr('stroke-width',1.5)
+                    .attr('stroke-dasharray','4,3');
+                g.append('text')
+                    .attr('x', avgXpos + 4).attr('y', 14)
+                    .style('fill','#ff5252').style('font-size','0.62em')
+                    .text(t('taAllAvg') + ' ' + weightedAvg.toFixed(1) + ' mo');
+
+                // ── Open-now weighted avg line (green) ──
+                const openOnly = valid.filter(d => d.status === 'Open');
+                if (openOnly.length > 0) {
+                    const openFursuits = openOnly.reduce((s,d) => s + (d.fursuits||1), 0);
+                    const openWAvg = openOnly.reduce((s,d) => s + d.paidTurnaround*(d.fursuits||1), 0) / openFursuits;
+                    const openXpos = monthsToX(openWAvg);
+                    g.append('line')
+                        .attr('x1', openXpos).attr('x2', openXpos)
+                        .attr('y1', 0).attr('y2', iH)
+                        .attr('stroke','#00E676').attr('stroke-width',1.5)
+                        .attr('stroke-dasharray','4,3');
+                    g.append('text')
+                        .attr('x', openXpos + 4).attr('y', 28)
+                        .style('fill','#00E676').style('font-size','0.62em')
+                        .text(t('taOpenAvg') + ' ' + openWAvg.toFixed(1) + ' mo');
+                }
+            })();
+        }
+
+        // --- INSIGHTS CHARTS ---
+        function updateInsightsCharts(data) {
+            const container = document.getElementById('insights-area');
+            if (!container) return;
+            const total = data.filter(d => d.maker).length;
+            if (total === 0) { container.innerHTML = ''; return; }
+
+            // ── Helpers ──────────────────────────────────────────────
+            function pct(n) { return (n / total * 100).toFixed(1); }
+            function countYesNo(field) {
+                let yes = 0, no = 0, none = 0;
+                data.forEach(d => {
+                    if (!d.maker) return;
+                    const v = (d[field] || '').trim().toLowerCase();
+                    if (v === 'yes') yes++;
+                    else if (v === 'no') no++;
+                    else none++;
+                });
+                return { yes, no, none };
+            }
+
+            // ── AU: Full Payment Progression ──────────────────────────
+            const fp = countYesNo('explicitFullPayment');
+
+            // ── AV: Shipping Insurance ────────────────────────────────
+            const ship = countYesNo('explicitShipping');
+
+            // ── AY: Waitlist ──────────────────────────────────────────
+            const wl = countYesNo('explicitWaitlist');
+
+            // ── AZ: Rush Offer ────────────────────────────────────────
+            const rush = countYesNo('explicitRush');
+
+            // ── AT: Terms of Service ──────────────────────────────────
+            let tosYes = 0, tosNo = 0;
+            data.forEach(d => {
+                if (!d.maker) return;
+                (d.publicTos && d.publicTos.startsWith('http')) ? tosYes++ : tosNo++;
+            });
+
+            // ── AW: Species Restriction ───────────────────────────────
+            const specCounts = {};
+            data.forEach(d => {
+                if (!d.maker) return;
+                const v = (d.explicitSpecies || 'None').trim();
+                specCounts[v] = (specCounts[v] || 0) + 1;
+            });
+
+            // ── L: Status ─────────────────────────────────────────────
+            let statusOpen = 0, statusClosed = 0;
+            const futureDates = []; // {maker, date, isoDate}
+            const today = new Date();
+            data.forEach(d => {
+                if (!d.maker) return;
+                const v = (d.status || '').trim();
+                if (v === 'Open') { statusOpen++; }
+                else if (v.startsWith('Open:')) {
+                    statusClosed++;
+                    const rawDate = v.replace('Open:','').trim();
+                    // Parse various formats: M/YYYY, M/D/YY, M/D/YYYY
+                    let dt = null;
+                    const parts = rawDate.split('/');
+                    if (parts.length === 2) {
+                        // M/YYYY or M/YY
+                        const yr = parts[1].length === 2 ? 2000 + parseInt(parts[1]) : parseInt(parts[1]);
+                        dt = new Date(yr, parseInt(parts[0]) - 1, 1);
+                    } else if (parts.length === 3) {
+                        const yr = parts[2].length === 2 ? 2000 + parseInt(parts[2]) : parseInt(parts[2]);
+                        dt = new Date(yr, parseInt(parts[0]) - 1, parseInt(parts[1]));
+                    }
+                    if (dt) futureDates.push({ maker: d.maker, date: rawDate, dt });
+                } else { statusClosed++; }
+            });
+            futureDates.sort((a, b) => a.dt - b.dt);
+
+            // ── AR: Website breakdown ─────────────────────────────────
+            function classifySite(rawUrl) {
+                var url = (rawUrl || '').trim();
+                if (!url || !url.startsWith('http')) return 'No Website';
+                try {
+                    var host = new URL(url).hostname.replace('www.','');
+                    if (host.includes('weebly')) return 'Weebly';
+                    if (host.includes('wixsite') || host.includes('wix.com')) return 'Wix';
+                    if (host.includes('carrd.co')) return 'Carrd';
+                    if (host.includes('linktr.ee')) return 'Linktree';
+                    if (host.includes('sites.google.com') || url.includes('sites.google.com')) return 'Google Sites';
+                    return 'Custom Domain';
+                } catch(e) { return 'Other'; }
+            }
+            const siteCats = { 'Custom Domain': 0, 'No Website': 0, 'Carrd': 0, 'Weebly': 0, 'Wix': 0, 'Linktree': 0, 'Google Sites': 0, 'Other': 0 };
+            data.forEach(d => {
+                if (!d.maker) return;
+                siteCats[classifySite(d.website)]++;
+            });
+
+            // ── AS: Queue breakdown ───────────────────────────────────
+            let qTrello = 0, qWeb = 0, qNone = 0;
+            data.forEach(d => {
+                if (!d.maker) return;
+                const url = (d.publicQueue || '').trim();
+                if (!url || !url.startsWith('http')) { qNone++; }
+                else if (url.includes('trello.com')) { qTrello++; }
+                else { qWeb++; }
+            });
+
+            // ── BB / BC / BD: Text lists ──────────────────────────────
+            const hbMakers = {}, partsMakers = {}, fabMakers = {};
+            function tallyWithMakers(val, makerName, makerMap) {
+                if (!val) return;
+                val.split('\n').forEach(function(line) {
+                    var l = line.trim();
+                    if (!l) return;
+                    if (!makerMap[l]) makerMap[l] = [];
+                    if (!makerMap[l].includes(makerName)) makerMap[l].push(makerName);
+                });
+            }
+            data.forEach(function(d) {
+                if (!d.maker) return;
+                tallyWithMakers(d.otherHeadBase, d.maker, hbMakers);
+                tallyWithMakers(d.partsPatterns, d.maker, partsMakers);
+                var fabVal = (d.fabric || '').replace(/\u200b/g,'');
+                tallyWithMakers(fabVal, d.maker, fabMakers);
+            });
+            function normaliseMakerMap(raw, normFn) {
+                var out = {};
+                Object.entries(raw).forEach(function(entry) {
+                    var k = entry[0], makers = entry[1];
+                    var display = normFn(k);
+                    if (!out[display]) out[display] = [];
+                    makers.forEach(function(m) { if (!out[display].includes(m)) out[display].push(m); });
+                });
+                return out;
+            }
+            const hbNorm = normaliseMakerMap(hbMakers, function(k) {
+                var n = k.trim().toLowerCase();
+                return n.includes('fuzzbutt') || n.includes('fuzz butt') ? 'Fuzzbutt Fursuits'
+                     : n.includes('nukecreation') ? 'Nuke Creations' : k.trim();
+            });
+            const partsNorm = normaliseMakerMap(partsMakers, function(k) {
+                var n = k.trim().toLowerCase();
+                return n.includes('spiltgrapesoda') || n.includes('splitgrapesoda') ? 'SpiltGrapeSoda'
+                     : n.includes('dream vision') ? 'Dream Vision Creations' : k.trim();
+            });
+            const fabNorm = normaliseMakerMap(fabMakers, function(k) {
+                var n = k.trim().toLowerCase();
+                return n.includes('big z') ? 'Big Z Fabric'
+                     : n.includes('howl') ? 'Howl Fabrics (fka Fursuits By Lacey)'
+                     : n.includes('fursuit suppli') ? 'Fursuit Supplies' : k.trim();
+            });
+
+            function sortedEntries(obj) {
+                return Object.entries(obj).sort(function(a,b){ return b[1].length - a[1].length; });
+            }
+
+            // ── Colours ───────────────────────────────────────────────
+            const C = { yes: '#00E676', no: '#ff5252', none: '#555', purple: '#7b5ea7', light: '#b39ddb', orange: '#ff8c00' };
+
+            // ── Build bar utility ──────────────────────────────────────
+            function miniBar(pctVal, color) {
+                return `<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+                    <div style="flex:1;background:#1a1a2e;border-radius:3px;height:8px;overflow:hidden;">
+                        <div style="width:${pctVal}%;background:${color};height:100%;border-radius:3px;transition:width 0.6s;"></div>
+                    </div>
+                    <span style="font-size:0.72em;color:${color};font-weight:bold;min-width:36px;">${pctVal}%</span>
+                </div>`;
+            }
+
+            // statCard rows: [label, count, color, sub, filterKey, predicate]
+            //   if filterKey + predicate present, the row becomes clickable to filter
+            function statCard(title, rows, note) {
+                const rowsHTML = rows.map(function(r) {
+                    var label = r[0], count = r[1], color = r[2], sub = r[3], filterKey = r[4], predicate = r[5];
+                    var clickable = filterKey && predicate;
+                    if (clickable) { window.__statPredicates[filterKey] = { predicate: predicate, label: title + ': ' + label }; }
+                    var active = clickable && isChartFilterActive(filterKey);
+                    var rowStyle = 'margin-bottom:6px;padding:4px;border-radius:4px;'
+                                 + (clickable ? 'cursor:pointer;' : '')
+                                 + (active ? 'background:rgba(255,140,0,0.12);outline:1px solid #ff8c00;' : '');
+                    var dataAttr = clickable ? (' class="stat-row" data-filter-key="' + filterKey + '"') : '';
+                    return '<div' + dataAttr + ' style="' + rowStyle + '">'
+                         + '<div style="display:flex;justify-content:space-between;font-size:0.75em;color:#ccc;">'
+                         + '<span>' + label + (active ? ' <span style="color:#ff8c00;">\u2715</span>' : '') + '</span><span style="color:#888;">' + count + ' makers</span></div>'
+                         + miniBar(parseFloat(pct(count)), active ? '#ff8c00' : color)
+                         + (sub ? '<div style="font-size:0.67em;color:#888;margin-top:2px;margin-left:4px;">' + sub + '</div>' : '')
+                         + '</div>';
+                }).join('');
+                const noteHTML = note ? '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">' + note + '</div>' : '';
+                return '<div class="promo-card" style="border-color:' + C.purple + ';">'
+                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:12px;">' + title + '</div>'
+                     + rowsHTML + noteHTML + '</div>';
+            }
+
+            // listCard rows clickable: filterKeyBase + field; clicking filters rows whose
+            // field text contains that item (newline-aware), toggle on/off.
+            function listCard(title, entries, note, filterKeyBase, fieldName) {
+                const rowsHTML = entries.map(function(e) {
+                    var label = e[0], makers = e[1];
+                    var count = makers.length;
+                    var tipText = makers.slice().sort().join(', ').replace(/"/g, '&quot;');
+                    var fk = filterKeyBase ? (filterKeyBase + ':' + label) : '';
+                    var active = fk && isChartFilterActive(fk);
+                    var clickable = !!filterKeyBase;
+                    var rowStyle = 'display:flex;justify-content:space-between;align-items:center;padding:3px 4px;border-bottom:1px solid #1a1a2e;border-radius:3px;'
+                                 + (clickable ? 'cursor:pointer;' : '')
+                                 + (active ? 'background:rgba(255,140,0,0.12);' : '');
+                    var dataAttr = clickable ? (' class="list-row" data-filter-key="' + fk.replace(/"/g,'&quot;') + '" data-field="' + fieldName + '" data-item="' + label.replace(/"/g,'&quot;') + '"') : '';
+                    return '<div' + dataAttr + ' style="' + rowStyle + '">'
+                         + '<span style="font-size:0.75em;color:' + (active?'#ff8c00':'#ccc') + ';flex:1;padding-right:6px;">' + (active?'\u2715 ':'') + label + '</span>'
+                         + '<span title="' + tipText + '" style="font-size:0.72em;color:' + (active?'#ff8c00':C.orange) + ';font-weight:bold;white-space:nowrap;cursor:help;border-bottom:1px dotted ' + C.orange + ';">'
+                         + count + ' ' + t('makersWord') + '</span></div>';
+                }).join('');
+                const noteHTML = note ? '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">' + note + '</div>' : '';
+                return '<div class="promo-card" style="border-color:' + C.purple + ';display:flex;flex-direction:column;">'
+                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:8px;">' + title + '</div>'
+                     + '<div style="flex:1;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:' + C.purple + ' #1a1a2e;">' + rowsHTML + '</div>'
+                     + noteHTML + '</div>';
+            }
+
+            // ── Calendar card ──────────────────────────────────────────
+            function calendarCard() {
+                if (futureDates.length === 0) return `<div class="promo-card" style="border-color:${C.purple};"><div class="chart-title" style="color:${C.light};">${t('calTitle')}</div><div style="font-size:0.8em;color:#888;margin-top:10px;">${t('calNoDates')}</div></div>`;
+
+                // Group by YYYY-MM
+                const byMonth = {};
+                futureDates.forEach(f => {
+                    const key = `${f.dt.getFullYear()}-${String(f.dt.getMonth()+1).padStart(2,'0')}`;
+                    if (!byMonth[key]) byMonth[key] = [];
+                    byMonth[key].push(f);
+                });
+                const monthKeys = Object.keys(byMonth).sort();
+
+                let calHTML = `<div class="promo-card" style="border-color:${C.purple};">
+                    <div class="chart-title" style="color:${C.light};margin-bottom:12px;">${t('calTitle')} <span style="font-size:0.7em;color:#888;font-weight:normal;">(${futureDates.length} ${t('calScheduled')})</span></div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;">`;
+
+                monthKeys.forEach(mk => {
+                    const [yr, mo] = mk.split('-').map(Number);
+                    const monthName = new Date(yr, mo-1, 1).toLocaleString('en-US',{month:'long',year:'numeric'});
+                    const entries = byMonth[mk];
+                    const daysInMonth = new Date(yr, mo, 0).getDate();
+                    const firstDay = new Date(yr, mo-1, 1).getDay();
+
+                    // Build day-marker map
+                    const dayMap = {};
+                    entries.forEach(f => {
+                        const d = f.dt.getDate();
+                        if (!dayMap[d]) dayMap[d] = [];
+                        dayMap[d].push(f.maker);
+                    });
+
+                    let cells = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:6px;">';
+                    [t('wkSu'),t('wkMo'),t('wkTu'),t('wkWe'),t('wkTh'),t('wkFr'),t('wkSa')].forEach(d => {
+                        cells += `<div style="text-align:center;font-size:0.58em;color:#666;padding:2px;">${d}</div>`;
+                    });
+                    for (let i = 0; i < firstDay; i++) cells += '<div></div>';
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        const makers = dayMap[d];
+                        const hasMakers = makers && makers.length > 0;
+                        const tooltip = hasMakers ? `title="${makers.join(', ')}"` : '';
+                        const bg = hasMakers ? C.purple : 'transparent';
+                        const color = hasMakers ? '#fff' : '#444';
+                        const cursor = hasMakers ? 'pointer' : 'default';
+                        cells += `<div ${tooltip} style="text-align:center;font-size:0.6em;padding:3px 1px;border-radius:3px;background:${bg};color:${color};cursor:${cursor};">${d}</div>`;
+                    }
+                    cells += '</div>';
+
+                    const listHTML = entries.map(f =>
+                        `<div class="jump-row" data-maker="${(f.maker||'').replace(/"/g,'&quot;')}" style="font-size:0.7em;color:#ccc;padding:2px 0;border-bottom:1px solid #1a1a2e;cursor:pointer;">
+                            <span style="color:${C.orange};">${f.date}</span> — <span style="border-bottom:1px dotted #666;">${f.maker}</span>
+                        </div>`).join('');
+
+                    calHTML += `<div style="width:170px;background:#0d0d1a;border:1px solid #2e2e2e;border-radius:6px;padding:10px;flex:0 0 auto;">
+                        <div style="font-size:0.72em;color:${C.light};font-weight:bold;margin-bottom:4px;">${monthName}</div>
+                        ${cells}
+                        <div style="margin-top:8px;max-height:150px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:${C.purple} #0d0d1a;">${listHTML}</div>
+                    </div>`;
+                });
+                calHTML += '</div></div>';
+                return calHTML;
+            }
+
+            // ── Species breakdown ──────────────────────────────────────
+            function specMatch(r, val){ return (r.explicitSpecies||'').trim() === val; }
+            const specRows = [
+                [t('specNoRes'), specCounts['No'] || 0, C.yes, '', 'species-no', function(r){ return specMatch(r,'No'); }],
+                [t('specCopyright'), (specCounts['Yes - Copyright'] || 0), C.no, t('specCopyrightSub'), 'species-copyright', function(r){ return specMatch(r,'Yes - Copyright'); }],
+                [t('specSelective'), (specCounts['Yes - Selective Copyright'] || 0), '#ff8c00', t('specSelectiveSub'), 'species-selective', function(r){ return specMatch(r,'Yes - Selective Copyright'); }],
+                [t('specNoCanine'), (specCounts['Yes - No Canines'] || 0), '#ff8c00', '', 'species-nocanine', function(r){ return specMatch(r,'Yes - No Canines'); }],
+                [t('specNoDAD'), (specCounts['Yes - Copyright, Dutch Angel Dragons'] || 0) + (specCounts['Yes - Dutch Angel Dragons'] || 0), '#ff8c00', '', 'species-dad', function(r){ var v=(r.explicitSpecies||'').trim(); return v==='Yes - Copyright, Dutch Angel Dragons' || v==='Yes - Dutch Angel Dragons'; }],
+                [t('specOther'), (specCounts['Yes'] || 0), C.no, '', 'species-yes', function(r){ return specMatch(r,'Yes'); }],
+                [t('specNotStated'), (specCounts['None'] || specCounts['none'] || 0) + (specCounts['undefined'] || 0), C.none, '', 'species-none', function(r){ var v=(r.explicitSpecies||'').trim(); return v==='' || v==='None' || v==='none'; }],
+            ].filter(r => r[1] > 0);
+
+            // ── Assemble page ──────────────────────────────────────────
+            container.innerHTML = `
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;">
+
+                ${statCard(t('fullPayTitle'), [
+                    [t('fullPayYes'), fp.yes, C.no, t('fullPaySub'), 'fullpay-yes', function(r){ return (r.explicitFullPayment||'').trim().toLowerCase()==='yes'; }],
+                    [t('fullPayNo'), fp.no + fp.none, C.none, '', 'fullpay-no', function(r){ return (r.explicitFullPayment||'').trim().toLowerCase()!=='yes'; }],
+                ],
+                t('fullPayNote'))}
+
+                ${statCard(t('shipTitle'), [
+                    [t('shipYes'), ship.yes, C.yes, '', 'ship-yes', function(r){ return (r.explicitShipping||'').trim().toLowerCase()==='yes'; }],
+                    [t('shipNo'),              ship.no + ship.none, C.no, '', 'ship-no', function(r){ return (r.explicitShipping||'').trim().toLowerCase()!=='yes'; }]
+                ], t('shipNote') +
+                '<br><br><span style=\'color:#666;\'>' + t('shipSources') + '</span>' +
+                '<br><a href=\'https://www.fedex.com/en-us/shipping/packing/pledge.html\' target=\'_blank\' style=\'color:#7b5ea7;\'>fedex.com &#8212; Declared Value &amp; Limits</a>' +
+                '<br><a href=\'https://www.ups.com/media/en/value-added_pricing_ak-hi.pdf\' target=\'_blank\' style=\'color:#7b5ea7;\'>ups.com &#8212; Value-Added Pricing</a>' +
+                '<br><a href=\'https://faq.usps.com/s/article/Registered-Mail-The-Basics\' target=\'_blank\' style=\'color:#7b5ea7;\'>usps.com &#8212; Registered Mail: The Basics</a>')}
+
+                ${statCard(t('waitTitle'), [
+                    [t('waitYes'), wl.yes, C.yes, '', 'waitlist-yes', function(r){ return (r.explicitWaitlist||'').trim().toLowerCase()==='yes'; }],
+                    [t('waitNo'), wl.no + wl.none, C.no, '', 'waitlist-no', function(r){ return (r.explicitWaitlist||'').trim().toLowerCase()!=='yes'; }],
+                ],
+                t('waitNote'))}
+
+                ${statCard(t('rushTitle'), [
+                    [t('rushYes'), rush.yes, C.yes, '', 'rush-yes', function(r){ return (r.explicitRush||'').trim().toLowerCase()==='yes'; }],
+                    [t('rushNo'), rush.no + rush.none, C.no, '', 'rush-no', function(r){ return (r.explicitRush||'').trim().toLowerCase()!=='yes'; }],
+                ],
+                t('rushNote'))}
+
+                ${statCard(t('tosTitle'), [
+                    [t('tosYesL'), tosYes, C.yes, '', 'tos-yes', function(r){ return r.publicTos && String(r.publicTos).startsWith('http'); }],
+                    [t('tosNoL'), tosNo, C.no, '', 'tos-no', function(r){ return !(r.publicTos && String(r.publicTos).startsWith('http')); }],
+                ],
+                t('tosNote'))}
+
+                ${statCard(t('specTitle'), specRows,
+                t('specNote'))}
+
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px;">
+
+                ${statCard(t('webTitle'), [
+                    [t('webCustom'), siteCats['Custom Domain'], C.yes, '', 'web-custom', function(r){ return classifySite(r.website)==='Custom Domain'; }],
+                    [t('webNone'), siteCats['No Website'], C.no, '', 'web-none', function(r){ return classifySite(r.website)==='No Website'; }],
+                    [t('webCarrd'), siteCats['Carrd'], C.light, '', 'web-carrd', function(r){ return classifySite(r.website)==='Carrd'; }],
+                    [t('webWeebly'), siteCats['Weebly'], C.light, '', 'web-weebly', function(r){ return classifySite(r.website)==='Weebly'; }],
+                    [t('webWix'), siteCats['Wix'], C.light, '', 'web-wix', function(r){ return classifySite(r.website)==='Wix'; }],
+                    [t('webLinktree'), siteCats['Linktree'], C.none, '', 'web-linktree', function(r){ return classifySite(r.website)==='Linktree'; }],
+                    [t('webGSites'), siteCats['Google Sites'], C.none, '', 'web-gsites', function(r){ return classifySite(r.website)==='Google Sites'; }],
+                ].filter(r => r[1] > 0))}
+
+                ${statCard(t('queueTitle'), [
+                    [t('queueTrello'), qTrello, C.yes, t('queueTrelloSub'), 'queue-trello', function(r){ var u=(r.publicQueue||'').trim(); return u.startsWith('http') && u.includes('trello.com'); }],
+                    [t('queueWeb'), qWeb, C.orange, t('queueWebSub'), 'queue-web', function(r){ var u=(r.publicQueue||'').trim(); return u.startsWith('http') && !u.includes('trello.com'); }],
+                    [t('queueNone'), qNone, C.no, t('queueNoneSub'), 'queue-none', function(r){ var u=(r.publicQueue||'').trim(); return !u.startsWith('http'); }],
+                ],
+                t('queueNote'))}
+
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:15px;">
+
+                ${listCard(t('hbasesTitle'), sortedEntries(hbNorm),
+                t('hbasesNote'), 'hbase', 'otherHeadBase')}
+
+                ${listCard(t('partsTitle'), sortedEntries(partsNorm),
+                t('partsNote'), 'parts', 'partsPatterns')}
+
+                ${listCard(t('fabricTitle'), sortedEntries(fabNorm),
+                t('fabricNote'), 'fabric', 'fabric')}
+
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr;gap:15px;margin-top:15px;">
+                ${calendarCard()}
+            </div>`;
+        }
+
+        // --- SOCIAL ICON HELPER ---
+        function makeSocialIcon(url) {
+            if (!url) return '';
+            const u = url.toLowerCase();
+            let icon = '';
+            let title = url;
+
+            if (u.includes('x.com') || u.includes('twitter.com')) {
+                // X / Twitter logo (SVG inline)
+                icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.259 5.629L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>`;
+            } else if (u.includes('bsky.app') || u.includes('bluesky')) {
+                // Bluesky butterfly logo
+                icon = `<svg width="18" height="18" viewBox="0 0 568 501" fill="#0085ff" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><path d="M123.121 33.664C188.142 82.606 258.981 181.836 284 221.807c25.019-39.971 95.858-139.201 160.879-188.143C491.866-1.862 568-30.834 568 57.947c0 17.536-10.035 147.555-15.919 168.693-20.443 73.27-94.92 91.95-161.097 80.616 115.679 19.686 145.24 84.951 81.521 150.216-120.4 123.498-172.911-30.991-186.255-70.587-3.16-9.262-4.63-13.582-4.63-9.918 0-3.664-1.47.656-4.63 9.918-13.344 39.596-65.855 194.085-186.255 70.587C36.679 391.206 66.24 325.941 181.919 306.256 115.742 317.59 41.265 298.91 20.822 225.64 14.938 204.502 4.903 74.483 4.903 56.947 4.903-31.834 81.037-1.862 123.121 33.664z"/></svg>`;
+            } else if (u.includes('instagram.com')) {
+                // Instagram gradient camera icon
+                icon = `<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><defs><linearGradient id="ig-grad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#f09433"/><stop offset="25%" style="stop-color:#e6683c"/><stop offset="50%" style="stop-color:#dc2743"/><stop offset="75%" style="stop-color:#cc2366"/><stop offset="100%" style="stop-color:#bc1888"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#ig-grad)"/><circle cx="12" cy="12" r="4" fill="none" stroke="white" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.5" fill="white"/><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="white" stroke-width="1.5"/></svg>`;
+            } else if (u.includes('facebook.com') || u.includes('fb.com')) {
+                // Facebook logo
+                icon = `<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><rect width="24" height="24" rx="5" fill="#1877F2"/><path d="M16.5 8h-2.25C13.784 8 13.5 8.284 13.5 8.75V11H16.5l-.5 3h-2.5v7h-3v-7H8v-3h2.5V8.5C10.5 6.57 11.82 5 14 5h2.5v3z" fill="white"/></svg>`;
+            } else if (u.includes('rednote') || u.includes('xiaohongshu') || u.includes('xhs.')) {
+                // Rednote / Xiaohongshu - red note icon
+                icon = `<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><rect width="24" height="24" rx="5" fill="#FF2442"/><text x="12" y="17" text-anchor="middle" font-size="13" font-weight="bold" fill="white" font-family="sans-serif">小</text></svg>`;
+            } else {
+                // Generic link icon for unknown platforms
+                icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
+            }
+
+            return `<a href="${url}" target="_blank" class="social-icon-link" title="Social Media">${icon}</a>`;
+        }
+
+        // --- CUSTOM MULTI-SELECT DROPDOWN HEADER FILTER ---
+        function multiSelectFilterEditor(cell, onRendered, success, cancel, editorParams) {
+            var field = cell.getColumn().getField();
+            var container = document.createElement('div');
+            container.style.cssText = 'display:flex;align-items:center;gap:2px;width:100%;position:relative;';
+
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Filter...';
+            input.style.cssText = 'flex:1;min-width:0;background:#0d0d1a;color:#ccc;border:1px solid #444;border-radius:3px;font-size:0.72em;padding:2px 4px;box-sizing:border-box;';
+
+            var btn = document.createElement('div');
+            btn.innerHTML = '&#9662;';
+            btn.title = 'Select values';
+            btn.style.cssText = 'cursor:pointer;color:#7b5ea7;font-size:0.9em;padding:0 3px;user-select:none;flex-shrink:0;';
+
+            var dropdown = document.createElement('div');
+            dropdown.style.cssText = 'display:none;position:fixed;z-index:2147483647;background:#1a1a2e;border:1px solid #7b5ea7;border-radius:4px;max-height:300px;overflow-y:auto;min-width:190px;box-shadow:0 6px 20px rgba(0,0,0,0.7);padding:4px;scrollbar-width:thin;scrollbar-color:#7b5ea7 #1a1a2e;';
+            document.body.appendChild(dropdown);
+
+            var selected = null;
+
+            function getDistinct() {
+                var vals = {};
+                (table ? table.getData() : []).forEach(function(row) {
+                    var v = row[field];
+                    if (v === null || v === undefined || v === '') return;
+                    v = String(v).trim();
+                    if (v) vals[v] = true;
+                });
+                return Object.keys(vals).sort(function(a,b){ return a.localeCompare(b, undefined, {numeric:true}); });
+            }
+
+            function applyFilter() {
+                var typed = input.value.trim().toLowerCase();
+                success({ typed: typed, selected: selected ? Object.assign({}, selected) : null });
+            }
+
+            function buildDropdown() {
+                dropdown.innerHTML = '';
+                var distinct = getDistinct();
+
+                var sortRow = document.createElement('div');
+                sortRow.style.cssText = 'display:flex;gap:4px;padding:2px 4px 6px;border-bottom:1px solid #333;margin-bottom:4px;';
+                ['A\u2192Z','Z\u2192A'].forEach(function(lbl, i) {
+                    var s = document.createElement('div');
+                    s.textContent = lbl;
+                    s.style.cssText = 'flex:1;text-align:center;font-size:0.7em;color:#b39ddb;cursor:pointer;border:1px solid #444;border-radius:3px;padding:2px;';
+                    s.onclick = function(e) { e.stopPropagation(); table.setSort(field, i === 0 ? 'asc' : 'desc'); };
+                    sortRow.appendChild(s);
+                });
+                dropdown.appendChild(sortRow);
+
+                var ctrlRow = document.createElement('div');
+                ctrlRow.style.cssText = 'display:flex;gap:4px;padding:0 4px 6px;border-bottom:1px solid #333;margin-bottom:4px;';
+                var selAll = document.createElement('div');
+                selAll.textContent = 'Select all';
+                selAll.style.cssText = 'flex:1;text-align:center;font-size:0.7em;color:#00E676;cursor:pointer;';
+                selAll.onclick = function(e){ e.stopPropagation(); selected = null; buildDropdown(); applyFilter(); };
+                var clrAll = document.createElement('div');
+                clrAll.textContent = 'Clear all';
+                clrAll.style.cssText = 'flex:1;text-align:center;font-size:0.7em;color:#ff5252;cursor:pointer;';
+                clrAll.onclick = function(e){ e.stopPropagation(); selected = {}; buildDropdown(); applyFilter(); };
+                ctrlRow.appendChild(selAll); ctrlRow.appendChild(clrAll);
+                dropdown.appendChild(ctrlRow);
+
+                distinct.forEach(function(val) {
+                    var item = document.createElement('label');
+                    item.style.cssText = 'display:flex;align-items:center;gap:6px;padding:3px 5px;font-size:0.72em;color:#ccc;cursor:pointer;border-radius:3px;';
+                    item.onmouseover = function(){ item.style.background = '#2e2e44'; };
+                    item.onmouseout = function(){ item.style.background = 'transparent'; };
+                    var cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.checked = (selected === null) || (selected[val] === true);
+                    cb.style.cssText = 'accent-color:#7b5ea7;flex-shrink:0;';
+                    cb.onclick = function(e) {
+                        e.stopPropagation();
+                        if (selected === null) { selected = {}; distinct.forEach(function(d){ selected[d] = true; }); }
+                        if (cb.checked) selected[val] = true; else delete selected[val];
+                        applyFilter();
+                    };
+                    var txt = document.createElement('span');
+                    txt.textContent = val;
+                    txt.style.cssText = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+                    item.appendChild(cb); item.appendChild(txt);
+                    dropdown.appendChild(item);
+                });
+
+                if (distinct.length === 0) {
+                    var empty = document.createElement('div');
+                    empty.textContent = 'No values';
+                    empty.style.cssText = 'padding:6px;font-size:0.7em;color:#888;text-align:center;';
+                    dropdown.appendChild(empty);
+                }
+            }
+
+            function positionDropdown() {
+                var rect = btn.getBoundingClientRect();
+                var dw = 200;
+                var left = rect.right - dw;
+                if (left < 4) left = 4;
+                dropdown.style.left = left + 'px';
+                dropdown.style.top = (rect.bottom + 2) + 'px';
+                dropdown.style.minWidth = dw + 'px';
+            }
+
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+                    buildDropdown();
+                    positionDropdown();
+                    dropdown.style.display = 'block';
+                } else {
+                    dropdown.style.display = 'none';
+                }
+            };
+
+            document.addEventListener('click', function docClick(ev) {
+                if (!container.contains(ev.target) && !dropdown.contains(ev.target)) dropdown.style.display = 'none';
+            });
+            // Reposition on scroll/resize while open
+            window.addEventListener('scroll', function(){ if (dropdown.style.display === 'block') positionDropdown(); }, true);
+            window.addEventListener('resize', function(){ if (dropdown.style.display === 'block') positionDropdown(); });
+
+            input.addEventListener('input', applyFilter);
+            input.addEventListener('keydown', function(e){ if (e.key === 'Enter') applyFilter(); });
+
+            container.appendChild(input);
+            container.appendChild(btn);
+            return container;
+        }
+
+        function multiSelectFilterFunc(headerValue, rowValue, rowData, filterParams) {
+            if (!headerValue) return true;
+            var v = (rowValue === null || rowValue === undefined) ? '' : String(rowValue).trim();
+            if (headerValue.typed) {
+                if (v.toLowerCase().indexOf(headerValue.typed) === -1) return false;
+            }
+            if (headerValue.selected) {
+                if (!headerValue.selected[v]) return false;
+            }
+            return true;
         }
 
         // --- INITIALIZE TABLE ---
@@ -1327,21 +2952,34 @@
             table = new Tabulator("#creator-table", {
                 data: data,
                 layout: "fitData",
+                columnDefaults: {
+                    headerSort: true,
+                    headerFilter: true,
+                    headerFilterPlaceholder: "Filter...",
+                },
                 movableColumns: true,
                 resizableColumns: true,
                 selectableRows: 1, 
                 placeholder:"No Data Available",
                 height: "100%", 
                 initialSort:[ {column:"rank", dir:"asc"} ],
+                rowClick: function(e, row) {
+                    // Single-select toggle: clicking the selected row deselects it
+                    const sel = table.getSelectedRows();
+                    const isSelected = sel.length === 1 && sel[0] === row;
+                    table.deselectRow();
+                    if (!isSelected) { row.select(); }
+                },
                 dataFiltered: function(filters, rows) { 
                     const activeData = rows.map(r => r.getData());
                     updateResultCounter(activeData.length, totalDataCount); 
                     updateAnalytics(activeData);
                 },
                 columns: [
-                    { title: t("thRow"), field:"rank", visible:true, sorter:"number" },
+                    { title: t("thRow"), field:"rank", visible:true, sorter:"number", headerFilter:"number" },
                     { 
                         title: t("thMaker"), field:"maker", cssClass: "text-cell",
+                        headerFilter: multiSelectFilterEditor, headerFilterFunc: multiSelectFilterFunc, headerFilterLiveFilter: false,
                         formatter: function(cell) {
                             const data = cell.getData();
                             const days = data.daysInactive;
@@ -1357,23 +2995,50 @@
                         }
                     },
                     { 
-                        title: t("thLogo"), field:"logo", hozAlign:"center", width:90, 
+                        title: t("thLogo"), field:"logo", hozAlign:"center", width:90, headerFilter:false, headerSort:false,
                         formatter:function(cell){
                             const val = cell.getValue();
                             return val ? `<div class="logo-box" data-src="${val}" style="background-image:url('${val}');"></div>` : "";
                         }
                     },
-                    { title: t("thLocation"), field:"country", formatter: formatTextCell, cssClass: "text-cell" },
+                    { title: t("thLocation"), field:"country", formatter: formatTextCell, cssClass: "text-cell", headerFilter: multiSelectFilterEditor, headerFilterFunc: multiSelectFilterFunc, headerFilterLiveFilter: false },
                     { 
-                        title: t("thLink"), field:"link", hozAlign:"center",
+                        title: t("thLink"), field:"link", hozAlign:"center", headerFilter:false, headerSort:false,
                         formatter: function(cell) {
+                            const data = cell.getData();
+                            let icons = '';
+
+                            // Social links (col E)
                             const url = cell.getValue();
-                            if(!url) return "";
-                            return wrapInTilt(`<a href="${url}" target="_blank" class="animated-link">${url}</a>`, "background:none; animation:none; -webkit-text-fill-color:initial; color:inherit;");
+                            if (url) {
+                                const urls = String(url).split(/[\s,]+/).filter(u => u.startsWith('http') || u.startsWith('www'));
+                                icons += urls.map(u => makeSocialIcon(u)).join('');
+                            }
+
+                            // Website (col AR) — globe
+                            const site = data.website;
+                            if (site && String(site).startsWith('http')) {
+                                icons += '<a href="' + site + '" target="_blank" class="social-icon-link" title="Website">\u{1F310}</a>';
+                            }
+
+                            // Public Queue (col AS) — Trello icon
+                            const queue = data.publicQueue;
+                            if (queue && String(queue).startsWith('http')) {
+                                icons += '<a href="' + queue + '" target="_blank" class="social-icon-link" title="Queue"><svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><rect width="48" height="48" rx="8" fill="#0052CC"/><rect x="8" y="14" width="14" height="20" rx="2" fill="#00C7E6"/><rect x="27" y="14" width="13" height="20" rx="2" fill="#00C7E6"/><rect x="9" y="16" width="12" height="5" rx="1" fill="#fff" opacity="0.9"/><rect x="9" y="23" width="8" height="3" rx="1" fill="#fff" opacity="0.6"/><rect x="28" y="16" width="11" height="5" rx="1" fill="#fff" opacity="0.9"/><rect x="28" y="23" width="7" height="3" rx="1" fill="#fff" opacity="0.6"/></svg></a>';
+                            }
+
+                            // Public ToS (col AT) — memo
+                            const tos = data.publicTos;
+                            if (tos && String(tos).startsWith('http')) {
+                                icons += '<a href="' + tos + '" target="_blank" class="social-icon-link" title="Terms of Service">\u{1F4CB}</a>';
+                            }
+
+                            if (!icons) return "";
+                            return '<div class="social-links-cell">' + icons + '</div>';
                         }
                     },
                     { 
-                        title: t("thPreview"), field: "previewImages", hozAlign: "center", width: 200,
+                        title: t("thPreview"), field: "previewImages", hozAlign: "center", width: 200, headerFilter:false, headerSort:false,
                         formatter: function(cell) {
                            const imageUrls = cell.getValue();
                            if (!imageUrls || imageUrls.length === 0) return "";
@@ -1390,16 +3055,16 @@
                            return container;
                         }
                     },
-                    { title: t("thStatus"), field:"status", formatter: formatTextCell, cssClass: "text-cell" },
-                    { title: t("thFursuits"), field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
-                    { title: t("thWorks"), field:"worksPerYear", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
-                    { title: t("thFollowers"), field:"followers", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
+                    { title: t("thStatus"), field:"status", formatter: formatTextCell, cssClass: "text-cell", headerFilter: multiSelectFilterEditor, headerFilterFunc: multiSelectFilterFunc, headerFilterLiveFilter: false },
+                    { title: t("thFursuits"), field:"fursuits", hozAlign:"right", sorter:"number", headerFilter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
+                    { title: t("thWorks"), field:"worksPerYear", hozAlign:"right", sorter:"number", headerFilter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title: t("thFollowers"), field:"followers", hozAlign:"right", sorter:"number", headerFilter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
                     { 
-                        title: t("thAvgPrice"), field:"price", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" },
+                        title: t("thAvgPrice"), field:"price", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, headerFilter:"number",
                         formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(formatCurrency(cell.getValue())) : "---"; }
                     },
                     {
-                        title: t("thShip"), field: "calculatedShip", hozAlign: "right", sorter: "number",
+                        title: t("thShip"), field: "calculatedShip", hozAlign: "right", sorter: "number", headerFilter:false,
                         mutator: function(value, data) { return getShippingCost(data.country, currentResidentState); },
                         formatter: function(cell) {
                             const ship = cell.getValue();
@@ -1407,7 +3072,7 @@
                         }
                     },
                     {
-                        title: t("thTax"), field: "calculatedTax", hozAlign: "right", sorter: "number",
+                        title: t("thTax"), field: "calculatedTax", hozAlign: "right", sorter: "number", headerFilter:false,
                         mutator: function(value, data) { return (data.price || 0) * currentTaxRate; },
                         formatter: function(cell) {
                             const tax = cell.getValue();
@@ -1415,7 +3080,7 @@
                         }
                     },
                     {
-                        title: t("thTotal"), field: "calculatedTotal", hozAlign: "right", sorter: "number",
+                        title: t("thTotal"), field: "calculatedTotal", hozAlign: "right", sorter: "number", headerFilter:false,
                         mutator: function(value, data) {
                             const price = data.price || 0;
                             const tax = price * currentTaxRate;
@@ -1426,7 +3091,10 @@
                             const total = cell.getValue();
                             return total > 0 ? wrapInTilt(formatCurrency(total), "color:darkorange; font-weight:bold") : "---";
                         }
-                    }
+                    },
+
+
+
                 ]
             });
 
@@ -1442,7 +3110,20 @@
              document.getElementById("results-counter").innerHTML = "Loading data...";
              Papa.parse(url, {
                 download: true, header: true, dynamicTyping: true,
+                error: function(err) {
+                    document.getElementById("results-counter").innerHTML =
+                        `<span style="color:#ff5252;">⚠ Failed to load data. Check that the Google Sheet is published to the web. (${err.message || err})</span>`;
+                },
                 complete: function(results) {
+                    if (!results.data || results.data.length === 0) {
+                        document.getElementById("results-counter").innerHTML =
+                            '<span style="color:#ff5252;">⚠ No data returned. Verify the Google Sheet is published: File → Share → Publish to web → CSV.</span>';
+                        return;
+                    }
+                    // Debug: log CSV column names once to console
+                    if (results.data.length > 0) {
+                        console.log('[CSV columns]', Object.keys(results.data[0]));
+                    }
                     const data = results.data.map(row => {
                         const rawPrice = cleanNumber(row['Average Price']);
                         return {
@@ -1458,7 +3139,26 @@
                             daysInactive: cleanNumber(row['Days Since Last Post']),
                             activitySymbol: row['Symbol'],
                             country: typeof row['Location'] === 'string' ? row['Location'].trim() : row['Location'],
-                            followers: cleanNumber(row['Followers'])
+                            followers: cleanNumber(row['Followers']),
+                            website: row['Public Website'] || row['Website'] || "",
+                            publicQueue: row['Public Queue'] || row['Open Public Queue'] || "",
+                            publicTos: row['Public Terms of Service'] || "",
+                            headBase: row['Head Base Material'] || "",
+                            paidTurnaround: parseFloat(
+                                row['Final Payment Turnaround (Months)'] ||
+                                row['Paid Turnaround (Months)'] ||
+                                row['Final Payment Turnaround'] ||
+                                row['Turnaround (Months)'] ||
+                                row['Turnaround']
+                            ) || null,
+                            explicitFullPayment: row['Explicit Full Payment Progression'] || '',
+                            explicitShipping: row['Explicit Shipping Insurance'] || '',
+                            explicitSpecies: row['Explicit Species Restriction'] || '',
+                            explicitWaitlist: row['Explicit Waitlist'] || '',
+                            explicitRush: row['Explicit Rush Offer'] || '',
+                            otherHeadBase: row['Other Head Base'] || '',
+                            partsPatterns: row['Parts & Patterns'] || '',
+                            fabric: row['Fabric'] || ''
                         };
                     }).filter(row => row.maker);
                     
