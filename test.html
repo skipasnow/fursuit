@@ -235,6 +235,7 @@
 
         /* --- HEAD BASE PIE CHART --- */
         #headbase-area .promo-card { height: auto; min-height: 320px; }
+        .analytics-section .promo-card { height: 290px; overflow: hidden; }
         .headbase-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -338,7 +339,7 @@
         .promo-card {
             background: #1f1f1f; border: 1px solid #444; border-radius: 6px; padding: 20px; 
             display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
-            position: relative; overflow: hidden; height: 290px; box-sizing: border-box;
+            position: relative; overflow: visible; height: auto; min-height: 290px; box-sizing: border-box;
         }
 
         .chart-title { font-size: 0.85em; font-weight: bold; color: #aaa; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 4px; }
