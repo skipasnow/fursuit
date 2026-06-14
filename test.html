@@ -799,7 +799,7 @@
           <div class="controls-footer">
               <div id="results-counter" class="results-counter">Loading data...</div>
               <button id="reset-filters-btn" onclick="resetAllChartFilters()" style="display:none;align-items:center;gap:6px;background:#ff8c00;color:#1a1a1a;border:none;border-radius:5px;padding:6px 14px;font-size:0.85em;font-weight:bold;cursor:pointer;box-shadow:0 2px 8px rgba(255,140,0,0.4);">
-                  ✕ Reset all chart filters (<span class="reset-count">0</span>)
+                  ✕ <span data-i18n="resetFilters">Reset all chart filters</span> (<span class="reset-count">0</span>)
               </button>
               <div class="sort-hint" data-i18n="sortHint">*Hold <b>Shift</b> and click column headers to sort by multiple columns.</div>
           </div>
@@ -846,7 +846,55 @@
                 thLink: "Links", thPreview: "Preview", thStatus: "Status",
                 thFursuits: "Fursuits", thWorks: "Avg Works/Yr", thFollowers: "Followers",
                 thAvgPrice: "Average Price", thShip: "Shipping", thTax: "Sales Tax", thTotal: "Total Cost",
-                thWebsite: "Website", thQueue: "Queue", thTos: "ToS"
+                thWebsite: "Website", thQueue: "Queue", thTos: "ToS",
+                hbMaterial: "HEAD BASE MATERIAL", hbBreakdown: "BREAKDOWN BY GROUP",
+                hbCenter1: "Head Base", hbCenter2: "Material",
+                taTop25: "TOP 25 LONGEST TURNAROUNDS FOR NEW COMMISSIONERS",
+                taOdds: "ODDS OF RECEIVING FURSUIT BY TIMEFRAME",
+                taWeightedAvg: "Weighted avg (by fursuits):", taMonths: "months",
+                taBasedOnMakers: "based on", taMakers: "makers", taFursuits: "fursuits",
+                taOddsBasedOn: "Based on", taReporting: "makers reporting turnaround time",
+                taClickJump: "Click to jump to row", taNumMakers: "# of Makers",
+                taAllAvg: "All makers avg:", taOpenAvg: "Open now avg:",
+                taClickFilter: "Click to filter table", taClickClear: "Click to clear filter",
+                fullPayTitle: "FULL PAYMENT REQUIRED",
+                fullPayYes: "Full Payment Required / Prioritized", fullPayNo: "Not Explicitly Stated",
+                fullPaySub: "Work does not begin or is deprioritized until invoice is paid in full",
+                fullPayNote: "Makers requiring full payment upfront, prioritizing full-paid commissions, or providing payment plans within a few months results in no work being done until payment is complete.",
+                shipTitle: "SHIPPING INSURANCE",
+                shipYes: "Insurance Mentioned in ToS", shipNo: "Not Mentioned",
+                shipNote: "<b>Important:</b> Declared value is NOT insurance — it requires burden of proof to collect, and carriers can deny or reduce claims. Luxury goods communities frequently cite USPS Registered Mail as the safest option due to the significant physical security involved with every handoff.<br><br>UPS declared value covers transit damage, loss, and theft, but delivery theft (porch piracy) is not covered. A required signature on delivery reduces risk. A high-value shipment summary must be provided to UPS to file a claim.<br><br>USPS Priority Mail only covers up to $5,000. USPS Priority Registered Mail covers up to $50,000 declared value and requires signed handling and documentation at every step of delivery — making it the most secure domestic option for high-value fursuits.<br><br>FedEx cannot insure commissioned products with values difficult to ascertain beyond $1,000. FedEx explicitly excludes commissioned artwork and costumes from high-value coverage.",
+                shipSources: "Sources:",
+                waitTitle: "EXPLICIT WAITLIST",
+                waitYes: "Waitlist Formally Referenced", waitNo: "No Formal Waitlist in ToS",
+                waitNote: "Absence of a formal waitlist does not mean there is no queue. Makers with large backlogs but no disclosed queue data represent a risk — commissioners may be unaware of how long their wait will actually be before sending a non-refundable deposit.",
+                rushTitle: "RUSH ORDERS AVAILABLE",
+                rushYes: "Rush Option Explicitly Offered", rushNo: "Not Offered / Not Mentioned",
+                rushNote: "Rush orders are often provided as an option to meet deadlines. These typically incur an additional percentage-based fee upon the total value of the commission.",
+                tosTitle: "TERMS OF SERVICE PROVIDED",
+                tosYesL: "Public ToS Available", tosNoL: "No Public ToS",
+                tosNote: "⚠ Many ToS agreements contain clauses allowing makers to retain non-refundable deposits for any reason. Some agreements also include social media restrictions, limiting a commissioner's ability to publicly discuss delays or unfinished work even after a payment dispute.",
+                specTitle: "SPECIES RESTRICTIONS",
+                specNoRes: "No Restriction", specCopyright: "Copyright Characters", specSelective: "Selective Copyright",
+                specNoCanine: "No Canines", specNoDAD: "No Dutch Angel Dragons", specOther: "Other/Yes", specNotStated: "Not Stated",
+                specCopyrightSub: "Will not make characters associated with copyrighted IPs", specSelectiveSub: "Certain IPs only — check ToS",
+                specNote: "Makers noting \"Copyright\" will typically not craft characters from copyrighted franchises (Disney, Nintendo, etc.). \"Selective Copyright\" means only specific IPs are restricted — always verify before commissioning.",
+                webTitle: "WEBSITE PLATFORM",
+                webCustom: "Custom Domain", webNone: "No Website", webCarrd: "Carrd", webWeebly: "Weebly", webWix: "Wix", webLinktree: "Linktree", webGSites: "Google Sites",
+                queueTitle: "PUBLIC QUEUE AVAILABILITY",
+                queueTrello: "Trello Queue", queueWeb: "Other Web Queue", queueNone: "No Public Queue",
+                queueTrelloSub: "Publicly accessible Trello board", queueWebSub: "Non-Trello public queue (Google Docs, website, etc.)",
+                queueNoneSub: "⚠ Queue not publicly disclosed — commission count unknown before deposit",
+                queueNote: "Makers without a publicly visible queue make it impossible to assess how many commissions are ahead of yours before you send a non-refundable payment. The larger the undisclosed backlog, the greater your risk.",
+                hbasesTitle: "OTHER HEAD BASES USED",
+                hbasesNote: "Pre-made head base forms sourced from other makers. Click a row to filter; hover \"Makers\" to see who used each.",
+                partsTitle: "PARTS & PATTERNS SUPPLIERS",
+                partsNote: "Suppliers for fursuit parts, patterns, and components. Click a row to filter; hover \"Makers\" to see who referenced each.",
+                fabricTitle: "FABRIC SUPPLIERS",
+                fabricNote: "<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly <b>Fursuits By Lacey</b>) is second. Click a row to filter; hover \"Makers\" to see who uses each.",
+                calTitle: "UPCOMING COMMISSION OPENINGS", calScheduled: "makers scheduled", calNoDates: "No future opening dates found.",
+                wkSu: "Su", wkMo: "Mo", wkTu: "Tu", wkWe: "We", wkTh: "Th", wkFr: "Fr", wkSa: "Sa",
+                makersWord: "Makers", resetFilters: "Reset all chart filters"
             },
             "zh-TW": {
                 navUs: "> 美系獸裝", navAsia: "> 日系獸裝", navMaintenance: "> 維護",
@@ -870,7 +918,55 @@
                 thLink: "連結", thPreview: "預覽", thStatus: "狀態",
                 thFursuits: "獸裝數", thWorks: "年均作品", thFollowers: "粉絲數",
                 thAvgPrice: "平均價格", thShip: "運費", thTax: "銷售稅", thTotal: "總成本",
-                thWebsite: "網站", thQueue: "候補名單", thTos: "服務條款"
+                thWebsite: "網站", thQueue: "候補名單", thTos: "服務條款",
+                hbMaterial: "頭基材料", hbBreakdown: "分組明細",
+                hbCenter1: "頭基", hbCenter2: "材料",
+                taTop25: "新委託者最長交付時間前25名",
+                taOdds: "依時間範圍獲得獸裝的機率",
+                taWeightedAvg: "加權平均 (依獸裝數):", taMonths: "個月",
+                taBasedOnMakers: "基於", taMakers: "位製作者", taFursuits: "套獸裝",
+                taOddsBasedOn: "基於", taReporting: "位製作者回報的交付時間",
+                taClickJump: "點擊跳至該列", taNumMakers: "製作者數",
+                taAllAvg: "全體平均:", taOpenAvg: "目前開放平均:",
+                taClickFilter: "點擊以篩選表格", taClickClear: "點擊以清除篩選",
+                fullPayTitle: "需全額付款",
+                fullPayYes: "需全額付款 / 優先處理", fullPayNo: "未明確說明",
+                fullPaySub: "在發票全額付清前不會開始或會被降低優先順序",
+                fullPayNote: "要求預先全額付款、優先處理已付清委託，或提供數月內付款計劃的製作者，實際上在付款完成前不會進行任何工作。",
+                shipTitle: "運送保險",
+                shipYes: "服務條款中提及保險", shipNo: "未提及",
+                shipNote: "<b>重要：</b>申報價值並非保險——索賠需要舉證責任，且承運商可拒絕或減少賠償。奢侈品社群常因每次交接時的嚴密實體安全性而推薦USPS掛號郵件作為最安全的選項。<br><br>UPS申報價值涵蓋運輸損壞、遺失與失竊，但不涵蓋送達後的失竊（門口包裹失竊）。送達需簽收可降低風險。索賠須向UPS提供高價值貨物摘要。<br><br>USPS優先郵件僅承保至$5,000。USPS優先掛號郵件承保至$50,000申報價值，並要求在每個遞送環節都有簽收處理——使其成為高價值獸裝最安全的國內選項。<br><br>FedEx無法為價值難以確定且超過$1,000的委託產品投保。FedEx明確將委託藝術品與服裝排除於高價值保障之外。",
+                shipSources: "資料來源:",
+                waitTitle: "明確的候補名單",
+                waitYes: "正式提及候補名單", waitNo: "服務條款中無正式候補名單",
+                waitNote: "沒有正式候補名單不代表沒有排隊。有大量積壓但未公開排隊資料的製作者具有風險——委託者在支付不可退還的訂金前可能無從得知實際等待時間。",
+                rushTitle: "提供加急服務",
+                rushYes: "明確提供加急選項", rushNo: "未提供 / 未提及",
+                rushNote: "加急訂單通常作為趕上截止期限的選項提供。這些通常會根據委託總價值收取額外的百分比費用。",
+                tosTitle: "提供服務條款",
+                tosYesL: "提供公開服務條款", tosNoL: "無公開服務條款",
+                tosNote: "⚠ 許多服務條款包含允許製作者以任何理由保留不可退還訂金的條款。部分協議還包含社群媒體限制，限制委託者在付款爭議後公開討論延誤或未完成作品的能力。",
+                specTitle: "物種限制",
+                specNoRes: "無限制", specCopyright: "版權角色", specSelective: "選擇性版權",
+                specNoCanine: "不接受犬科", specNoDAD: "不接受荷蘭天使龍", specOther: "其他/是", specNotStated: "未說明",
+                specCopyrightSub: "不會製作與版權IP相關的角色", specSelectiveSub: "僅限特定IP——請查看服務條款",
+                specNote: "標註「版權」的製作者通常不會製作來自版權作品（迪士尼、任天堂等）的角色。「選擇性版權」表示僅限制特定IP——委託前請務必確認。",
+                webTitle: "網站平台",
+                webCustom: "自訂網域", webNone: "無網站", webCarrd: "Carrd", webWeebly: "Weebly", webWix: "Wix", webLinktree: "Linktree", webGSites: "Google Sites",
+                queueTitle: "公開排隊資料",
+                queueTrello: "Trello 排隊", queueWeb: "其他網頁排隊", queueNone: "無公開排隊",
+                queueTrelloSub: "公開可存取的Trello看板", queueWebSub: "非Trello的公開排隊 (Google文件、網站等)",
+                queueNoneSub: "⚠ 排隊未公開——付訂前無法得知委託數量",
+                queueNote: "沒有公開排隊資料的製作者會讓您無法在支付不可退還款項前評估有多少委託排在您前面。未公開的積壓越多，您的風險越大。",
+                hbasesTitle: "使用的其他頭基",
+                hbasesNote: "來自其他製作者的預製頭基。點擊一列以篩選；將滑鼠停在「製作者」上可查看誰使用過。",
+                partsTitle: "零件與版型供應商",
+                partsNote: "獸裝零件、版型與組件的供應商。點擊一列以篩選；將滑鼠停在「製作者」上可查看誰引用過。",
+                fabricTitle: "布料供應商",
+                fabricNote: "<b>Big Z Fabric</b> 是最常被引用的獸裝布料供應商。<b>Howl Fabrics</b>（前身為 <b>Fursuits By Lacey</b>）位居第二。點擊一列以篩選；將滑鼠停在「製作者」上可查看誰使用。",
+                calTitle: "即將開放的委託", calScheduled: "位製作者已排定", calNoDates: "找不到未來的開放日期。",
+                wkSu: "日", wkMo: "一", wkTu: "二", wkWe: "三", wkTh: "四", wkFr: "五", wkSa: "六",
+                makersWord: "製作者", resetFilters: "重置所有圖表篩選"
             },
             "zh-CN": {
                 navUs: "> 美系兽装", navAsia: "> 日系兽装", navMaintenance: "> 维护",
@@ -894,7 +990,55 @@
                 thLink: "链接", thPreview: "预览", thStatus: "状态",
                 thFursuits: "兽装数", thWorks: "年均作品", thFollowers: "粉丝数",
                 thAvgPrice: "平均价格", thShip: "运费", thTax: "销售税", thTotal: "总成本",
-                thWebsite: "网站", thQueue: "候补名单", thTos: "服务条款"
+                thWebsite: "网站", thQueue: "候补名单", thTos: "服务条款",
+                hbMaterial: "头基材料", hbBreakdown: "分组明细",
+                hbCenter1: "头基", hbCenter2: "材料",
+                taTop25: "新委托者最长交付时间前25名",
+                taOdds: "按时间范围获得兽装的概率",
+                taWeightedAvg: "加权平均 (按兽装数):", taMonths: "个月",
+                taBasedOnMakers: "基于", taMakers: "位制作者", taFursuits: "套兽装",
+                taOddsBasedOn: "基于", taReporting: "位制作者报告的交付时间",
+                taClickJump: "点击跳至该行", taNumMakers: "制作者数",
+                taAllAvg: "全体平均:", taOpenAvg: "当前开放平均:",
+                taClickFilter: "点击以筛选表格", taClickClear: "点击以清除筛选",
+                fullPayTitle: "需全额付款",
+                fullPayYes: "需全额付款 / 优先处理", fullPayNo: "未明确说明",
+                fullPaySub: "在发票全额付清前不会开始或会被降低优先顺序",
+                fullPayNote: "要求预先全额付款、优先处理已付清委托，或提供数月内付款计划的制作者，实际上在付款完成前不会进行任何工作。",
+                shipTitle: "运送保险",
+                shipYes: "服务条款中提及保险", shipNo: "未提及",
+                shipNote: "<b>重要：</b>申报价值并非保险——索赔需要举证责任，且承运商可拒绝或减少赔偿。奢侈品社群常因每次交接时的严密实体安全性而推荐USPS挂号邮件作为最安全的选项。<br><br>UPS申报价值涵盖运输损坏、遗失与失窃，但不涵盖送达后的失窃（门口包裹失窃）。送达需签收可降低风险。索赔须向UPS提供高价值货物摘要。<br><br>USPS优先邮件仅承保至$5,000。USPS优先挂号邮件承保至$50,000申报价值，并要求在每个递送环节都有签收处理——使其成为高价值兽装最安全的国内选项。<br><br>FedEx无法为价值难以确定且超过$1,000的委托产品投保。FedEx明确将委托艺术品与服装排除于高价值保障之外。",
+                shipSources: "资料来源:",
+                waitTitle: "明确的候补名单",
+                waitYes: "正式提及候补名单", waitNo: "服务条款中无正式候补名单",
+                waitNote: "没有正式候补名单不代表没有排队。有大量积压但未公开排队资料的制作者具有风险——委托者在支付不可退还的订金前可能无从得知实际等待时间。",
+                rushTitle: "提供加急服务",
+                rushYes: "明确提供加急选项", rushNo: "未提供 / 未提及",
+                rushNote: "加急订单通常作为赶上截止期限的选项提供。这些通常会根据委托总价值收取额外的百分比费用。",
+                tosTitle: "提供服务条款",
+                tosYesL: "提供公开服务条款", tosNoL: "无公开服务条款",
+                tosNote: "⚠ 许多服务条款包含允许制作者以任何理由保留不可退还订金的条款。部分协议还包含社群媒体限制，限制委托者在付款争议后公开讨论延误或未完成作品的能力。",
+                specTitle: "物种限制",
+                specNoRes: "无限制", specCopyright: "版权角色", specSelective: "选择性版权",
+                specNoCanine: "不接受犬科", specNoDAD: "不接受荷兰天使龙", specOther: "其他/是", specNotStated: "未说明",
+                specCopyrightSub: "不会制作与版权IP相关的角色", specSelectiveSub: "仅限特定IP——请查看服务条款",
+                specNote: "标注「版权」的制作者通常不会制作来自版权作品（迪士尼、任天堂等）的角色。「选择性版权」表示仅限制特定IP——委托前请务必确认。",
+                webTitle: "网站平台",
+                webCustom: "自定义域名", webNone: "无网站", webCarrd: "Carrd", webWeebly: "Weebly", webWix: "Wix", webLinktree: "Linktree", webGSites: "Google Sites",
+                queueTitle: "公开排队资料",
+                queueTrello: "Trello 排队", queueWeb: "其他网页排队", queueNone: "无公开排队",
+                queueTrelloSub: "公开可访问的Trello看板", queueWebSub: "非Trello的公开排队 (Google文档、网站等)",
+                queueNoneSub: "⚠ 排队未公开——付订前无法得知委托数量",
+                queueNote: "没有公开排队资料的制作者会让您无法在支付不可退还款项前评估有多少委托排在您前面。未公开的积压越多，您的风险越大。",
+                hbasesTitle: "使用的其他头基",
+                hbasesNote: "来自其他制作者的预制头基。点击一行以筛选；将鼠标停在「制作者」上可查看谁使用过。",
+                partsTitle: "零件与版型供应商",
+                partsNote: "兽装零件、版型与组件的供应商。点击一行以筛选；将鼠标停在「制作者」上可查看谁引用过。",
+                fabricTitle: "布料供应商",
+                fabricNote: "<b>Big Z Fabric</b> 是最常被引用的兽装布料供应商。<b>Howl Fabrics</b>（前身为 <b>Fursuits By Lacey</b>）位居第二。点击一行以筛选；将鼠标停在「制作者」上可查看谁使用。",
+                calTitle: "即将开放的委托", calScheduled: "位制作者已排定", calNoDates: "找不到未来的开放日期。",
+                wkSu: "日", wkMo: "一", wkTu: "二", wkWe: "三", wkTh: "四", wkFr: "五", wkSa: "六",
+                makersWord: "制作者", resetFilters: "重置所有图表筛选"
             },
             "ko": {
                 navUs: "> 미국 퍼수트", navAsia: "> 아시아 퍼수트", navMaintenance: "> 유지보수",
@@ -918,7 +1062,55 @@
                 thLink: "링크", thPreview: "미리보기", thStatus: "상태",
                 thFursuits: "퍼수트 수", thWorks: "연간 작품", thFollowers: "팔로워",
                 thAvgPrice: "평균 가격", thShip: "배송비", thTax: "판매세", thTotal: "총 비용",
-                thWebsite: "웹사이트", thQueue: "대기 목록", thTos: "이용 약관"
+                thWebsite: "웹사이트", thQueue: "대기 목록", thTos: "이용 약관",
+                hbMaterial: "헤드 베이스 재료", hbBreakdown: "그룹별 분석",
+                hbCenter1: "헤드", hbCenter2: "베이스",
+                taTop25: "신규 의뢰자 기준 최장 작업 기간 상위 25",
+                taOdds: "기간별 퍼수트 수령 확률",
+                taWeightedAvg: "가중 평균 (퍼수트 기준):", taMonths: "개월",
+                taBasedOnMakers: "기준", taMakers: "명의 제작자", taFursuits: "개 퍼수트",
+                taOddsBasedOn: "기준", taReporting: "명의 제작자가 보고한 작업 기간",
+                taClickJump: "클릭하여 행으로 이동", taNumMakers: "제작자 수",
+                taAllAvg: "전체 평균:", taOpenAvg: "현재 오픈 평균:",
+                taClickFilter: "클릭하여 표 필터링", taClickClear: "클릭하여 필터 해제",
+                fullPayTitle: "전액 결제 필요",
+                fullPayYes: "전액 결제 필요 / 우선 처리", fullPayNo: "명시되지 않음",
+                fullPaySub: "청구서가 전액 결제될 때까지 작업이 시작되지 않거나 후순위로 밀립니다",
+                fullPayNote: "선결제 전액을 요구하거나, 완납된 커미션을 우선 처리하거나, 수개월 내 결제 플랜을 제공하는 제작자는 사실상 결제가 완료될 때까지 작업을 진행하지 않습니다.",
+                shipTitle: "배송 보험",
+                shipYes: "이용 약관에 보험 언급", shipNo: "언급 없음",
+                shipNote: "<b>중요:</b> 신고 가액은 보험이 아닙니다 — 청구하려면 입증 책임이 필요하며, 운송사는 청구를 거부하거나 줄일 수 있습니다. 명품 커뮤니티에서는 모든 인계 단계의 강력한 물리적 보안 때문에 USPS 등기우편을 가장 안전한 옵션으로 자주 권장합니다.<br><br>UPS 신고 가액은 운송 중 손상, 분실, 도난을 보장하지만 배송 후 도난(현관 도난)은 보장하지 않습니다. 배송 시 서명 요구로 위험을 줄일 수 있습니다. 청구하려면 UPS에 고가 화물 명세서를 제출해야 합니다.<br><br>USPS 우선우편은 최대 $5,000까지만 보장합니다. USPS 우선 등기우편은 최대 $50,000 신고 가액까지 보장하며 배송의 모든 단계에서 서명 처리와 문서화를 요구합니다 — 고가 퍼수트에 가장 안전한 국내 옵션입니다.<br><br>FedEx는 $1,000을 초과하는 가치 산정이 어려운 커미션 제품을 보험에 가입할 수 없습니다. FedEx는 커미션 작품과 의상을 고가 보장에서 명시적으로 제외합니다.",
+                shipSources: "출처:",
+                waitTitle: "명시적 대기 목록",
+                waitYes: "대기 목록 공식 언급", waitNo: "이용 약관에 공식 대기 목록 없음",
+                waitNote: "공식 대기 목록이 없다고 해서 대기열이 없는 것은 아닙니다. 백로그가 많지만 대기열 정보를 공개하지 않은 제작자는 위험합니다 — 의뢰자는 환불 불가 보증금을 보내기 전에 실제 대기 시간을 알지 못할 수 있습니다.",
+                rushTitle: "급행 주문 가능",
+                rushYes: "급행 옵션 명시적 제공", rushNo: "미제공 / 언급 없음",
+                rushNote: "급행 주문은 마감일을 맞추기 위한 옵션으로 자주 제공됩니다. 일반적으로 커미션 총액에 대한 추가 비율 수수료가 부과됩니다.",
+                tosTitle: "이용 약관 제공",
+                tosYesL: "공개 이용 약관 있음", tosNoL: "공개 이용 약관 없음",
+                tosNote: "⚠ 많은 이용 약관에는 제작자가 어떤 이유로든 환불 불가 보증금을 보유할 수 있는 조항이 포함되어 있습니다. 일부 약관에는 소셜 미디어 제한도 포함되어, 결제 분쟁 후에도 의뢰자가 지연이나 미완성 작업을 공개적으로 논의할 수 있는 권리를 제한합니다.",
+                specTitle: "종 제한",
+                specNoRes: "제한 없음", specCopyright: "저작권 캐릭터", specSelective: "선택적 저작권",
+                specNoCanine: "개과 불가", specNoDAD: "더치 엔젤 드래곤 불가", specOther: "기타/예", specNotStated: "미기재",
+                specCopyrightSub: "저작권 IP와 관련된 캐릭터는 제작하지 않음", specSelectiveSub: "특정 IP만 — 이용 약관 확인",
+                specNote: "\"저작권\"으로 표시한 제작자는 일반적으로 저작권 프랜차이즈(디즈니, 닌텐도 등)의 캐릭터를 제작하지 않습니다. \"선택적 저작권\"은 특정 IP만 제한됨을 의미합니다 — 의뢰 전 항상 확인하세요.",
+                webTitle: "웹사이트 플랫폼",
+                webCustom: "맞춤 도메인", webNone: "웹사이트 없음", webCarrd: "Carrd", webWeebly: "Weebly", webWix: "Wix", webLinktree: "Linktree", webGSites: "Google Sites",
+                queueTitle: "공개 대기열 여부",
+                queueTrello: "Trello 대기열", queueWeb: "기타 웹 대기열", queueNone: "공개 대기열 없음",
+                queueTrelloSub: "공개적으로 접근 가능한 Trello 보드", queueWebSub: "Trello가 아닌 공개 대기열 (Google 문서, 웹사이트 등)",
+                queueNoneSub: "⚠ 대기열 미공개 — 보증금 전 커미션 수 알 수 없음",
+                queueNote: "공개 대기열이 없는 제작자는 환불 불가 결제를 보내기 전에 앞에 얼마나 많은 커미션이 있는지 평가하는 것을 불가능하게 만듭니다. 미공개 백로그가 클수록 위험이 커집니다.",
+                hbasesTitle: "사용된 기타 헤드 베이스",
+                hbasesNote: "다른 제작자에게서 조달한 기성 헤드 베이스 폼. 행을 클릭하여 필터링하고, \"제작자\"에 마우스를 올려 누가 사용했는지 확인하세요.",
+                partsTitle: "부품 및 패턴 공급업체",
+                partsNote: "퍼수트 부품, 패턴, 구성품 공급업체. 행을 클릭하여 필터링하고, \"제작자\"에 마우스를 올려 누가 참조했는지 확인하세요.",
+                fabricTitle: "원단 공급업체",
+                fabricNote: "<b>Big Z Fabric</b>은 가장 흔히 참조되는 퍼수트 원단 공급업체입니다. <b>Howl Fabrics</b>(이전 명칭 <b>Fursuits By Lacey</b>)가 두 번째입니다. 행을 클릭하여 필터링하고, \"제작자\"에 마우스를 올려 누가 사용하는지 확인하세요.",
+                calTitle: "예정된 커미션 오픈", calScheduled: "명의 제작자 예정", calNoDates: "향후 오픈 날짜를 찾을 수 없습니다.",
+                wkSu: "일", wkMo: "월", wkTu: "화", wkWe: "수", wkTh: "목", wkFr: "금", wkSa: "토",
+                makersWord: "제작자", resetFilters: "모든 차트 필터 초기화"
             },
             "ja": {
                 navUs: "> 米国の着ぐるみ", navAsia: "> アジアの着ぐるみ", navMaintenance: "> メンテナンス",
@@ -942,7 +1134,55 @@
                 thLink: "リンク", thPreview: "プレビュー", thStatus: "ステータス",
                 thFursuits: "着ぐるみ数", thWorks: "年間作品", thFollowers: "フォロワー",
                 thAvgPrice: "平均価格", thShip: "送料", thTax: "売上税", thTotal: "総費用",
-                thWebsite: "ウェブサイト", thQueue: "待機リスト", thTos: "利用規約"
+                thWebsite: "ウェブサイト", thQueue: "待機リスト", thTos: "利用規約",
+                hbMaterial: "ヘッドベース素材", hbBreakdown: "グループ別内訳",
+                hbCenter1: "ヘッド", hbCenter2: "ベース",
+                taTop25: "新規依頼者向け制作期間が最も長い上位25",
+                taOdds: "期間別の着ぐるみ受領確率",
+                taWeightedAvg: "加重平均 (着ぐるみ数基準):", taMonths: "ヶ月",
+                taBasedOnMakers: "基準", taMakers: "名のクリエイター", taFursuits: "着の着ぐるみ",
+                taOddsBasedOn: "基準", taReporting: "名のクリエイターが報告した制作期間",
+                taClickJump: "クリックで行へ移動", taNumMakers: "クリエイター数",
+                taAllAvg: "全体平均:", taOpenAvg: "現在受付中の平均:",
+                taClickFilter: "クリックで表をフィルタ", taClickClear: "クリックでフィルタ解除",
+                fullPayTitle: "全額前払い必須",
+                fullPayYes: "全額前払い必須 / 優先処理", fullPayNo: "明記なし",
+                fullPaySub: "請求書が全額支払われるまで作業は開始されないか、優先度が下げられます",
+                fullPayNote: "前払い全額を要求する、支払い済みコミッションを優先する、または数ヶ月以内の分割払いを提供するクリエイターは、実質的に支払い完了まで作業を行いません。",
+                shipTitle: "配送保険",
+                shipYes: "利用規約に保険の記載あり", shipNo: "記載なし",
+                shipNote: "<b>重要：</b>申告価額は保険ではありません——請求には立証責任が必要で、運送業者は請求を拒否または減額できます。高級品コミュニティでは、各受け渡し時の厳重な物理的セキュリティのため、USPS書留郵便を最も安全な選択肢として頻繁に推奨しています。<br><br>UPSの申告価額は輸送中の破損、紛失、盗難をカバーしますが、配達後の盗難（玄関先の盗難）はカバーしません。配達時の署名要求でリスクを軽減できます。請求にはUPSに高額貨物明細書を提出する必要があります。<br><br>USPSプライオリティメールは最大$5,000までしか補償しません。USPSプライオリティ書留郵便は最大$50,000の申告価額を補償し、配達の各段階で署名処理と文書化を要求します——高額な着ぐるみに最も安全な国内オプションです。<br><br>FedExは価値の確定が困難で$1,000を超えるコミッション製品を保険対象にできません。FedExはコミッション作品と衣装を高額補償から明示的に除外しています。",
+                shipSources: "出典:",
+                waitTitle: "明示的な待機リスト",
+                waitYes: "待機リストの正式な記載あり", waitNo: "利用規約に正式な待機リストなし",
+                waitNote: "正式な待機リストがないことは、列がないことを意味しません。大量のバックログがあるが待機列データを公開していないクリエイターはリスクがあります——依頼者は返金不可の手付金を送る前に、実際の待ち時間を把握できない場合があります。",
+                rushTitle: "特急注文対応",
+                rushYes: "特急オプションを明示的に提供", rushNo: "未提供 / 記載なし",
+                rushNote: "特急注文は締め切りに間に合わせるためのオプションとして頻繁に提供されます。通常、コミッション総額に対する追加の割合料金が発生します。",
+                tosTitle: "利用規約の提供",
+                tosYesL: "公開利用規約あり", tosNoL: "公開利用規約なし",
+                tosNote: "⚠ 多くの利用規約には、クリエイターがいかなる理由でも返金不可の手付金を保持できる条項が含まれています。一部の規約にはソーシャルメディアの制限も含まれ、支払い紛争後でも依頼者が遅延や未完成の作業を公に議論する能力を制限します。",
+                specTitle: "種族制限",
+                specNoRes: "制限なし", specCopyright: "著作権キャラクター", specSelective: "選択的著作権",
+                specNoCanine: "犬科不可", specNoDAD: "ダッチエンジェルドラゴン不可", specOther: "その他/はい", specNotStated: "記載なし",
+                specCopyrightSub: "著作権IPに関連するキャラクターは制作しません", specSelectiveSub: "特定のIPのみ——利用規約を確認",
+                specNote: "「著作権」と記載するクリエイターは通常、著作権作品（ディズニー、任天堂など）のキャラクターを制作しません。「選択的著作権」は特定のIPのみが制限されることを意味します——依頼前に必ず確認してください。",
+                webTitle: "ウェブサイトプラットフォーム",
+                webCustom: "独自ドメイン", webNone: "ウェブサイトなし", webCarrd: "Carrd", webWeebly: "Weebly", webWix: "Wix", webLinktree: "Linktree", webGSites: "Google Sites",
+                queueTitle: "公開待機列の有無",
+                queueTrello: "Trello 待機列", queueWeb: "その他のウェブ待機列", queueNone: "公開待機列なし",
+                queueTrelloSub: "公開アクセス可能なTrelloボード", queueWebSub: "Trello以外の公開待機列 (Googleドキュメント、ウェブサイトなど)",
+                queueNoneSub: "⚠ 待機列が非公開——手付金前にコミッション数が不明",
+                queueNote: "公開待機列のないクリエイターでは、返金不可の支払いを送る前に、あなたの前にいくつのコミッションがあるかを評価することが不可能になります。非公開のバックログが大きいほど、リスクが高まります。",
+                hbasesTitle: "使用されたその他のヘッドベース",
+                hbasesNote: "他のクリエイターから調達した既製ヘッドベースフォーム。行をクリックしてフィルタし、「クリエイター」にカーソルを合わせて誰が使用したかを確認してください。",
+                partsTitle: "パーツ＆パターン供給元",
+                partsNote: "着ぐるみのパーツ、パターン、コンポーネントの供給元。行をクリックしてフィルタし、「クリエイター」にカーソルを合わせて誰が参照したかを確認してください。",
+                fabricTitle: "生地供給元",
+                fabricNote: "<b>Big Z Fabric</b> は最も頻繁に参照される着ぐるみ生地供給元です。<b>Howl Fabrics</b>（旧称 <b>Fursuits By Lacey</b>）が2番目です。行をクリックしてフィルタし、「クリエイター」にカーソルを合わせて誰が使用しているかを確認してください。",
+                calTitle: "今後のコミッション受付", calScheduled: "名のクリエイターが予定", calNoDates: "今後の受付日が見つかりません。",
+                wkSu: "日", wkMo: "月", wkTu: "火", wkWe: "水", wkTh: "木", wkFr: "金", wkSa: "土",
+                makersWord: "クリエイター", resetFilters: "すべてのグラフフィルタをリセット"
             }
         };
 
@@ -1677,11 +1917,11 @@
             container.innerHTML = `
             <div class="headbase-grid">
                 <div class="promo-card" style="border-color:#7b5ea7; grid-column: span 1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                    <div class="chart-title" style="color:#b39ddb; margin-bottom:10px; align-self:flex-start;">HEAD BASE MATERIAL</div>
+                    <div class="chart-title" style="color:#b39ddb; margin-bottom:10px; align-self:flex-start;">${t('hbMaterial')}</div>
                     <svg id="headbase-pie" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"></svg>
                 </div>
                 <div class="promo-card" style="border-color:#7b5ea7; grid-column: span 2;">
-                    <div class="chart-title" style="color:#b39ddb; margin-bottom:15px;">BREAKDOWN BY GROUP</div>
+                    <div class="chart-title" style="color:#b39ddb; margin-bottom:15px;">${t('hbBreakdown')}</div>
                     ${legendHTML}
                 </div>
             </div>`;
@@ -1720,7 +1960,7 @@
                  const subs = (subsByGroup[d.data.name] || [])
                      .map(s => `${s.sub}: ${s.pct.toFixed(1)}%`).join('<br>');
                  var act = isChartFilterActive('headbase-group') && chartFilters['headbase-group'].groupName === d.data.name;
-                 tip.html(`<b style="color:${d.data.color}">${d.data.name}</b><br>${d.data.pct.toFixed(1)}% of total<br><hr style="border-color:#444;margin:4px 0;">${subs}<br><span style="color:#aaa;font-size:0.9em;">${act ? 'Click to clear filter' : 'Click to filter by group'}</span>`)
+                 tip.html(`<b style="color:${d.data.color}">${d.data.name}</b><br>${d.data.pct.toFixed(1)}% of total<br><hr style="border-color:#444;margin:4px 0;">${subs}<br><span style="color:#aaa;font-size:0.9em;">${act ? t('taClickClear') : t('taClickFilter')}</span>`)
                     .style('opacity', 1);
              })
              .on('mousemove', function(event) {
@@ -1751,11 +1991,11 @@
             g.append('text')
              .attr('text-anchor', 'middle').attr('dy', '-0.3em')
              .style('fill', '#aaa').style('font-size', '0.65em')
-             .text('Head Base');
+             .text(t('hbCenter1'));
             g.append('text')
              .attr('text-anchor', 'middle').attr('dy', '0.9em')
              .style('fill', '#aaa').style('font-size', '0.65em')
-             .text('Material');
+             .text(t('hbCenter2'));
 
             // Clean up old tooltip on redraw
             d3.selectAll('#hb-tip').filter(function() { return this !== tip.node(); }).remove();
@@ -1856,10 +2096,10 @@
 
               <!-- LEFT: stat + top-15 bar chart -->
               <div class="promo-card" style="border-color:#7b5ea7; display:flex; flex-direction:column; gap:12px;">
-                <div class="chart-title" style="color:#b39ddb;">TOP 25 LONGEST TURNAROUNDS FOR NEW COMMISSIONERS</div>
+                <div class="chart-title" style="color:#b39ddb;">${t('taTop25')}</div>
                 <div style="font-size:0.78em; color:#aaa;">
-                  Weighted avg (by fursuits): <span style="color:#ff8c00; font-weight:bold; font-size:1.15em;">${weightedAvg.toFixed(1)} months</span>
-                  &nbsp;·&nbsp; based on ${valid.length} makers / ${totalFursuits.toLocaleString()} fursuits
+                  ${t('taWeightedAvg')} <span style="color:#ff8c00; font-weight:bold; font-size:1.15em;">${weightedAvg.toFixed(1)} ${t('taMonths')}</span>
+                  &nbsp;·&nbsp; ${t('taBasedOnMakers')} ${valid.length} ${t('taMakers')} / ${totalFursuits.toLocaleString()} ${t('taFursuits')}
                 </div>
                 <div id="ta-bar-scroll" style="height:340px; overflow-y:auto; overflow-x:hidden; scrollbar-width:thin; scrollbar-color:#7b5ea7 #1a1a2e;">
                   <svg id="ta-bar" style="width:100%; display:block;"></svg>
@@ -1868,8 +2108,8 @@
 
               <!-- RIGHT: bell-curve bucket chart -->
               <div class="promo-card" style="border-color:#7b5ea7; display:flex; flex-direction:column; gap:12px;">
-                <div class="chart-title" style="color:#b39ddb;">ODDS OF RECEIVING FURSUIT BY TIMEFRAME</div>
-                <div style="font-size:0.75em; color:#888;">Based on ${valid.length} makers reporting turnaround time</div>
+                <div class="chart-title" style="color:#b39ddb;">${t('taOdds')}</div>
+                <div style="font-size:0.75em; color:#888;">${t('taOddsBasedOn')} ${valid.length} ${t('taReporting')}</div>
                 <svg id="ta-curve" style="width:100%; overflow:visible;"></svg>
               </div>
 
@@ -1926,7 +2166,7 @@
                         .style('cursor','pointer')
                         .on('mouseover', function(event) {
                             d3.select(this).attr('fill', barColorHov);
-                            tipEl.html(`<b>${d.maker}</b><br>${d.paidTurnaround} months&nbsp;·&nbsp;${d.fursuits} fursuits<br><span style="color:#aaa;font-size:0.9em;">Click to jump to row</span>`)
+                            tipEl.html(`<b>${d.maker}</b><br>${d.paidTurnaround} months&nbsp;·&nbsp;${d.fursuits} fursuits<br><span style="color:#aaa;font-size:0.9em;">${t('taClickJump')}</span>`)
                                  .style('opacity',1);
                         })
                         .on('mousemove', function(event) {
@@ -2006,7 +2246,7 @@
                     .on('mouseover', function(event, d) {
                         if (!(activeTurnaroundBucket && activeTurnaroundBucket.label === d.label)) d3.select(this).attr('fill', barColorHov);
                         var active = (activeTurnaroundBucket && activeTurnaroundBucket.label === d.label);
-                        tipEl2.html(`<b>${d.label}</b><br>${d.count} makers (${d.pct.toFixed(1)}% of reported)<br><span style="color:#aaa;font-size:0.9em;">${active ? 'Click to clear filter' : 'Click to filter table'}</span>`)
+                        tipEl2.html(`<b>${d.label}</b><br>${d.count} makers (${d.pct.toFixed(1)}% of reported)<br><span style="color:#aaa;font-size:0.9em;">${active ? t('taClickClear') : t('taClickFilter')}</span>`)
                               .style('opacity',1);
                     })
                     .on('mousemove', function(event) {
@@ -2070,7 +2310,7 @@
                     .attr('x', -iH/2).attr('y', -36)
                     .attr('text-anchor','middle')
                     .style('fill','#888').style('font-size','0.65em')
-                    .text('# of Makers');
+                    .text(t('taNumMakers'));
 
                 // ── Position helper: map months → x using bucket boundaries ──
                 const bucketMins = [1, 5, 9, 13, 19, 25];
@@ -2097,7 +2337,7 @@
                 g.append('text')
                     .attr('x', avgXpos + 4).attr('y', 14)
                     .style('fill','#ff5252').style('font-size','0.62em')
-                    .text('All makers avg: ' + weightedAvg.toFixed(1) + ' mo');
+                    .text(t('taAllAvg') + ' ' + weightedAvg.toFixed(1) + ' mo');
 
                 // ── Open-now weighted avg line (green) ──
                 const openOnly = valid.filter(d => d.status === 'Open');
@@ -2113,7 +2353,7 @@
                     g.append('text')
                         .attr('x', openXpos + 4).attr('y', 28)
                         .style('fill','#00E676').style('font-size','0.62em')
-                        .text('Open now avg: ' + openWAvg.toFixed(1) + ' mo');
+                        .text(t('taOpenAvg') + ' ' + openWAvg.toFixed(1) + ' mo');
                 }
             })();
         }
@@ -2327,7 +2567,7 @@
                     return '<div' + dataAttr + ' style="' + rowStyle + '">'
                          + '<span style="font-size:0.75em;color:' + (active?'#ff8c00':'#ccc') + ';flex:1;padding-right:6px;">' + (active?'\u2715 ':'') + label + '</span>'
                          + '<span title="' + tipText + '" style="font-size:0.72em;color:' + (active?'#ff8c00':C.orange) + ';font-weight:bold;white-space:nowrap;cursor:help;border-bottom:1px dotted ' + C.orange + ';">'
-                         + count + ' Maker' + (count === 1 ? '' : 's') + '</span></div>';
+                         + count + ' ' + t('makersWord') + '</span></div>';
                 }).join('');
                 const noteHTML = note ? '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">' + note + '</div>' : '';
                 return '<div class="promo-card" style="border-color:' + C.purple + ';display:flex;flex-direction:column;">'
@@ -2338,7 +2578,7 @@
 
             // ── Calendar card ──────────────────────────────────────────
             function calendarCard() {
-                if (futureDates.length === 0) return `<div class="promo-card" style="border-color:${C.purple};"><div class="chart-title" style="color:${C.light};">UPCOMING OPENINGS</div><div style="font-size:0.8em;color:#888;margin-top:10px;">No future opening dates found.</div></div>`;
+                if (futureDates.length === 0) return `<div class="promo-card" style="border-color:${C.purple};"><div class="chart-title" style="color:${C.light};">${t('calTitle')}</div><div style="font-size:0.8em;color:#888;margin-top:10px;">${t('calNoDates')}</div></div>`;
 
                 // Group by YYYY-MM
                 const byMonth = {};
@@ -2350,7 +2590,7 @@
                 const monthKeys = Object.keys(byMonth).sort();
 
                 let calHTML = `<div class="promo-card" style="border-color:${C.purple};">
-                    <div class="chart-title" style="color:${C.light};margin-bottom:12px;">UPCOMING COMMISSION OPENINGS <span style="font-size:0.7em;color:#888;font-weight:normal;">(${futureDates.length} makers scheduled)</span></div>
+                    <div class="chart-title" style="color:${C.light};margin-bottom:12px;">${t('calTitle')} <span style="font-size:0.7em;color:#888;font-weight:normal;">(${futureDates.length} ${t('calScheduled')})</span></div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;">`;
 
                 monthKeys.forEach(mk => {
@@ -2369,7 +2609,7 @@
                     });
 
                     let cells = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:6px;">';
-                    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => {
+                    [t('wkSu'),t('wkMo'),t('wkTu'),t('wkWe'),t('wkTh'),t('wkFr'),t('wkSa')].forEach(d => {
                         cells += `<div style="text-align:center;font-size:0.58em;color:#666;padding:2px;">${d}</div>`;
                     });
                     for (let i = 0; i < firstDay; i++) cells += '<div></div>';
@@ -2402,91 +2642,88 @@
             // ── Species breakdown ──────────────────────────────────────
             function specMatch(r, val){ return (r.explicitSpecies||'').trim() === val; }
             const specRows = [
-                ['No Restriction', specCounts['No'] || 0, C.yes, '', 'species-no', function(r){ return specMatch(r,'No'); }],
-                ['Copyright Characters', (specCounts['Yes - Copyright'] || 0), C.no, 'Will not make characters associated with copyrighted IPs', 'species-copyright', function(r){ return specMatch(r,'Yes - Copyright'); }],
-                ['Selective Copyright', (specCounts['Yes - Selective Copyright'] || 0), '#ff8c00', 'Certain IPs only — check ToS', 'species-selective', function(r){ return specMatch(r,'Yes - Selective Copyright'); }],
-                ['No Canines', (specCounts['Yes - No Canines'] || 0), '#ff8c00', '', 'species-nocanine', function(r){ return specMatch(r,'Yes - No Canines'); }],
-                ['No Dutch Angel Dragons', (specCounts['Yes - Copyright, Dutch Angel Dragons'] || 0) + (specCounts['Yes - Dutch Angel Dragons'] || 0), '#ff8c00', '', 'species-dad', function(r){ var v=(r.explicitSpecies||'').trim(); return v==='Yes - Copyright, Dutch Angel Dragons' || v==='Yes - Dutch Angel Dragons'; }],
-                ['Other/Yes', (specCounts['Yes'] || 0), C.no, '', 'species-yes', function(r){ return specMatch(r,'Yes'); }],
-                ['Not Stated', (specCounts['None'] || specCounts['none'] || 0) + (specCounts['undefined'] || 0), C.none, '', 'species-none', function(r){ var v=(r.explicitSpecies||'').trim(); return v==='' || v==='None' || v==='none'; }],
+                [t('specNoRes'), specCounts['No'] || 0, C.yes, '', 'species-no', function(r){ return specMatch(r,'No'); }],
+                [t('specCopyright'), (specCounts['Yes - Copyright'] || 0), C.no, t('specCopyrightSub'), 'species-copyright', function(r){ return specMatch(r,'Yes - Copyright'); }],
+                [t('specSelective'), (specCounts['Yes - Selective Copyright'] || 0), '#ff8c00', t('specSelectiveSub'), 'species-selective', function(r){ return specMatch(r,'Yes - Selective Copyright'); }],
+                [t('specNoCanine'), (specCounts['Yes - No Canines'] || 0), '#ff8c00', '', 'species-nocanine', function(r){ return specMatch(r,'Yes - No Canines'); }],
+                [t('specNoDAD'), (specCounts['Yes - Copyright, Dutch Angel Dragons'] || 0) + (specCounts['Yes - Dutch Angel Dragons'] || 0), '#ff8c00', '', 'species-dad', function(r){ var v=(r.explicitSpecies||'').trim(); return v==='Yes - Copyright, Dutch Angel Dragons' || v==='Yes - Dutch Angel Dragons'; }],
+                [t('specOther'), (specCounts['Yes'] || 0), C.no, '', 'species-yes', function(r){ return specMatch(r,'Yes'); }],
+                [t('specNotStated'), (specCounts['None'] || specCounts['none'] || 0) + (specCounts['undefined'] || 0), C.none, '', 'species-none', function(r){ var v=(r.explicitSpecies||'').trim(); return v==='' || v==='None' || v==='none'; }],
             ].filter(r => r[1] > 0);
 
             // ── Assemble page ──────────────────────────────────────────
             container.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;">
 
-                ${statCard('FULL PAYMENT REQUIRED', [
-                    ['Full Payment Required / Prioritized', fp.yes, C.no, 'Work does not begin or is deprioritized until invoice is paid in full', 'fullpay-yes', function(r){ return (r.explicitFullPayment||'').trim().toLowerCase()==='yes'; }],
-                    ['Not Explicitly Stated', fp.no + fp.none, C.none, '', 'fullpay-no', function(r){ return (r.explicitFullPayment||'').trim().toLowerCase()!=='yes'; }],
+                ${statCard(t('fullPayTitle'), [
+                    [t('fullPayYes'), fp.yes, C.no, t('fullPaySub'), 'fullpay-yes', function(r){ return (r.explicitFullPayment||'').trim().toLowerCase()==='yes'; }],
+                    [t('fullPayNo'), fp.no + fp.none, C.none, '', 'fullpay-no', function(r){ return (r.explicitFullPayment||'').trim().toLowerCase()!=='yes'; }],
                 ],
-                'Makers requiring full payment upfront, prioritizing full-paid commissions, or providing payment plans within a few months results in no work being done until payment is complete.')}
+                t('fullPayNote'))}
 
-                ${statCard('SHIPPING INSURANCE', [
-                    ['Insurance Mentioned in ToS', ship.yes, C.yes, '', 'ship-yes', function(r){ return (r.explicitShipping||'').trim().toLowerCase()==='yes'; }],
-                    ['Not Mentioned',              ship.no + ship.none, C.no, '', 'ship-no', function(r){ return (r.explicitShipping||'').trim().toLowerCase()!=='yes'; }]
-                ], '<b>Important:</b> Declared value is NOT insurance — it requires burden of proof to collect, and carriers can deny or reduce claims. Luxury goods communities frequently cite USPS Registered Mail as the safest option due to the significant physical security involved with every handoff.' +
-                '<br><br>UPS declared value covers transit damage, loss, and theft, but delivery theft (porch piracy) is not covered. A required signature on delivery reduces risk. A high-value shipment summary must be provided to UPS to file a claim.' +
-                '<br><br>USPS Priority Mail only covers up to $5,000. USPS Priority Registered Mail covers up to $50,000 declared value and requires signed handling and documentation at every step of delivery — making it the most secure domestic option for high-value fursuits.' +
-                '<br><br>FedEx cannot insure commissioned products with values difficult to ascertain beyond $1,000. FedEx explicitly excludes commissioned artwork and costumes from high-value coverage.' +
-                '<br><br><span style=\'color:#666;\'>Sources:</span>' +
+                ${statCard(t('shipTitle'), [
+                    [t('shipYes'), ship.yes, C.yes, '', 'ship-yes', function(r){ return (r.explicitShipping||'').trim().toLowerCase()==='yes'; }],
+                    [t('shipNo'),              ship.no + ship.none, C.no, '', 'ship-no', function(r){ return (r.explicitShipping||'').trim().toLowerCase()!=='yes'; }]
+                ], t('shipNote') +
+                '<br><br><span style=\'color:#666;\'>' + t('shipSources') + '</span>' +
                 '<br><a href=\'https://www.fedex.com/en-us/shipping/packing/pledge.html\' target=\'_blank\' style=\'color:#7b5ea7;\'>fedex.com &#8212; Declared Value &amp; Limits</a>' +
                 '<br><a href=\'https://www.ups.com/media/en/value-added_pricing_ak-hi.pdf\' target=\'_blank\' style=\'color:#7b5ea7;\'>ups.com &#8212; Value-Added Pricing</a>' +
-                '<br><a href=\'https://faq.usps.com/s/article/Registered-Mail-The-Basics\' target=\'_blank\' style=\'color:#7b5ea7;\'>usps.com &#8212; Registered Mail: The Basics</a>', 480)}
+                '<br><a href=\'https://faq.usps.com/s/article/Registered-Mail-The-Basics\' target=\'_blank\' style=\'color:#7b5ea7;\'>usps.com &#8212; Registered Mail: The Basics</a>')}
 
-                ${statCard('EXPLICIT WAITLIST', [
-                    ['Waitlist Formally Referenced', wl.yes, C.yes, '', 'waitlist-yes', function(r){ return (r.explicitWaitlist||'').trim().toLowerCase()==='yes'; }],
-                    ['No Formal Waitlist in ToS', wl.no + wl.none, C.no, '', 'waitlist-no', function(r){ return (r.explicitWaitlist||'').trim().toLowerCase()!=='yes'; }],
+                ${statCard(t('waitTitle'), [
+                    [t('waitYes'), wl.yes, C.yes, '', 'waitlist-yes', function(r){ return (r.explicitWaitlist||'').trim().toLowerCase()==='yes'; }],
+                    [t('waitNo'), wl.no + wl.none, C.no, '', 'waitlist-no', function(r){ return (r.explicitWaitlist||'').trim().toLowerCase()!=='yes'; }],
                 ],
-                'Absence of a formal waitlist does not mean there is no queue. Makers with large backlogs but no disclosed queue data represent a risk — commissioners may be unaware of how long their wait will actually be before sending a non-refundable deposit.')}
+                t('waitNote'))}
 
-                ${statCard('RUSH ORDERS AVAILABLE', [
-                    ['Rush Option Explicitly Offered', rush.yes, C.yes, '', 'rush-yes', function(r){ return (r.explicitRush||'').trim().toLowerCase()==='yes'; }],
-                    ['Not Offered / Not Mentioned', rush.no + rush.none, C.no, '', 'rush-no', function(r){ return (r.explicitRush||'').trim().toLowerCase()!=='yes'; }],
+                ${statCard(t('rushTitle'), [
+                    [t('rushYes'), rush.yes, C.yes, '', 'rush-yes', function(r){ return (r.explicitRush||'').trim().toLowerCase()==='yes'; }],
+                    [t('rushNo'), rush.no + rush.none, C.no, '', 'rush-no', function(r){ return (r.explicitRush||'').trim().toLowerCase()!=='yes'; }],
                 ],
-                'Rush orders are often provided as an option to meet deadlines. These typically incur an additional percentage-based fee upon the total value of the commission.')}
+                t('rushNote'))}
 
-                ${statCard('TERMS OF SERVICE PROVIDED', [
-                    ['Public ToS Available', tosYes, C.yes, '', 'tos-yes', function(r){ return r.publicTos && String(r.publicTos).startsWith('http'); }],
-                    ['No Public ToS', tosNo, C.no, '', 'tos-no', function(r){ return !(r.publicTos && String(r.publicTos).startsWith('http')); }],
+                ${statCard(t('tosTitle'), [
+                    [t('tosYesL'), tosYes, C.yes, '', 'tos-yes', function(r){ return r.publicTos && String(r.publicTos).startsWith('http'); }],
+                    [t('tosNoL'), tosNo, C.no, '', 'tos-no', function(r){ return !(r.publicTos && String(r.publicTos).startsWith('http')); }],
                 ],
-                '⚠ Many ToS agreements contain clauses allowing makers to retain non-refundable deposits for any reason. Some agreements also include social media restrictions, limiting a commissioner\'s ability to publicly discuss delays or unfinished work even after a payment dispute.')}
+                t('tosNote'))}
 
-                ${statCard('SPECIES RESTRICTIONS', specRows,
-                'Makers noting "Copyright" will typically not craft characters from copyrighted franchises (Disney, Nintendo, etc.). "Selective Copyright" means only specific IPs are restricted — always verify before commissioning.')}
+                ${statCard(t('specTitle'), specRows,
+                t('specNote'))}
 
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px;">
 
-                ${statCard('WEBSITE PLATFORM', [
-                    ['Custom Domain', siteCats['Custom Domain'], C.yes, '', 'web-custom', function(r){ return classifySite(r.website)==='Custom Domain'; }],
-                    ['No Website', siteCats['No Website'], C.no, '', 'web-none', function(r){ return classifySite(r.website)==='No Website'; }],
-                    ['Carrd', siteCats['Carrd'], C.light, '', 'web-carrd', function(r){ return classifySite(r.website)==='Carrd'; }],
-                    ['Weebly', siteCats['Weebly'], C.light, '', 'web-weebly', function(r){ return classifySite(r.website)==='Weebly'; }],
-                    ['Wix', siteCats['Wix'], C.light, '', 'web-wix', function(r){ return classifySite(r.website)==='Wix'; }],
-                    ['Linktree', siteCats['Linktree'], C.none, '', 'web-linktree', function(r){ return classifySite(r.website)==='Linktree'; }],
-                    ['Google Sites', siteCats['Google Sites'], C.none, '', 'web-gsites', function(r){ return classifySite(r.website)==='Google Sites'; }],
+                ${statCard(t('webTitle'), [
+                    [t('webCustom'), siteCats['Custom Domain'], C.yes, '', 'web-custom', function(r){ return classifySite(r.website)==='Custom Domain'; }],
+                    [t('webNone'), siteCats['No Website'], C.no, '', 'web-none', function(r){ return classifySite(r.website)==='No Website'; }],
+                    [t('webCarrd'), siteCats['Carrd'], C.light, '', 'web-carrd', function(r){ return classifySite(r.website)==='Carrd'; }],
+                    [t('webWeebly'), siteCats['Weebly'], C.light, '', 'web-weebly', function(r){ return classifySite(r.website)==='Weebly'; }],
+                    [t('webWix'), siteCats['Wix'], C.light, '', 'web-wix', function(r){ return classifySite(r.website)==='Wix'; }],
+                    [t('webLinktree'), siteCats['Linktree'], C.none, '', 'web-linktree', function(r){ return classifySite(r.website)==='Linktree'; }],
+                    [t('webGSites'), siteCats['Google Sites'], C.none, '', 'web-gsites', function(r){ return classifySite(r.website)==='Google Sites'; }],
                 ].filter(r => r[1] > 0))}
 
-                ${statCard('PUBLIC QUEUE AVAILABILITY', [
-                    ['Trello Queue', qTrello, C.yes, 'Publicly accessible Trello board', 'queue-trello', function(r){ var u=(r.publicQueue||'').trim(); return u.startsWith('http') && u.includes('trello.com'); }],
-                    ['Other Web Queue', qWeb, C.orange, 'Non-Trello public queue (Google Docs, website, etc.)', 'queue-web', function(r){ var u=(r.publicQueue||'').trim(); return u.startsWith('http') && !u.includes('trello.com'); }],
-                    ['No Public Queue', qNone, C.no, '⚠ Queue not publicly disclosed — commission count unknown before deposit', 'queue-none', function(r){ var u=(r.publicQueue||'').trim(); return !u.startsWith('http'); }],
+                ${statCard(t('queueTitle'), [
+                    [t('queueTrello'), qTrello, C.yes, t('queueTrelloSub'), 'queue-trello', function(r){ var u=(r.publicQueue||'').trim(); return u.startsWith('http') && u.includes('trello.com'); }],
+                    [t('queueWeb'), qWeb, C.orange, t('queueWebSub'), 'queue-web', function(r){ var u=(r.publicQueue||'').trim(); return u.startsWith('http') && !u.includes('trello.com'); }],
+                    [t('queueNone'), qNone, C.no, t('queueNoneSub'), 'queue-none', function(r){ var u=(r.publicQueue||'').trim(); return !u.startsWith('http'); }],
                 ],
-                'Makers without a publicly visible queue make it impossible to assess how many commissions are ahead of yours before you send a non-refundable payment. The larger the undisclosed backlog, the greater your risk.')}
+                t('queueNote'))}
 
             </div>
 
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:15px;">
 
-                ${listCard('OTHER HEAD BASES USED', sortedEntries(hbNorm),
-                'Pre-made head base forms sourced from other makers. Click a row to filter; hover "Makers" to see who used each.', 'hbase', 'otherHeadBase')}
+                ${listCard(t('hbasesTitle'), sortedEntries(hbNorm),
+                t('hbasesNote'), 'hbase', 'otherHeadBase')}
 
-                ${listCard('PARTS & PATTERNS SUPPLIERS', sortedEntries(partsNorm),
-                'Suppliers for fursuit parts, patterns, and components. Click a row to filter; hover "Makers" to see who referenced each.', 'parts', 'partsPatterns')}
+                ${listCard(t('partsTitle'), sortedEntries(partsNorm),
+                t('partsNote'), 'parts', 'partsPatterns')}
 
-                ${listCard('FABRIC SUPPLIERS', sortedEntries(fabNorm),
-                '<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly <b>Fursuits By Lacey</b>) is second. Click a row to filter; hover "Makers" to see who uses each.', 'fabric', 'fabric')}
+                ${listCard(t('fabricTitle'), sortedEntries(fabNorm),
+                t('fabricNote'), 'fabric', 'fabric')}
 
             </div>
 
