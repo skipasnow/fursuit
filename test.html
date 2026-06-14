@@ -1854,17 +1854,49 @@
                     .style('fill','#888').style('font-size','0.65em')
                     .text('# of Makers');
 
-                // Avg line
-                const avgX = d3.scaleLinear().domain([0, 120]).range([0, iW])(weightedAvg);
+                // ── Position helper: map months → x using bucket boundaries ──
+                const bucketMins = [1, 5, 9, 13, 19, 25];
+                const nBuckets = buckets.length;
+                function monthsToX(months) {
+                    for (var bi = 0; bi < nBuckets; bi++) {
+                        var bMin = bucketMins[bi];
+                        var bMax = bi < nBuckets - 1 ? bucketMins[bi+1] - 1 : 999;
+                        if (months <= bMax) {
+                            var frac = Math.min(Math.max((months - bMin) / (bMax - bMin + 1), 0), 1);
+                            return xScale(chartData[bi].label) + frac * xScale.bandwidth();
+                        }
+                    }
+                    return iW;
+                }
+
+                // ── All-makers weighted avg line (red) ──
+                const avgXpos = monthsToX(weightedAvg);
                 g.append('line')
-                    .attr('x1', avgX).attr('x2', avgX)
+                    .attr('x1', avgXpos).attr('x2', avgXpos)
                     .attr('y1', 0).attr('y2', iH)
                     .attr('stroke','#ff5252').attr('stroke-width',1.5)
                     .attr('stroke-dasharray','4,3');
                 g.append('text')
-                    .attr('x', avgX + 4).attr('y', 14)
+                    .attr('x', avgXpos + 4).attr('y', 14)
                     .style('fill','#ff5252').style('font-size','0.62em')
-                    .text('avg ' + weightedAvg.toFixed(1) + 'mo');
+                    .text('All makers avg: ' + weightedAvg.toFixed(1) + ' mo');
+
+                // ── Open-now weighted avg line (green) ──
+                const openOnly = valid.filter(d => d.status === 'Open');
+                if (openOnly.length > 0) {
+                    const openFursuits = openOnly.reduce((s,d) => s + (d.fursuits||1), 0);
+                    const openWAvg = openOnly.reduce((s,d) => s + d.paidTurnaround*(d.fursuits||1), 0) / openFursuits;
+                    const openXpos = monthsToX(openWAvg);
+                    g.append('line')
+                        .attr('x1', openXpos).attr('x2', openXpos)
+                        .attr('y1', 0).attr('y2', iH)
+                        .attr('stroke','#00E676').attr('stroke-width',1.5)
+                        .attr('stroke-dasharray','4,3');
+                    g.append('text')
+                        .attr('x', openXpos + 4).attr('y', 28)
+                        .style('fill','#00E676').style('font-size','0.62em')
+                        .text('Open now avg: ' + openWAvg.toFixed(1) + ' mo');
+                }
             })();
         }
 
@@ -1971,53 +2003,52 @@
             });
 
             // ── BB / BC / BD: Text lists ──────────────────────────────
-            const headBaseCount = {}, partsCount = {}, fabricCount = {};
-            function tallyNewlines(val, counter) {
+            const hbMakers = {}, partsMakers = {}, fabMakers = {};
+            function tallyWithMakers(val, makerName, makerMap) {
                 if (!val) return;
-                val.split('\n').forEach(line => {
-                    const l = line.trim();
-                    if (l) counter[l] = (counter[l] || 0) + 1;
+                val.split('\n').forEach(function(line) {
+                    var l = line.trim();
+                    if (!l) return;
+                    if (!makerMap[l]) makerMap[l] = [];
+                    if (!makerMap[l].includes(makerName)) makerMap[l].push(makerName);
                 });
             }
-            data.forEach(d => {
+            data.forEach(function(d) {
                 if (!d.maker) return;
-                tallyNewlines(d.otherHeadBase, headBaseCount);
-                tallyNewlines(d.partsPatterns, partsCount);
-                // Normalize fabric names
-                const fabVal = (d.fabric || '').replace(/\u200b/g,''); // strip zero-width space
-                tallyNewlines(fabVal, fabricCount);
+                tallyWithMakers(d.otherHeadBase, d.maker, hbMakers);
+                tallyWithMakers(d.partsPatterns, d.maker, partsMakers);
+                var fabVal = (d.fabric || '').replace(/\u200b/g,'');
+                tallyWithMakers(fabVal, d.maker, fabMakers);
             });
-            // Merge fabric aliases
-            const fabNorm = {};
-            Object.entries(fabricCount).forEach(([k, v]) => {
-                const norm = k.trim().toLowerCase();
-                const display = norm.includes('big z') ? 'Big Z Fabric'
-                              : norm.includes('howl') ? 'Howl Fabrics (fka Fursuits By Lacey)'
-                              : norm.includes('fursuit suppli') ? 'Fursuit Supplies'
-                              : k.trim();
-                fabNorm[display] = (fabNorm[display] || 0) + v;
+            function normaliseMakerMap(raw, normFn) {
+                var out = {};
+                Object.entries(raw).forEach(function(entry) {
+                    var k = entry[0], makers = entry[1];
+                    var display = normFn(k);
+                    if (!out[display]) out[display] = [];
+                    makers.forEach(function(m) { if (!out[display].includes(m)) out[display].push(m); });
+                });
+                return out;
+            }
+            const hbNorm = normaliseMakerMap(hbMakers, function(k) {
+                var n = k.trim().toLowerCase();
+                return n.includes('fuzzbutt') || n.includes('fuzz butt') ? 'Fuzzbutt Fursuits'
+                     : n.includes('nukecreation') ? 'Nuke Creations' : k.trim();
             });
-            // Merge parts aliases
-            const partsNorm = {};
-            Object.entries(partsCount).forEach(([k, v]) => {
-                const norm = k.trim().toLowerCase();
-                const display = norm.includes('spiltgrapesoda') || norm === 'spiltgrapesoda' || norm === 'splitgrapesoda' || norm === 'spiltgrapesoda' ? 'SpiltGrapeSoda'
-                              : norm.includes('dream vision') ? 'Dream Vision Creations'
-                              : k.trim();
-                partsNorm[display] = (partsNorm[display] || 0) + v;
+            const partsNorm = normaliseMakerMap(partsMakers, function(k) {
+                var n = k.trim().toLowerCase();
+                return n.includes('spiltgrapesoda') || n.includes('splitgrapesoda') ? 'SpiltGrapeSoda'
+                     : n.includes('dream vision') ? 'Dream Vision Creations' : k.trim();
             });
-            // Merge headbase aliases
-            const hbNorm = {};
-            Object.entries(headBaseCount).forEach(([k, v]) => {
-                const norm = k.trim().toLowerCase();
-                const display = norm.includes('fuzzbutt') || norm.includes('fuzz butt') ? 'Fuzzbutt Fursuits'
-                              : norm.includes('nukecreation') ? 'Nuke Creations'
-                              : k.trim();
-                hbNorm[display] = (hbNorm[display] || 0) + v;
+            const fabNorm = normaliseMakerMap(fabMakers, function(k) {
+                var n = k.trim().toLowerCase();
+                return n.includes('big z') ? 'Big Z Fabric'
+                     : n.includes('howl') ? 'Howl Fabrics (fka Fursuits By Lacey)'
+                     : n.includes('fursuit suppli') ? 'Fursuit Supplies' : k.trim();
             });
 
             function sortedEntries(obj) {
-                return Object.entries(obj).sort((a,b) => b[1]-a[1]);
+                return Object.entries(obj).sort(function(a,b){ return b[1].length - a[1].length; });
             }
 
             // ── Colours ───────────────────────────────────────────────
@@ -2049,18 +2080,21 @@
                 </div>`;
             }
 
-            function listCard(title, entries, note, maxShow) {
-                const show = entries.slice(0, maxShow || 20);
-                const rowsHTML = show.map(([label, count]) => `
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #1a1a2e;">
-                        <span style="font-size:0.75em;color:#ccc;">${label}</span>
-                        <span style="font-size:0.72em;color:${C.orange};font-weight:bold;white-space:nowrap;margin-left:8px;">${count} mention${count===1?'':'s'}</span>
-                    </div>`).join('');
-                const noteHTML = note ? `<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">${note}</div>` : '';
-                return `<div class="promo-card" style="border-color:${C.purple};">
-                    <div class="chart-title" style="color:${C.light};margin-bottom:12px;">${title}</div>
-                    ${rowsHTML}${noteHTML}
-                </div>`;
+            function listCard(title, entries, note) {
+                const rowsHTML = entries.map(function(e) {
+                    var label = e[0], makers = e[1];
+                    var count = makers.length;
+                    var tipText = makers.slice().sort().join(', ').replace(/"/g, '&quot;');
+                    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #1a1a2e;">'
+                         + '<span style="font-size:0.75em;color:#ccc;flex:1;padding-right:6px;">' + label + '</span>'
+                         + '<span title="' + tipText + '" style="font-size:0.72em;color:' + C.orange + ';font-weight:bold;white-space:nowrap;cursor:help;border-bottom:1px dotted ' + C.orange + ';">'
+                         + count + ' Maker' + (count === 1 ? '' : 's') + '</span></div>';
+                }).join('');
+                const noteHTML = note ? '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">' + note + '</div>' : '';
+                return '<div class="promo-card" style="border-color:' + C.purple + ';display:flex;flex-direction:column;">'
+                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:8px;">' + title + '</div>'
+                     + '<div style="flex:1;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:' + C.purple + ' #1a1a2e;">' + rowsHTML + '</div>'
+                     + noteHTML + '</div>';
             }
 
             // ── Calendar card ──────────────────────────────────────────
@@ -2206,13 +2240,13 @@
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:15px;">
 
                 ${listCard('OTHER HEAD BASES USED', sortedEntries(hbNorm),
-                'These are pre-made head base forms sourced from other makers and used as a foundation. Counts reflect number of mentions across all maker profiles.')}
+                'Pre-made head base forms sourced from other makers. Hover over "Makers" to see which makers have used each head base.')}
 
                 ${listCard('PARTS & PATTERNS SUPPLIERS', sortedEntries(partsNorm),
-                'Makers referencing these suppliers for fursuit parts, patterns, or components. SpiltGrapeSoda variants are merged. Counts reflect number of mentions.')}
+                'Suppliers for fursuit parts, patterns, and components. SpiltGrapeSoda variants are merged. Hover over "Makers" to see which makers referenced each supplier.')}
 
                 ${listCard('FABRIC SUPPLIERS', sortedEntries(fabNorm),
-                '<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly known as <b>Fursuits By Lacey</b>) is the second most common. Counts reflect number of explicit mentions in maker profiles.')}
+                '<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly <b>Fursuits By Lacey</b>) is second. Hover over "Makers" to see which makers use each supplier.')}
 
             </div>
 
