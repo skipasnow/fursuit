@@ -417,6 +417,15 @@
         #creator-table { width: 100%; height: 100%; border: none; }
         
         .tabulator .tabulator-header { background-color: #1f1f1f !important; font-weight: bold !important; border-bottom: 1px solid #444; }
+        .tabulator .tabulator-header-filter input,
+        .tabulator .tabulator-header-filter select {
+            background: #0d0d1a !important; color: #ccc !important;
+            border: 1px solid #444 !important; border-radius: 3px !important;
+            font-size: 0.72em !important; padding: 2px 4px !important; width: 100% !important; box-sizing: border-box !important;
+        }
+        .tabulator .tabulator-header-filter input:focus,
+        .tabulator .tabulator-header-filter select:focus { border-color: #7b5ea7 !important; outline: none !important; }
+        .tabulator-col-sorter { color: #7b5ea7 !important; }
         .tabulator .tabulator-row .tabulator-cell { border: 1px solid #444; font-size: 16px; }
         .tabulator .tabulator-row:nth-child(even) { background-color: #383838; }
         .tabulator .tabulator-row:nth-child(odd) { background-color: #2e2e2e; }
@@ -1669,12 +1678,33 @@
                     const y = i * rowH + 10;
                     const bw = xScale(d.paidTurnaround);
 
-                    // Label
+                    // Label (clickable)
                     svg.append('text')
                         .attr('x', labelW - 6).attr('y', y + rowH/2 + 4)
                         .attr('text-anchor','end')
-                        .style('font-size','0.68em').style('fill','#ccc')
+                        .style('font-size','0.68em').style('fill','#ccc').style('cursor','pointer')
+                        .on('mouseover', function() { d3.select(this).style('fill','#ff8c00'); })
+                        .on('mouseout',  function() { d3.select(this).style('fill','#ccc'); })
+                        .on('click', function() { jumpToMaker(d.maker); })
                         .text(d.maker.length > 22 ? d.maker.slice(0,21)+'…' : d.maker);
+
+                    // Click helper — scroll table to matching maker row
+                    function jumpToMaker(makerName) {
+                        if (!table) return;
+                        const rows = table.getRows();
+                        const match = rows.find(r => r.getData().maker === makerName);
+                        if (!match) return;
+                        table.scrollToRow(match, 'top', true);
+                        match.select();
+                        const el = match.getElement();
+                        if (el) {
+                            el.style.transition = 'box-shadow 0.15s';
+                            el.style.boxShadow = '0 0 0 2px #ff8c00 inset';
+                            setTimeout(() => { el.style.boxShadow = ''; }, 1800);
+                        }
+                        // Scroll page to table
+                        document.getElementById('table-pane').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
 
                     // Bar
                     svg.append('rect')
@@ -1684,7 +1714,7 @@
                         .style('cursor','pointer')
                         .on('mouseover', function(event) {
                             d3.select(this).attr('fill', barColorHov);
-                            tipEl.html(`<b>${d.maker}</b><br>${d.paidTurnaround} months&nbsp;·&nbsp;${d.fursuits} fursuits`)
+                            tipEl.html(`<b>${d.maker}</b><br>${d.paidTurnaround} months&nbsp;·&nbsp;${d.fursuits} fursuits<br><span style="color:#aaa;font-size:0.9em;">Click to jump to row</span>`)
                                  .style('opacity',1);
                         })
                         .on('mousemove', function(event) {
@@ -1693,7 +1723,11 @@
                         .on('mouseout', function() {
                             d3.select(this).attr('fill', barColor);
                             tipEl.style('opacity',0);
-                        });
+                        })
+                        .on('click', function() { jumpToMaker(d.maker); });
+
+                    // Maker name label (also clickable)
+                    svg.select('text:last-of-type');  // reference already appended label
 
                     // Value label
                     svg.append('text')
@@ -1930,274 +1964,256 @@
             });
 
             // ── BB / BC / BD: Text lists ──────────────────────────────
-            // Track maker names per item (not just counts)
-            const hbMakers = {}, partsMakers = {}, fabMakers = {};
-            function tallyWithMakers(val, makerName, makerMap) {
+            const headBaseCount = {}, partsCount = {}, fabricCount = {};
+            function tallyNewlines(val, counter) {
                 if (!val) return;
-                val.split('\n').forEach(function(line) {
-                    var l = line.trim();
-                    if (!l) return;
-                    if (!makerMap[l]) makerMap[l] = [];
-                    if (!makerMap[l].includes(makerName)) makerMap[l].push(makerName);
+                val.split('\n').forEach(line => {
+                    const l = line.trim();
+                    if (l) counter[l] = (counter[l] || 0) + 1;
                 });
             }
-            data.forEach(function(d) {
+            data.forEach(d => {
                 if (!d.maker) return;
-                tallyWithMakers(d.otherHeadBase, d.maker, hbMakers);
-                tallyWithMakers(d.partsPatterns, d.maker, partsMakers);
-                var fabVal = (d.fabric || '').replace(/\u200b/g,'');
-                tallyWithMakers(fabVal, d.maker, fabMakers);
+                tallyNewlines(d.otherHeadBase, headBaseCount);
+                tallyNewlines(d.partsPatterns, partsCount);
+                // Normalize fabric names
+                const fabVal = (d.fabric || '').replace(/\u200b/g,''); // strip zero-width space
+                tallyNewlines(fabVal, fabricCount);
             });
-            function normaliseMakerMap(raw, normFn) {
-                var out = {};
-                Object.entries(raw).forEach(function(entry) {
-                    var k = entry[0], makers = entry[1];
-                    var display = normFn(k);
-                    if (!out[display]) out[display] = [];
-                    makers.forEach(function(m) { if (!out[display].includes(m)) out[display].push(m); });
-                });
-                return out;
-            }
-            const hbNorm    = normaliseMakerMap(hbMakers, function(k) {
-                var n = k.trim().toLowerCase();
-                return n.includes('fuzzbutt')||n.includes('fuzz butt') ? 'Fuzzbutt Fursuits'
-                     : n.includes('nukecreation') ? 'Nuke Creations' : k.trim();
+            // Merge fabric aliases
+            const fabNorm = {};
+            Object.entries(fabricCount).forEach(([k, v]) => {
+                const norm = k.trim().toLowerCase();
+                const display = norm.includes('big z') ? 'Big Z Fabric'
+                              : norm.includes('howl') ? 'Howl Fabrics (fka Fursuits By Lacey)'
+                              : norm.includes('fursuit suppli') ? 'Fursuit Supplies'
+                              : k.trim();
+                fabNorm[display] = (fabNorm[display] || 0) + v;
             });
-            const partsNorm = normaliseMakerMap(partsMakers, function(k) {
-                var n = k.trim().toLowerCase();
-                return n.includes('spiltgrapesoda')||n.includes('splitgrapesoda') ? 'SpiltGrapeSoda'
-                     : n.includes('dream vision') ? 'Dream Vision Creations' : k.trim();
+            // Merge parts aliases
+            const partsNorm = {};
+            Object.entries(partsCount).forEach(([k, v]) => {
+                const norm = k.trim().toLowerCase();
+                const display = norm.includes('spiltgrapesoda') || norm === 'spiltgrapesoda' || norm === 'splitgrapesoda' || norm === 'spiltgrapesoda' ? 'SpiltGrapeSoda'
+                              : norm.includes('dream vision') ? 'Dream Vision Creations'
+                              : k.trim();
+                partsNorm[display] = (partsNorm[display] || 0) + v;
             });
-            const fabNorm   = normaliseMakerMap(fabMakers, function(k) {
-                var n = k.trim().toLowerCase();
-                return n.includes('big z') ? 'Big Z Fabric'
-                     : n.includes('howl') ? 'Howl Fabrics (fka Fursuits By Lacey)'
-                     : n.includes('fursuit suppli') ? 'Fursuit Supplies' : k.trim();
+            // Merge headbase aliases
+            const hbNorm = {};
+            Object.entries(headBaseCount).forEach(([k, v]) => {
+                const norm = k.trim().toLowerCase();
+                const display = norm.includes('fuzzbutt') || norm.includes('fuzz butt') ? 'Fuzzbutt Fursuits'
+                              : norm.includes('nukecreation') ? 'Nuke Creations'
+                              : k.trim();
+                hbNorm[display] = (hbNorm[display] || 0) + v;
             });
+
             function sortedEntries(obj) {
-                return Object.entries(obj).sort(function(a,b){ return b[1].length - a[1].length; });
+                return Object.entries(obj).sort((a,b) => b[1]-a[1]);
             }
 
             // ── Colours ───────────────────────────────────────────────
             const C = { yes: '#00E676', no: '#ff5252', none: '#555', purple: '#7b5ea7', light: '#b39ddb', orange: '#ff8c00' };
 
+            // ── Build bar utility ──────────────────────────────────────
             function miniBar(pctVal, color) {
-                return '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">'
-                     + '<div style="flex:1;background:#1a1a2e;border-radius:3px;height:8px;overflow:hidden;">'
-                     + '<div style="width:' + pctVal + '%;background:' + color + ';height:100%;border-radius:3px;transition:width 0.6s;"></div></div>'
-                     + '<span style="font-size:0.72em;color:' + color + ';font-weight:bold;min-width:36px;">' + pctVal + '%</span></div>';
+                return `<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+                    <div style="flex:1;background:#1a1a2e;border-radius:3px;height:8px;overflow:hidden;">
+                        <div style="width:${pctVal}%;background:${color};height:100%;border-radius:3px;transition:width 0.6s;"></div>
+                    </div>
+                    <span style="font-size:0.72em;color:${color};font-weight:bold;min-width:36px;">${pctVal}%</span>
+                </div>`;
             }
 
-            function statCard(title, cardRows, note, minH) {
-                var rowsHTML = cardRows.map(function(r) {
-                    var label = r[0], count = r[1], color = r[2], sub = r[3];
-                    return '<div style="margin-bottom:6px;">'
-                         + '<div style="display:flex;justify-content:space-between;font-size:0.75em;color:#ccc;">'
-                         + '<span>' + label + '</span><span style="color:#888;">' + count + ' makers</span></div>'
-                         + miniBar(parseFloat(pct(count)), color)
-                         + (sub ? '<div style="font-size:0.67em;color:#888;margin-top:2px;margin-left:4px;">' + sub + '</div>' : '')
-                         + '</div>';
-                }).join('');
-                var noteHTML = note ? '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.5;">' + note + '</div>' : '';
-                var heightStyle = minH ? 'min-height:' + minH + 'px;' : '';
-                return '<div class="promo-card" style="border-color:' + C.purple + ';' + heightStyle + '">'
-                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:12px;">' + title + '</div>'
-                     + rowsHTML + noteHTML + '</div>';
+            function statCard(title, rows, note) {
+                const rowsHTML = rows.map(([label, count, color, sub]) => `
+                    <div style="margin-bottom:6px;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.75em;color:#ccc;">
+                            <span>${label}</span><span style="color:#888;">${count} makers</span>
+                        </div>
+                        ${miniBar(parseFloat(pct(count)), color)}
+                        ${sub ? `<div style="font-size:0.67em;color:#888;margin-top:2px;margin-left:4px;">${sub}</div>` : ''}
+                    </div>`).join('');
+                const noteHTML = note ? `<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">${note}</div>` : '';
+                return `<div class="promo-card" style="border-color:${C.purple};">
+                    <div class="chart-title" style="color:${C.light};margin-bottom:12px;">${title}</div>
+                    ${rowsHTML}${noteHTML}
+                </div>`;
             }
 
-            // listCard: entries = [display, makerArray[]]
-            function listCard(title, entries, note) {
-                var rowsHTML = entries.map(function(e) {
-                    var label = e[0], makers = e[1];
-                    var count = makers.length;
-                    var tipText = makers.slice().sort().join(', ').replace(/"/g, '&quot;');
-                    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #1a1a2e;">'
-                         + '<span style="font-size:0.75em;color:#ccc;flex:1;padding-right:6px;">' + label + '</span>'
-                         + '<span title="' + tipText + '" style="font-size:0.72em;color:' + C.orange + ';font-weight:bold;white-space:nowrap;cursor:help;border-bottom:1px dotted ' + C.orange + ';">'
-                         + count + ' Maker' + (count === 1 ? '' : 's') + '</span></div>';
-                }).join('');
-                var noteHTML = note ? '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">' + note + '</div>' : '';
-                return '<div class="promo-card" style="border-color:' + C.purple + ';display:flex;flex-direction:column;">'
-                     + '<div class="chart-title" style="color:' + C.light + ';margin-bottom:8px;">' + title + '</div>'
-                     + '<div style="flex:1;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:' + C.purple + ' #1a1a2e;">' + rowsHTML + '</div>'
-                     + noteHTML + '</div>';
-            }
-
-            function donutChart(segments) {
-                var tot = segments.reduce(function(s,x){return s+x.count;},0);
-                if (tot === 0) return '';
-                var size = 130, r = 50, cx = size/2, cy = size/2, inner = 28;
-                var startAngle = -Math.PI/2;
-                var paths = '', legend = '';
-                segments.forEach(function(seg) {
-                    if (seg.count === 0) return;
-                    var angle = (seg.count / tot) * 2 * Math.PI;
-                    var endAngle = startAngle + angle;
-                    var x1=cx+r*Math.cos(startAngle), y1=cy+r*Math.sin(startAngle);
-                    var x2=cx+r*Math.cos(endAngle),   y2=cy+r*Math.sin(endAngle);
-                    var xi1=cx+inner*Math.cos(startAngle), yi1=cy+inner*Math.sin(startAngle);
-                    var xi2=cx+inner*Math.cos(endAngle),   yi2=cy+inner*Math.sin(endAngle);
-                    var large = angle > Math.PI ? 1 : 0;
-                    paths += '<path d="M '+xi1+' '+yi1+' L '+x1+' '+y1+' A '+r+' '+r+' 0 '+large+' 1 '+x2+' '+y2+' L '+xi2+' '+yi2+' A '+inner+' '+inner+' 0 '+large+' 0 '+xi1+' '+yi1+' Z" fill="'+seg.color+'" stroke="#1a1a2e" stroke-width="1.5"><title>'+seg.label+': '+seg.count+' ('+(seg.count/tot*100).toFixed(1)+'%)</title></path>';
-                    legend += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">'
-                            + '<div style="width:10px;height:10px;border-radius:2px;background:'+seg.color+';flex-shrink:0;"></div>'
-                            + '<span style="font-size:0.72em;color:#ccc;">'+seg.label+'</span>'
-                            + '<span style="font-size:0.72em;color:'+seg.color+';font-weight:bold;margin-left:auto;">'+(seg.count/tot*100).toFixed(1)+'%</span></div>';
-                    startAngle = endAngle;
-                });
-                return '<div style="display:flex;align-items:center;gap:16px;">'
-                     + '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" style="flex-shrink:0;">'+paths+'</svg>'
-                     + '<div style="flex:1;">'+legend+'</div></div>';
+            function listCard(title, entries, note, maxShow) {
+                const show = entries.slice(0, maxShow || 20);
+                const rowsHTML = show.map(([label, count]) => `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #1a1a2e;">
+                        <span style="font-size:0.75em;color:#ccc;">${label}</span>
+                        <span style="font-size:0.72em;color:${C.orange};font-weight:bold;white-space:nowrap;margin-left:8px;">${count} mention${count===1?'':'s'}</span>
+                    </div>`).join('');
+                const noteHTML = note ? `<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">${note}</div>` : '';
+                return `<div class="promo-card" style="border-color:${C.purple};">
+                    <div class="chart-title" style="color:${C.light};margin-bottom:12px;">${title}</div>
+                    ${rowsHTML}${noteHTML}
+                </div>`;
             }
 
             // ── Calendar card ──────────────────────────────────────────
             function calendarCard() {
-                if (futureDates.length === 0) {
-                    return '<div class="promo-card" style="border-color:'+C.purple+';">'
-                         + '<div class="chart-title" style="color:'+C.light+';">UPCOMING COMMISSION OPENINGS</div>'
-                         + '<div style="font-size:0.8em;color:#888;margin-top:10px;">No future opening dates found.</div></div>';
-                }
-                var byMonth = {};
-                futureDates.forEach(function(f) {
-                    var key = f.dt.getFullYear()+'-'+String(f.dt.getMonth()+1).padStart(2,'0');
+                if (futureDates.length === 0) return `<div class="promo-card" style="border-color:${C.purple};"><div class="chart-title" style="color:${C.light};">UPCOMING OPENINGS</div><div style="font-size:0.8em;color:#888;margin-top:10px;">No future opening dates found.</div></div>`;
+
+                // Group by YYYY-MM
+                const byMonth = {};
+                futureDates.forEach(f => {
+                    const key = `${f.dt.getFullYear()}-${String(f.dt.getMonth()+1).padStart(2,'0')}`;
                     if (!byMonth[key]) byMonth[key] = [];
                     byMonth[key].push(f);
                 });
-                var monthKeys = Object.keys(byMonth).sort();
-                var calInner = '';
-                monthKeys.forEach(function(mk) {
-                    var pts = mk.split('-').map(Number);
-                    var yr = pts[0], mo = pts[1];
-                    var monthName = new Date(yr,mo-1,1).toLocaleString('en-US',{month:'long',year:'numeric'});
-                    var entries = byMonth[mk];
-                    var daysInMonth = new Date(yr,mo,0).getDate();
-                    var firstDay = new Date(yr,mo-1,1).getDay();
-                    var dayMap = {};
-                    entries.forEach(function(f) {
-                        var d = f.dt.getDate();
+                const monthKeys = Object.keys(byMonth).sort();
+
+                let calHTML = `<div class="promo-card" style="border-color:${C.purple};grid-column:span 2;">
+                    <div class="chart-title" style="color:${C.light};margin-bottom:12px;">UPCOMING COMMISSION OPENINGS <span style="font-size:0.7em;color:#888;font-weight:normal;">(${futureDates.length} makers scheduled)</span></div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">`;
+
+                monthKeys.forEach(mk => {
+                    const [yr, mo] = mk.split('-').map(Number);
+                    const monthName = new Date(yr, mo-1, 1).toLocaleString('en-US',{month:'long',year:'numeric'});
+                    const entries = byMonth[mk];
+                    const daysInMonth = new Date(yr, mo, 0).getDate();
+                    const firstDay = new Date(yr, mo-1, 1).getDay();
+
+                    // Build day-marker map
+                    const dayMap = {};
+                    entries.forEach(f => {
+                        const d = f.dt.getDate();
                         if (!dayMap[d]) dayMap[d] = [];
                         dayMap[d].push(f.maker);
                     });
-                    var cells = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:4px;">';
-                    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(function(d) {
-                        cells += '<div style="text-align:center;font-size:0.55em;color:#666;padding:1px;">'+d+'</div>';
+
+                    let cells = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:6px;">';
+                    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => {
+                        cells += `<div style="text-align:center;font-size:0.58em;color:#666;padding:2px;">${d}</div>`;
                     });
-                    for (var i=0;i<firstDay;i++) cells += '<div></div>';
-                    for (var d=1;d<=daysInMonth;d++) {
-                        var mks=dayMap[d], has=mks&&mks.length>0;
-                        var tip=has?' title="'+mks.join(', ').replace(/"/g,'&quot;')+'"':'';
-                        var bg=has?C.purple:'transparent', col=has?'#fff':'#444', cur=has?'pointer':'default';
-                        cells += '<div'+tip+' style="text-align:center;font-size:0.58em;padding:2px 1px;border-radius:3px;background:'+bg+';color:'+col+';cursor:'+cur+';">'+d+'</div>';
+                    for (let i = 0; i < firstDay; i++) cells += '<div></div>';
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        const makers = dayMap[d];
+                        const hasMakers = makers && makers.length > 0;
+                        const tooltip = hasMakers ? `title="${makers.join(', ')}"` : '';
+                        const bg = hasMakers ? C.purple : 'transparent';
+                        const color = hasMakers ? '#fff' : '#444';
+                        const cursor = hasMakers ? 'pointer' : 'default';
+                        cells += `<div ${tooltip} style="text-align:center;font-size:0.6em;padding:3px 1px;border-radius:3px;background:${bg};color:${color};cursor:${cursor};">${d}</div>`;
                     }
                     cells += '</div>';
-                    var listHTML = entries.map(function(f) {
-                        return '<div style="font-size:0.68em;color:#ccc;padding:2px 0;border-bottom:1px solid #1a1a2e;white-space:nowrap;">'
-                             + '<span style="color:'+C.orange+';">'+f.date+'</span> — '+f.maker+'</div>';
-                    }).join('');
-                    calInner += '<div style="background:#0d0d1a;border:1px solid #2e2e2e;border-radius:6px;padding:8px;flex:0 0 170px;min-width:170px;">'
-                              + '<div style="font-size:0.7em;color:'+C.light+';font-weight:bold;margin-bottom:2px;">'+monthName+'</div>'
-                              + cells
-                              + '<div style="margin-top:6px;max-height:140px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:'+C.purple+' #0d0d1a;">'+listHTML+'</div>'
-                              + '</div>';
+
+                    const listHTML = entries.map(f =>
+                        `<div style="font-size:0.7em;color:#ccc;padding:2px 0;border-bottom:1px solid #1a1a2e;">
+                            <span style="color:${C.orange};">${f.date}</span> — ${f.maker}
+                        </div>`).join('');
+
+                    calHTML += `<div style="min-width:160px;background:#0d0d1a;border:1px solid #2e2e2e;border-radius:6px;padding:10px;flex:0 0 auto;">
+                        <div style="font-size:0.72em;color:${C.light};font-weight:bold;margin-bottom:4px;">${monthName}</div>
+                        ${cells}
+                        <div style="margin-top:8px;">${listHTML}</div>
+                    </div>`;
                 });
-                return '<div class="promo-card" style="border-color:'+C.purple+';">'
-                     + '<div class="chart-title" style="color:'+C.light+';margin-bottom:10px;">UPCOMING COMMISSION OPENINGS '
-                     + '<span style="font-size:0.7em;color:#888;font-weight:normal;">('+futureDates.length+' makers scheduled)</span></div>'
-                     + '<div style="display:flex;gap:10px;flex-wrap:wrap;overflow-x:auto;padding-bottom:4px;">'+calInner+'</div></div>';
+                calHTML += '</div></div>';
+                return calHTML;
             }
 
-            // ── Open/Closed donut ──────────────────────────────────────
-            var openClosedCard =
-                '<div class="promo-card" style="border-color:'+C.purple+';">'
-              + '<div class="chart-title" style="color:'+C.light+';margin-bottom:12px;">COMMISSION STATUS</div>'
-              + donutChart([
-                    {label:'Open Now',             count:statusOpen,   color:C.yes},
-                    {label:'Closed / Future Date', count:statusClosed, color:C.no}
-                ])
-              + '<div style="font-size:0.67em;color:#888;margin-top:10px;border-top:1px solid #2e2e2e;padding-top:8px;line-height:1.4;">'
-              + 'Makers with an "Open: (date)" status are counted as closed. '
-              + 'Open now: <b style="color:'+C.yes+';">'+statusOpen+'</b>&nbsp;|&nbsp;'
-              + 'Closed/pending: <b style="color:'+C.no+';">'+statusClosed+'</b>'
-              + '</div></div>';
-
             // ── Species breakdown ──────────────────────────────────────
-            var specRows = [
-                ['No Restriction',         specCounts['No']||0,                                                                    C.yes],
-                ['Copyright Characters',   specCounts['Yes - Copyright']||0,                                                       C.no,     'Will not make characters associated with copyrighted IPs'],
-                ['Selective Copyright',    specCounts['Yes - Selective Copyright']||0,                                             '#ff8c00', 'Certain IPs only — check ToS'],
-                ['No Canines',             specCounts['Yes - No Canines']||0,                                                      '#ff8c00'],
-                ['No Dutch Angel Dragons', (specCounts['Yes - Copyright, Dutch Angel Dragons']||0)+(specCounts['Yes - Dutch Angel Dragons']||0), '#ff8c00'],
-                ['Other/Yes',              specCounts['Yes']||0,                                                                   C.no],
-                ['Not Stated',             (specCounts['None']||0)+(specCounts['none']||0)+(specCounts['undefined']||0),           C.none]
-            ].filter(function(r){return r[1]>0;});
+            const specRows = [
+                ['No Restriction', specCounts['No'] || 0, C.yes],
+                ['Copyright Characters', (specCounts['Yes - Copyright'] || 0), C.no, 'Will not make characters associated with copyrighted IPs'],
+                ['Selective Copyright', (specCounts['Yes - Selective Copyright'] || 0), '#ff8c00', 'Certain IPs only — check ToS'],
+                ['No Canines', (specCounts['Yes - No Canines'] || 0), '#ff8c00'],
+                ['No Dutch Angel Dragons', (specCounts['Yes - Copyright, Dutch Angel Dragons'] || 0) + (specCounts['Yes - Dutch Angel Dragons'] || 0), '#ff8c00'],
+                ['Other/Yes', (specCounts['Yes'] || 0), C.no],
+                ['Not Stated', (specCounts['None'] || specCounts['none'] || 0) + (specCounts['undefined'] || 0), C.none],
+            ].filter(r => r[1] > 0);
 
-            var shippingNote = 'UPS declared value covers transit damage, loss, and theft, but delivery theft is not covered. A required signature reduces risk. A high-value shipment summary must be provided to UPS to file a claim. USPS Priority Mail only covers up to $5,000. USPS Priority Registered Mail covers up to $50,000 declared value and requires signed handling at every step of delivery. FedEx cannot insure commissioned products with values difficult to ascertain beyond $1,000.'
-                             + '<br><br><span style="color:#666;">Sources:</span>'
-                             + '<br><a href="https://www.fedex.com/en-us/shipping/packing/pledge.html" target="_blank" style="color:#7b5ea7;">fedex.com — Declared Value & Limits</a>'
-                             + '<br><a href="https://www.ups.com/media/en/value-added_pricing_ak-hi.pdf" target="_blank" style="color:#7b5ea7;">ups.com — Value-Added Pricing</a>'
-                             + '<br><a href="https://faq.usps.com/s/article/Registered-Mail-The-Basics" target="_blank" style="color:#7b5ea7;">usps.com — Registered Mail: The Basics</a>';
+            // ── Assemble page ──────────────────────────────────────────
+            container.innerHTML = `
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;">
 
-            // ── Assemble all rows ──────────────────────────────────────
-            var row1 =
-                openClosedCard
-              + statCard('FULL PAYMENT REQUIRED', [
-                    ['Full Payment Required / Prioritized', fp.yes,          C.no,   'Work does not begin or is deprioritized until invoice is paid in full'],
-                    ['Not Explicitly Stated',               fp.no+fp.none,   C.none]
-                ], 'Makers requiring full payment upfront or prioritizing fully-paid commissions effectively begin no work until payment is complete. Payment windows are typically under 6 months.')
-              + statCard('SHIPPING INSURANCE', [
-                    ['Insurance Mentioned in ToS', ship.yes,            C.yes],
-                    ['Not Mentioned',              ship.no+ship.none,   C.no]
-                ], shippingNote);
+                ${statCard('FULL PAYMENT REQUIRED (AU)', [
+                    ['Full Payment Required / Prioritized', fp.yes, C.no, 'Work does not begin or is deprioritized until invoice is paid in full'],
+                    ['Not Explicitly Stated', fp.no + fp.none, C.none],
+                ],
+                'Makers requiring full payment upfront or prioritizing fully-paid commissions effectively begin no work until payment is complete. Payment windows are typically under 6 months.')}
 
-            var row2 =
-                statCard('EXPLICIT WAITLIST', [
-                    ['Waitlist Formally Referenced', wl.yes,        C.yes],
-                    ['No Formal Waitlist in ToS',    wl.no+wl.none, C.no]
-                ], 'Absence of a formal waitlist does not mean there is no queue. Makers with large backlogs but no disclosed queue data represent a risk.')
-              + statCard('RUSH ORDERS AVAILABLE', [
-                    ['Rush Option Explicitly Offered', rush.yes,           C.yes],
-                    ['Not Offered / Not Mentioned',    rush.no+rush.none,  C.no]
-                ])
-              + statCard('TERMS OF SERVICE PROVIDED', [
+                ${statCard('SHIPPING INSURANCE', [
+                    ['Insurance Mentioned in ToS', ship.yes, C.yes],
+                    ['Not Mentioned',              ship.no + ship.none, C.no]
+                ], '<b>Important:</b> Declared value is NOT insurance — it requires burden of proof to collect, and carriers can deny or reduce claims. Luxury goods communities frequently cite USPS Registered Mail as the safest option due to the significant physical security involved with every handoff.' +
+                '<br><br>UPS declared value covers transit damage, loss, and theft, but delivery theft (porch piracy) is not covered. A required signature on delivery reduces risk. A high-value shipment summary must be provided to UPS to file a claim.' +
+                '<br><br>USPS Priority Mail only covers up to $5,000. USPS Priority Registered Mail covers up to $50,000 declared value and requires signed handling and documentation at every step of delivery — making it the most secure domestic option for high-value fursuits.' +
+                '<br><br>FedEx cannot insure commissioned products with values difficult to ascertain beyond $1,000. FedEx explicitly excludes commissioned artwork and costumes from high-value coverage.' +
+                '<br><br><span style=\'color:#666;\'>Sources:</span>' +
+                '<br><a href=\'https://www.fedex.com/en-us/shipping/packing/pledge.html\' target=\'_blank\' style=\'color:#7b5ea7;\'>fedex.com &#8212; Declared Value &amp; Limits</a>' +
+                '<br><a href=\'https://www.ups.com/media/en/value-added_pricing_ak-hi.pdf\' target=\'_blank\' style=\'color:#7b5ea7;\'>ups.com &#8212; Value-Added Pricing</a>' +
+                '<br><a href=\'https://faq.usps.com/s/article/Registered-Mail-The-Basics\' target=\'_blank\' style=\'color:#7b5ea7;\'>usps.com &#8212; Registered Mail: The Basics</a>', 480)}
+
+                ${statCard('EXPLICIT WAITLIST (AY)', [
+                    ['Waitlist Formally Referenced', wl.yes, C.yes],
+                    ['No Formal Waitlist in ToS', wl.no + wl.none, C.no],
+                ],
+                'Absence of a formal waitlist does not mean there is no queue. Makers with large backlogs but no disclosed queue data represent a risk — commissioners may be unaware of how long their wait will actually be before sending a non-refundable deposit.')}
+
+                ${statCard('RUSH ORDERS AVAILABLE (AZ)', [
+                    ['Rush Option Explicitly Offered', rush.yes, C.yes],
+                    ['Not Offered / Not Mentioned', rush.no + rush.none, C.no],
+                ])}
+
+                ${statCard('TERMS OF SERVICE PROVIDED (AT)', [
                     ['Public ToS Available', tosYes, C.yes],
-                    ['No Public ToS',        tosNo,  C.no]
-                ], '&#9888; Many ToS agreements contain clauses allowing makers to retain non-refundable deposits for any reason. Some agreements also restrict commissioners from publicly discussing delays or unfinished work on social media.')
-              + statCard('SPECIES RESTRICTIONS', specRows,
-                    'Makers noting "Copyright" will not craft characters from copyrighted franchises (Disney, Nintendo, etc.). "Selective Copyright" means only specific IPs are restricted — always verify before commissioning.', 340);
+                    ['No Public ToS', tosNo, C.no],
+                ],
+                '⚠ Many ToS agreements contain clauses allowing makers to retain non-refundable deposits for any reason. Some agreements also include social media restrictions, limiting a commissioner\'s ability to publicly discuss delays or unfinished work even after a payment dispute.')}
 
-            var row3 =
-                statCard('WEBSITE PLATFORM', [
-                    ['Custom Domain',  siteCats['Custom Domain'],  C.yes],
-                    ['No Website',     siteCats['No Website'],     C.no],
-                    ['Carrd',          siteCats['Carrd'],          C.light],
-                    ['Weebly',         siteCats['Weebly'],         C.light],
-                    ['Wix',            siteCats['Wix'],            C.light],
-                    ['Linktree',       siteCats['Linktree'],       C.none],
-                    ['Google Sites',   siteCats['Google Sites'],   C.none]
-                ].filter(function(r){return r[1]>0;}))
-              + statCard('PUBLIC QUEUE AVAILABILITY', [
-                    ['Trello Queue',    qTrello, C.yes,    'Publicly accessible Trello board'],
-                    ['Other Web Queue', qWeb,    C.orange, 'Non-Trello public queue (Google Docs, website, etc.)'],
-                    ['No Public Queue', qNone,   C.no,     '&#9888; Queue not publicly disclosed — commission count unknown before deposit']
-                ], 'Makers without a publicly visible queue make it impossible to assess how many commissions are ahead of yours before you send a non-refundable payment.');
+                ${statCard('SPECIES RESTRICTIONS (AW)', specRows,
+                'Makers noting "Copyright" will typically not craft characters from copyrighted franchises (Disney, Nintendo, etc.). "Selective Copyright" means only specific IPs are restricted — always verify before commissioning.')}
 
-            var row4 =
-                listCard('OTHER HEAD BASES USED', sortedEntries(hbNorm),
-                    'Pre-made head base forms sourced from other makers. Hover over "Makers" to see which makers have used each head base.')
-              + listCard('PARTS & PATTERNS SUPPLIERS', sortedEntries(partsNorm),
-                    'Suppliers for fursuit parts, patterns, and components. Hover over "Makers" to see which makers referenced each supplier.')
-              + listCard('FABRIC SUPPLIERS', sortedEntries(fabNorm),
-                    '<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly <b>Fursuits By Lacey</b>) is second. Hover over "Makers" to see which makers use each supplier.');
+            </div>
 
-            container.innerHTML =
-                '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;">'             + row1 + '</div>'
-              + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-top:15px;">' + row2 + '</div>'
-              + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px;">'   + row3 + '</div>'
-              + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:15px;">' + row4 + '</div>'
-              + '<div style="margin-top:15px;">' + calendarCard() + '</div>';
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px;">
+
+                ${statCard('WEBSITE PLATFORM (AR)', [
+                    ['Custom Domain', siteCats['Custom Domain'], C.yes],
+                    ['No Website', siteCats['No Website'], C.no],
+                    ['Carrd', siteCats['Carrd'], C.light],
+                    ['Weebly', siteCats['Weebly'], C.light],
+                    ['Wix', siteCats['Wix'], C.light],
+                    ['Linktree', siteCats['Linktree'], C.none],
+                    ['Google Sites', siteCats['Google Sites'], C.none],
+                ].filter(r => r[1] > 0))}
+
+                ${statCard('PUBLIC QUEUE AVAILABILITY (AS)', [
+                    ['Trello Queue', qTrello, C.yes, 'Publicly accessible Trello board'],
+                    ['Other Web Queue', qWeb, C.orange, 'Non-Trello public queue (Google Docs, website, etc.)'],
+                    ['No Public Queue', qNone, C.no, '⚠ Queue not publicly disclosed — commission count unknown before deposit'],
+                ],
+                'Makers without a publicly visible queue make it impossible to assess how many commissions are ahead of yours before you send a non-refundable payment. The larger the undisclosed backlog, the greater your risk.')}
+
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:15px;">
+
+                ${listCard('OTHER HEAD BASES USED (BB)', sortedEntries(hbNorm),
+                'These are pre-made head base forms sourced from other makers and used as a foundation. Counts reflect number of mentions across all maker profiles.')}
+
+                ${listCard('PARTS & PATTERNS SUPPLIERS (BC)', sortedEntries(partsNorm),
+                'Makers referencing these suppliers for fursuit parts, patterns, or components. SpiltGrapeSoda variants are merged. Counts reflect number of mentions.')}
+
+                ${listCard('FABRIC SUPPLIERS (BD)', sortedEntries(fabNorm),
+                '<b>Big Z Fabric</b> is the most commonly referenced fursuit fabric supplier. <b>Howl Fabrics</b> (formerly known as <b>Fursuits By Lacey</b>) is the second most common. Counts reflect number of explicit mentions in maker profiles.')}
+
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr;gap:15px;margin-top:15px;">
+                ${calendarCard()}
+            </div>`;
         }
 
-                // --- SOCIAL ICON HELPER ---
+        // --- SOCIAL ICON HELPER ---
         function makeSocialIcon(url) {
             if (!url) return '';
             const u = url.toLowerCase();
@@ -2234,6 +2250,11 @@
             table = new Tabulator("#creator-table", {
                 data: data,
                 layout: "fitData",
+                columnDefaults: {
+                    headerSort: true,
+                    headerFilter: true,
+                    headerFilterPlaceholder: "Filter...",
+                },
                 movableColumns: true,
                 resizableColumns: true,
                 selectableRows: 1, 
@@ -2246,7 +2267,7 @@
                     updateAnalytics(activeData);
                 },
                 columns: [
-                    { title: t("thRow"), field:"rank", visible:true, sorter:"number" },
+                    { title: t("thRow"), field:"rank", visible:true, sorter:"number", headerFilter:"number" },
                     { 
                         title: t("thMaker"), field:"maker", cssClass: "text-cell",
                         formatter: function(cell) {
@@ -2264,7 +2285,7 @@
                         }
                     },
                     { 
-                        title: t("thLogo"), field:"logo", hozAlign:"center", width:90, 
+                        title: t("thLogo"), field:"logo", hozAlign:"center", width:90, headerFilter:false, headerSort:false,
                         formatter:function(cell){
                             const val = cell.getValue();
                             return val ? `<div class="logo-box" data-src="${val}" style="background-image:url('${val}');"></div>` : "";
@@ -2272,7 +2293,7 @@
                     },
                     { title: t("thLocation"), field:"country", formatter: formatTextCell, cssClass: "text-cell" },
                     { 
-                        title: t("thLink"), field:"link", hozAlign:"center",
+                        title: t("thLink"), field:"link", hozAlign:"center", headerFilter:false, headerSort:false,
                         formatter: function(cell) {
                             const data = cell.getData();
                             let icons = '';
@@ -2307,7 +2328,7 @@
                         }
                     },
                     { 
-                        title: t("thPreview"), field: "previewImages", hozAlign: "center", width: 200,
+                        title: t("thPreview"), field: "previewImages", hozAlign: "center", width: 200, headerFilter:false, headerSort:false,
                         formatter: function(cell) {
                            const imageUrls = cell.getValue();
                            if (!imageUrls || imageUrls.length === 0) return "";
@@ -2325,15 +2346,15 @@
                         }
                     },
                     { title: t("thStatus"), field:"status", formatter: formatTextCell, cssClass: "text-cell" },
-                    { title: t("thFursuits"), field:"fursuits", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
-                    { title: t("thWorks"), field:"worksPerYear", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
-                    { title: t("thFollowers"), field:"followers", hozAlign:"right", sorter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
+                    { title: t("thFursuits"), field:"fursuits", hozAlign:"right", sorter:"number", headerFilter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
+                    { title: t("thWorks"), field:"worksPerYear", hozAlign:"right", sorter:"number", headerFilter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue()) : ""; } },
+                    { title: t("thFollowers"), field:"followers", hozAlign:"right", sorter:"number", headerFilter:"number", formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(cell.getValue().toLocaleString()) : ""; } },
                     { 
-                        title: t("thAvgPrice"), field:"price", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" },
+                        title: t("thAvgPrice"), field:"price", hozAlign:"right", sorter:"number", sorterParams:{ alignEmptyValues:"bottom" }, headerFilter:"number",
                         formatter:function(cell){ return cell.getValue() !== null ? wrapInTilt(formatCurrency(cell.getValue())) : "---"; }
                     },
                     {
-                        title: t("thShip"), field: "calculatedShip", hozAlign: "right", sorter: "number",
+                        title: t("thShip"), field: "calculatedShip", hozAlign: "right", sorter: "number", headerFilter:false,
                         mutator: function(value, data) { return getShippingCost(data.country, currentResidentState); },
                         formatter: function(cell) {
                             const ship = cell.getValue();
@@ -2341,7 +2362,7 @@
                         }
                     },
                     {
-                        title: t("thTax"), field: "calculatedTax", hozAlign: "right", sorter: "number",
+                        title: t("thTax"), field: "calculatedTax", hozAlign: "right", sorter: "number", headerFilter:false,
                         mutator: function(value, data) { return (data.price || 0) * currentTaxRate; },
                         formatter: function(cell) {
                             const tax = cell.getValue();
@@ -2349,7 +2370,7 @@
                         }
                     },
                     {
-                        title: t("thTotal"), field: "calculatedTotal", hozAlign: "right", sorter: "number",
+                        title: t("thTotal"), field: "calculatedTotal", hozAlign: "right", sorter: "number", headerFilter:false,
                         mutator: function(value, data) {
                             const price = data.price || 0;
                             const tax = price * currentTaxRate;
