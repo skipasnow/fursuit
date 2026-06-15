@@ -1256,8 +1256,34 @@
             updateSliderDisplay();
         }
 
+        // Map each UI language to its most relevant currency
+        const langToCurrency = {
+            'en': 'USD',
+            'zh-TW': 'TWD',
+            'zh-CN': 'CNY',
+            'ko': 'KRW',
+            'ja': 'JPY'
+        };
+
         document.getElementById('lang-select').addEventListener('change', (e) => {
-            currentLang = e.target.value; applyTranslations();
+            currentLang = e.target.value;
+            applyTranslations();
+
+            // Auto-switch the currency to match the chosen language
+            const mappedCurrency = langToCurrency[currentLang];
+            const currencySelect = document.getElementById('currency-select');
+            if (mappedCurrency && currencySelect && currencySelect.value !== mappedCurrency) {
+                currencySelect.value = mappedCurrency;
+                currentCurrency = mappedCurrency;
+                if (table) {
+                    table.redraw(true);
+                    updateAnalytics(table.getData("active"));
+                } else if (typeof loadedData !== 'undefined') {
+                    updateAnalytics(loadedData);
+                }
+                if (typeof updateCostCard === 'function') updateCostCard();
+                if (typeof updateSliderDisplay === 'function') updateSliderDisplay();
+            }
         });
 
         // --- CURRENCY LOGIC ---
@@ -1527,15 +1553,22 @@
 
         function updateTableFilters() {
             if(table) {
-                table.setFilter(masterFilter, {
-                    priceMin: filterState.priceMin,
-                    priceMax: filterState.priceMax,
-                    showNA: filterState.showNA,
-                    status: filterState.status,
-                    states: Array.from(filterState.states),
-                    tick: Date.now() // Forces Tabulator to re-evaluate the custom filter
-                });
+                // Use the unified addFilter system (coexists with chart filters)
+                // instead of setFilter (which would wipe chart filters).
+                try { table.removeFilter(masterFilterWrapper); } catch (e) {}
+                table.addFilter(masterFilterWrapper);
             }
+        }
+
+        // Wrapper so the master (map/price/status) filter reads live filterState
+        function masterFilterWrapper(data) {
+            return masterFilter(data, {
+                priceMin: filterState.priceMin,
+                priceMax: filterState.priceMax,
+                showNA: filterState.showNA,
+                status: filterState.status,
+                states: Array.from(filterState.states)
+            });
         }
 
 		function toggleStateSelection(stateName) {
@@ -1841,19 +1874,26 @@
             }
 
             // Head base material pie chart
-            updateHeadBaseChart(Object.keys(chartFilters).length > 0 ? fullAnalyticsData : data);
+            // A chart filter (clicking a chart segment) is active?
+            const chartFilterActive = Object.keys(chartFilters).length > 0;
 
-            // Capture broadest dataset (when no chart filters active) for charts that shouldn't self-collapse
-            if (Object.keys(chartFilters).length === 0) {
+            // The "baseline" (fullAnalyticsData) is captured once at initial load and
+            // whenever NO filters of any kind are active, so it stays a true full dataset.
+            // Map / price / status filters DO flow into `data`, so all charts below
+            // reflect them. Chart-segment filters use the baseline to avoid self-collapse.
+            if (!chartFilterActive) {
                 fullTurnaroundData = data;
                 fullAnalyticsData = data;
             }
 
-            // Paid turnaround charts — always render from full distribution
-            updateTurnaroundChart(Object.keys(chartFilters).length > 0 ? fullTurnaroundData : data);
+            // Head base pie — reflects map/price/status; uses baseline only under chart-segment filter
+            updateHeadBaseChart(chartFilterActive ? fullAnalyticsData : data);
 
-            // Insights row — render from full data so options/highlights persist while filtering
-            updateInsightsCharts(Object.keys(chartFilters).length > 0 ? fullAnalyticsData : data);
+            // Paid turnaround charts
+            updateTurnaroundChart(chartFilterActive ? fullTurnaroundData : data);
+
+            // Insights row
+            updateInsightsCharts(chartFilterActive ? fullAnalyticsData : data);
         }
 
         // --- HEAD BASE MATERIAL PIE CHART ---
