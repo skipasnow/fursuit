@@ -341,6 +341,12 @@
         .theme-x .promo-bg-curve { fill: #e7e9ea; }
         .theme-x .peak-range { color: #e7e9ea; }
 
+        .theme-rednote { border-color: #FF2442; box-shadow: inset 0 0 20px rgba(255, 36, 66, 0.15); }
+        .theme-rednote .promo-title { color: #ff5c72; }
+        .theme-rednote .promo-stat-large { color: #fff; text-shadow: 0 0 10px rgba(255, 36, 66, 0.6); }
+        .theme-rednote .promo-bg-curve { fill: #FF2442; }
+        .theme-rednote .peak-range { color: #ff5c72; }
+
         .social-section-header {
             flex: 1 1 100%; margin-top: 5px; padding-top: 15px;
             border-top: 1px dashed #444;
@@ -362,6 +368,7 @@
         .social-bar.active { opacity: 1; stroke: #fff; stroke-width: 1.5; filter: brightness(1.4) drop-shadow(0 0 4px rgba(255,255,255,0.7)); }
         .theme-instagram .social-bar { fill: url(#igGradient); }
         .theme-x .social-bar { fill: #e7e9ea; }
+        .theme-rednote .social-bar { fill: #FF2442; }
         .social-avg-line {
             stroke: #ff8c00; stroke-width: 1.6; stroke-dasharray: 3 2;
             filter: drop-shadow(0 0 2px rgba(255,140,0,0.8));
@@ -849,6 +856,7 @@
                 socialTitle: "Platform Comparison: Instagram vs X",
                 instagramPlatform: "Instagram",
                 xPlatform: "X (Twitter)",
+                rednotePlatform: "Rednote (Xiaohongshu)",
                 trackedAccounts: "tracked accounts",
                 medianFollowers: "Median Followers",
                 majorityFollowers: "Majority of accounts fall here",
@@ -903,6 +911,7 @@
                 socialTitle: "平台比較：Instagram vs X",
                 instagramPlatform: "Instagram",
                 xPlatform: "X (推特)",
+                rednotePlatform: "小紅書",
                 trackedAccounts: "個追蹤帳號",
                 medianFollowers: "追蹤人數中位數",
                 majorityFollowers: "多數帳號落在此區間",
@@ -958,6 +967,7 @@
                 socialTitle: "平台对比：Instagram vs X",
                 instagramPlatform: "Instagram",
                 xPlatform: "X（推特）",
+                rednotePlatform: "小红书",
                 trackedAccounts: "个追踪账号",
                 medianFollowers: "粉丝数中位数",
                 majorityFollowers: "多数账号落在此区间",
@@ -1012,6 +1022,7 @@
                 socialTitle: "プラットフォーム比較：Instagram vs X",
                 instagramPlatform: "Instagram",
                 xPlatform: "X（旧Twitter）",
+                rednotePlatform: "RED（小紅書）",
                 trackedAccounts: "件のアカウントに基づく",
                 medianFollowers: "フォロワー数の中央値",
                 majorityFollowers: "アカウントの大部分はここに該当",
@@ -1065,6 +1076,7 @@
                 socialTitle: "플랫폼 비교: Instagram vs X",
                 instagramPlatform: "Instagram",
                 xPlatform: "X (트위터)",
+                rednotePlatform: "레드노트 (샤오홍슈)",
                 trackedAccounts: "개 계정 기준",
                 medianFollowers: "팔로워 중간값",
                 majorityFollowers: "대부분의 계정이 여기에 해당",
@@ -1400,6 +1412,7 @@
             const l = link.toLowerCase();
             if (l.includes('instagram.com')) return 'Instagram';
             if (l.includes('x.com') || l.includes('twitter.com')) return 'X';
+            if (l.includes('rednote.com') || l.includes('xiaohongshu.com') || l.includes('xhslink.com')) return 'Rednote';
             return null;
         }
 
@@ -1571,7 +1584,8 @@
         function buildSocialComparisonHtml(data, t) {
             const social = {
                 'Instagram': { cssClass: 'theme-instagram', label: t.instagramPlatform, followers: [] },
-                'X': { cssClass: 'theme-x', label: t.xPlatform, followers: [] }
+                'X': { cssClass: 'theme-x', label: t.xPlatform, followers: [] },
+                'Rednote': { cssClass: 'theme-rednote', label: t.rednotePlatform, followers: [] }
             };
 
             data.forEach(row => {
@@ -1583,7 +1597,7 @@
 
             let html = `<div class="social-section-header"><div class="data-header-title" style="font-size:1.2em; margin-bottom:0;">${t.socialTitle}</div></div>`;
 
-            ['Instagram', 'X'].forEach(p => {
+            ['Instagram', 'X', 'Rednote'].forEach(p => {
                 const s = social[p];
                 const sorted = s.followers.slice().sort((a, b) => a - b);
                 const count = sorted.length;
