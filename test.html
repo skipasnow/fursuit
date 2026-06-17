@@ -348,16 +348,18 @@
 
         /* --- SOCIAL PLATFORM COMPARISON CHART --- */
         .social-promo-card {
-            height: auto; min-height: 280px;
+            height: auto; min-height: 320px;
             display: flex; flex-direction: column;
         }
         .social-promo-card .promo-content-layer { height: auto; flex: 1 1 auto; }
         .social-chart-panel {
-            position: relative; height: 76px; margin-top: 8px; padding-top: 16px;
+            position: relative; height: auto; margin-top: 8px; padding-top: 16px;
             border-top: 1px dashed rgba(255,255,255,0.15); flex-shrink: 0;
         }
-        .social-chart-svg { width: 100%; height: 100%; display: block; }
-        .social-bar { fill: #888; opacity: 0.85; transition: opacity 0.2s; }
+        .social-chart-svg { width: 100%; height: 60px; display: block; }
+        .social-bar { fill: #888; opacity: 0.85; transition: opacity 0.15s, filter 0.15s; cursor: pointer; }
+        .social-bar:hover { opacity: 1; filter: brightness(1.25); }
+        .social-bar.active { opacity: 1; stroke: #fff; stroke-width: 1.5; filter: brightness(1.4) drop-shadow(0 0 4px rgba(255,255,255,0.7)); }
         .theme-instagram .social-bar { fill: url(#igGradient); }
         .theme-x .social-bar { fill: #e7e9ea; }
         .social-avg-line {
@@ -371,6 +373,24 @@
             white-space: nowrap; pointer-events: none; letter-spacing: 0.5px;
             border: 1px solid #ff8c00; z-index: 2;
         }
+        .social-axis-row { position: relative; height: 14px; margin-top: 2px; }
+        .axis-tick {
+            position: absolute; transform: translateX(-50%); font-size: 0.58em;
+            color: #888; white-space: nowrap;
+        }
+        .social-chart-hint {
+            font-size: 0.62em; color: #666; text-align: center;
+            margin-top: 6px; font-style: italic;
+        }
+        .social-filter-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #2a2a2a; border: 1px solid #ff8c00; border-radius: 4px;
+            padding: 4px 10px; font-size: 0.85em; color: #fff;
+        }
+        .social-filter-badge .clear-social-filter {
+            cursor: pointer; color: #ff5252; font-weight: bold; font-size: 1.1em; line-height: 1;
+        }
+        .social-filter-badge .clear-social-filter:hover { color: #ff8a80; }
 
         .promo-bg-curve-container {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 60%;
@@ -747,6 +767,7 @@
 
           <div class="controls-footer">
               <div id="results-counter" class="results-counter">Loading data...</div>
+              <div id="social-filter-badge" class="social-filter-badge" style="display:none;"></div>
               <div class="sort-hint" id="t-sort-hint">*Hold <b>Shift</b> and click column headers to sort by multiple columns.</div>
           </div>
         </div>
@@ -770,7 +791,7 @@
         let globalTravelCost = 0;
         let currentSelectedFlightCost = 0;
         let table = null;
-        let filterState = { priceMin: 500, priceMax: 10000, showNA: true, tags: new Set(), location: "", status: "" };
+        let filterState = { priceMin: 500, priceMax: 10000, showNA: true, tags: new Set(), location: "", status: "", social: null };
         let pendingTags = new Set();
         let totalDataCount = 0;
         let loadedData = []; // Store raw data for language switching
@@ -832,6 +853,8 @@
                 medianFollowers: "Median Followers",
                 majorityFollowers: "Majority of accounts fall here",
                 avgMarker: "AVG",
+                socialFilterHint: "Click a bar to filter results below",
+                filteringBy: "Filtering by:",
 
                 // Table Columns
                 colRow: "Row", colFreight: "Freight", colImporter: "Importer Rate", colAesthetic: "Aesthetic", colMaker: "Maker",
@@ -884,6 +907,8 @@
                 medianFollowers: "追蹤人數中位數",
                 majorityFollowers: "多數帳號落在此區間",
                 avgMarker: "平均",
+                socialFilterHint: "點擊長條可篩選下方資料",
+                filteringBy: "篩選中：",
 
                 colRow: "編號", colFreight: "運費", colImporter: "進口費率", colAesthetic: "風格", colMaker: "製作師",
                 colLogo: "商標", colLoc: "地點", colLink: "連結", colPreview: "預覽",
@@ -937,6 +962,8 @@
                 medianFollowers: "粉丝数中位数",
                 majorityFollowers: "多数账号落在此区间",
                 avgMarker: "平均",
+                socialFilterHint: "点击柱状条可筛选下方数据",
+                filteringBy: "筛选条件：",
 
                 // Table Columns
                 colRow: "序号", colFreight: "运费", colImporter: "进口费率", colAesthetic: "风格", colMaker: "工作室",
@@ -989,6 +1016,8 @@
                 medianFollowers: "フォロワー数の中央値",
                 majorityFollowers: "アカウントの大部分はここに該当",
                 avgMarker: "平均",
+                socialFilterHint: "バーをクリックすると下のデータを絞り込めます",
+                filteringBy: "絞り込み中：",
 
                 colRow: "行", colFreight: "貨物", colImporter: "輸入レート", colAesthetic: "美学", colMaker: "メーカー",
                 colLogo: "ロゴ", colLoc: "場所", colLink: "リンク", colPreview: "プレビュー",
@@ -1040,6 +1069,8 @@
                 medianFollowers: "팔로워 중간값",
                 majorityFollowers: "대부분의 계정이 여기에 해당",
                 avgMarker: "평균",
+                socialFilterHint: "막대를 클릭하면 아래 데이터를 필터링합니다",
+                filteringBy: "필터링 중:",
 
                 colRow: "행", colFreight: "화물", colImporter: "수입 요율", colAesthetic: "미학", colMaker: "제작자",
                 colLogo: "로고", colLoc: "위치", colLink: "링크", colPreview: "미리보기",
@@ -1159,6 +1190,10 @@
             }
 
             if (filterState.status !== "" && row.status !== filterState.status) {
+                return false;
+            }
+
+            if (filterState.social && !detectBinForValue(row, filterState.social)) {
                 return false;
             }
 
@@ -1416,8 +1451,8 @@
             return result;
         }
 
-        function renderSocialChart(bins, avgValue, scalePos) {
-            const viewWidth = 300, viewHeight = 70, baseline = 68, maxBarHeight = 60;
+        function renderSocialChart(bins, avgValue, scalePos, platform) {
+            const viewWidth = 300, viewHeight = 60, baseline = 58, maxBarHeight = 50;
             const numBins = bins.length;
             const slot = viewWidth / numBins;
             const gap = 3;
@@ -1425,21 +1460,97 @@
 
             let bars = '';
             bins.forEach((b, i) => {
+                // Filter bounds: open-ended on the outer edges so the filter
+                // still works correctly if live sheet data adds a smaller
+                // minimum or a larger maximum later.
+                const filterMin = i === 0 ? -Infinity : b.x0;
+                const filterMax = i === numBins - 1 ? Infinity : b.x1;
                 if (b.count === 0) return;
                 const h = (b.count / maxCount) * maxBarHeight;
                 const x = i * slot + gap / 2;
                 const w = slot - gap;
                 const y = baseline - h;
-                bars += `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" rx="1.5" class="social-bar"/>`;
+                bars += `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" rx="1.5" class="social-bar" data-platform="${platform}" data-min="${filterMin}" data-max="${filterMax}"><title>${fmtCount(b.x0)} - ${fmtCount(b.x1)}: ${b.count}</title></rect>`;
             });
 
             const avgX = scalePos(avgValue) * viewWidth;
             const avgLine = `<line x1="${avgX.toFixed(2)}" y1="2" x2="${avgX.toFixed(2)}" y2="${baseline}" class="social-avg-line"/>`;
 
+            // Axis tick labels at every other bin boundary so the segment
+            // ranges stay legible at card width instead of overlapping.
+            const boundaries = bins.map(b => b.x0).concat([bins[bins.length - 1].x1]);
+            let axisTicks = '';
+            for (let i = 0; i <= numBins; i += 2) {
+                const leftPct = (i / numBins) * 100;
+                axisTicks += `<span class="axis-tick" style="left:${leftPct.toFixed(1)}%;">${fmtCount(boundaries[i])}</span>`;
+            }
+
             return {
                 svg: `<svg class="social-chart-svg" viewBox="0 0 ${viewWidth} ${viewHeight}" preserveAspectRatio="none">${bars}${avgLine}</svg>`,
+                axisRow: `<div class="social-axis-row">${axisTicks}</div>`,
                 avgPercent: (avgX / viewWidth) * 100
             };
+        }
+
+        function detectBinForValue(row, social) {
+            // Mirrors the binning rule used when the chart was drawn, so a
+            // click-to-filter range always matches what's visually shown.
+            const platform = detectPlatform(row.link);
+            if (platform !== social.platform) return false;
+            const f = row.followers;
+            if (f === null || f === undefined || isNaN(f)) return false;
+            return f >= social.min && f < social.max;
+        }
+
+        function attachSocialBarHandlers(container) {
+            container.querySelectorAll('.social-bar').forEach(bar => {
+                bar.addEventListener('click', () => {
+                    const platform = bar.dataset.platform;
+                    const min = parseFloat(bar.dataset.min);
+                    const max = parseFloat(bar.dataset.max);
+                    const isSame = filterState.social &&
+                        filterState.social.platform === platform &&
+                        filterState.social.min === min &&
+                        filterState.social.max === max;
+                    filterState.social = isSame ? null : { platform, min, max };
+                    updateTableFilters();
+                    highlightActiveSocialBar();
+                    renderSocialFilterBadge();
+                });
+            });
+        }
+
+        function highlightActiveSocialBar() {
+            document.querySelectorAll('.social-bar').forEach(bar => {
+                const matches = filterState.social &&
+                    bar.dataset.platform === filterState.social.platform &&
+                    parseFloat(bar.dataset.min) === filterState.social.min &&
+                    parseFloat(bar.dataset.max) === filterState.social.max;
+                bar.classList.toggle('active', !!matches);
+            });
+        }
+
+        function renderSocialFilterBadge() {
+            const el = document.getElementById('social-filter-badge');
+            if (!el) return;
+            if (!filterState.social) {
+                el.style.display = 'none';
+                el.innerHTML = '';
+                return;
+            }
+            const t = translations[currentLang];
+            const { platform, min, max } = filterState.social;
+            const label = platform === 'Instagram' ? t.instagramPlatform : t.xPlatform;
+            const minStr = min === -Infinity ? '0' : fmtCount(min);
+            const maxStr = max === Infinity ? '∞' : fmtCount(max);
+            el.style.display = 'inline-flex';
+            el.innerHTML = `<span>${t.filteringBy} ${label}: ${minStr}-${maxStr}</span><span class="clear-social-filter">&times;</span>`;
+            el.querySelector('.clear-social-filter').addEventListener('click', () => {
+                filterState.social = null;
+                updateTableFilters();
+                highlightActiveSocialBar();
+                renderSocialFilterBadge();
+            });
         }
 
         function drawCurve(svgId, bins, fillOverride) {
@@ -1482,13 +1593,15 @@
                 const { bins, scalePos } = buildLogBins(sorted, 10);
                 let peakStr = "N/A";
                 let chartMarkup = '';
+                let axisMarkup = '';
                 let avgPercent = 50;
                 if (bins.length > 0) {
                     let maxBin = bins[0];
                     bins.forEach(b => { if (b.count > maxBin.count) maxBin = b; });
                     if (maxBin.count > 0) peakStr = `${fmtCount(maxBin.x0)} - ${fmtCount(maxBin.x1)}`;
-                    const chart = renderSocialChart(bins, avg, scalePos);
+                    const chart = renderSocialChart(bins, avg, scalePos, p);
                     chartMarkup = chart.svg;
+                    axisMarkup = chart.axisRow;
                     avgPercent = chart.avgPercent;
                 }
 
@@ -1526,6 +1639,8 @@
                     <div class="social-chart-panel">
                         <div class="avg-marker-label" style="left:${avgPercent.toFixed(1)}%;">${t.avgMarker}</div>
                         ${chartMarkup}
+                        ${axisMarkup}
+                        <div class="social-chart-hint">${t.socialFilterHint}</div>
                     </div>
                 </div>`;
             });
@@ -1641,6 +1756,11 @@
                 const s = stats[loc];
                 drawCurve(`curve-${loc}`, s.bins);
             });
+
+            // Wire up click-to-filter on the Instagram/X bar segments
+            attachSocialBarHandlers(container);
+            highlightActiveSocialBar();
+            renderSocialFilterBadge();
         }
 
         function initTable(data) {
@@ -1858,6 +1978,10 @@
                     loadedData = data; // Save for language switching
                     totalDataCount = data.length;
                     
+                    // New dataset means new bin boundaries, so any active
+                    // bar-segment filter from the previous dataset no longer applies.
+                    filterState.social = null;
+
                     // UPDATE ANALYTICS
                     updateAnalytics(data);
 
