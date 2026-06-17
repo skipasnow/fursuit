@@ -346,6 +346,32 @@
             border-top: 1px dashed #444;
         }
 
+        /* --- SOCIAL PLATFORM COMPARISON CHART --- */
+        .social-promo-card {
+            height: auto; min-height: 280px;
+            display: flex; flex-direction: column;
+        }
+        .social-promo-card .promo-content-layer { height: auto; flex: 1 1 auto; }
+        .social-chart-panel {
+            position: relative; height: 76px; margin-top: 8px; padding-top: 16px;
+            border-top: 1px dashed rgba(255,255,255,0.15); flex-shrink: 0;
+        }
+        .social-chart-svg { width: 100%; height: 100%; display: block; }
+        .social-bar { fill: #888; opacity: 0.85; transition: opacity 0.2s; }
+        .theme-instagram .social-bar { fill: url(#igGradient); }
+        .theme-x .social-bar { fill: #e7e9ea; }
+        .social-avg-line {
+            stroke: #ff8c00; stroke-width: 1.6; stroke-dasharray: 3 2;
+            filter: drop-shadow(0 0 2px rgba(255,140,0,0.8));
+        }
+        .avg-marker-label {
+            position: absolute; top: -4px; transform: translateX(-50%);
+            font-size: 0.62em; font-weight: bold; color: #fff;
+            background: rgba(20,20,20,0.85); padding: 1px 5px; border-radius: 3px;
+            white-space: nowrap; pointer-events: none; letter-spacing: 0.5px;
+            border: 1px solid #ff8c00; z-index: 2;
+        }
+
         .promo-bg-curve-container {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 60%;
             pointer-events: none; z-index: 0; opacity: 0.25;
@@ -805,6 +831,7 @@
                 trackedAccounts: "tracked accounts",
                 medianFollowers: "Median Followers",
                 majorityFollowers: "Majority of accounts fall here",
+                avgMarker: "AVG",
 
                 // Table Columns
                 colRow: "Row", colFreight: "Freight", colImporter: "Importer Rate", colAesthetic: "Aesthetic", colMaker: "Maker",
@@ -856,6 +883,7 @@
                 trackedAccounts: "個追蹤帳號",
                 medianFollowers: "追蹤人數中位數",
                 majorityFollowers: "多數帳號落在此區間",
+                avgMarker: "平均",
 
                 colRow: "編號", colFreight: "運費", colImporter: "進口費率", colAesthetic: "風格", colMaker: "製作師",
                 colLogo: "商標", colLoc: "地點", colLink: "連結", colPreview: "預覽",
@@ -908,6 +936,7 @@
                 trackedAccounts: "个追踪账号",
                 medianFollowers: "粉丝数中位数",
                 majorityFollowers: "多数账号落在此区间",
+                avgMarker: "平均",
 
                 // Table Columns
                 colRow: "序号", colFreight: "运费", colImporter: "进口费率", colAesthetic: "风格", colMaker: "工作室",
@@ -959,6 +988,7 @@
                 trackedAccounts: "件のアカウントに基づく",
                 medianFollowers: "フォロワー数の中央値",
                 majorityFollowers: "アカウントの大部分はここに該当",
+                avgMarker: "平均",
 
                 colRow: "行", colFreight: "貨物", colImporter: "輸入レート", colAesthetic: "美学", colMaker: "メーカー",
                 colLogo: "ロゴ", colLoc: "場所", colLink: "リンク", colPreview: "プレビュー",
@@ -1009,6 +1039,7 @@
                 trackedAccounts: "개 계정 기준",
                 medianFollowers: "팔로워 중간값",
                 majorityFollowers: "대부분의 계정이 여기에 해당",
+                avgMarker: "평균",
 
                 colRow: "행", colFreight: "화물", colImporter: "수입 요율", colAesthetic: "미학", colMaker: "제작자",
                 colLogo: "로고", colLoc: "위치", colLink: "링크", colPreview: "미리보기",
@@ -1348,19 +1379,67 @@
             return sortedArr.length % 2 !== 0 ? sortedArr[mid] : (sortedArr[mid - 1] + sortedArr[mid]) / 2;
         }
 
-        function binAndPeak(sortedValues) {
-            const result = { bins: [], peakLow: 0, peakHigh: 0 };
+        function buildLogBins(sortedValues, numBins) {
+            // Follower counts are heavily right-skewed (a few mega accounts
+            // dwarf everyone else), so linear bins make the "peak" bin
+            // span almost the entire range. Binning in log space keeps the
+            // dense low/mid range readable while still accounting for outliers.
+            const result = { bins: [], scalePos: () => 0 };
             if (sortedValues.length === 0) return result;
-            const x = d3.scaleLinear().domain(d3.extent(sortedValues)).range([0, 300]);
-            const histogram = d3.bin().domain(x.domain()).thresholds(x.ticks(15));
-            result.bins = histogram(sortedValues);
-            if (result.bins.length > 0) {
-                let maxBin = result.bins[0];
-                result.bins.forEach(bin => { if (bin.length > maxBin.length) maxBin = bin; });
-                result.peakLow = maxBin.x0;
-                result.peakHigh = maxBin.x1;
+            const safeLog = v => Math.log10(Math.max(v, 1));
+            const logMin = safeLog(sortedValues[0]);
+            const logMax = safeLog(sortedValues[sortedValues.length - 1]);
+            const span = (logMax - logMin) || 1;
+
+            const bins = [];
+            for (let i = 0; i < numBins; i++) {
+                const loLog = logMin + (span * i) / numBins;
+                const hiLog = logMin + (span * (i + 1)) / numBins;
+                bins.push({ x0: Math.pow(10, loLog), x1: Math.pow(10, hiLog), count: 0 });
             }
+            sortedValues.forEach(v => {
+                const lv = safeLog(v);
+                let idx = Math.floor(((lv - logMin) / span) * numBins);
+                if (idx >= numBins) idx = numBins - 1;
+                if (idx < 0) idx = 0;
+                bins[idx].count++;
+            });
+
+            result.bins = bins;
+            // Returns a 0-1 position for any value along the same log scale,
+            // used to place the average marker consistently with the bars.
+            result.scalePos = (v) => {
+                const lv = safeLog(v);
+                const t = span === 0 ? 0 : (lv - logMin) / span;
+                return Math.max(0, Math.min(1, t));
+            };
             return result;
+        }
+
+        function renderSocialChart(bins, avgValue, scalePos) {
+            const viewWidth = 300, viewHeight = 70, baseline = 68, maxBarHeight = 60;
+            const numBins = bins.length;
+            const slot = viewWidth / numBins;
+            const gap = 3;
+            const maxCount = Math.max(1, ...bins.map(b => b.count));
+
+            let bars = '';
+            bins.forEach((b, i) => {
+                if (b.count === 0) return;
+                const h = (b.count / maxCount) * maxBarHeight;
+                const x = i * slot + gap / 2;
+                const w = slot - gap;
+                const y = baseline - h;
+                bars += `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" rx="1.5" class="social-bar"/>`;
+            });
+
+            const avgX = scalePos(avgValue) * viewWidth;
+            const avgLine = `<line x1="${avgX.toFixed(2)}" y1="2" x2="${avgX.toFixed(2)}" y2="${baseline}" class="social-avg-line"/>`;
+
+            return {
+                svg: `<svg class="social-chart-svg" viewBox="0 0 ${viewWidth} ${viewHeight}" preserveAspectRatio="none">${bars}${avgLine}</svg>`,
+                avgPercent: (avgX / viewWidth) * 100
+            };
         }
 
         function drawCurve(svgId, bins, fillOverride) {
@@ -1380,8 +1459,8 @@
 
         function buildSocialComparisonHtml(data, t) {
             const social = {
-                'Instagram': { cssClass: 'theme-instagram', label: t.instagramPlatform, gradient: true, followers: [] },
-                'X': { cssClass: 'theme-x', label: t.xPlatform, gradient: false, followers: [] }
+                'Instagram': { cssClass: 'theme-instagram', label: t.instagramPlatform, followers: [] },
+                'X': { cssClass: 'theme-x', label: t.xPlatform, followers: [] }
             };
 
             data.forEach(row => {
@@ -1399,23 +1478,31 @@
                 const count = sorted.length;
                 const avg = count > 0 ? sorted.reduce((a, b) => a + b, 0) / count : 0;
                 const med = median(sorted);
-                const { bins, peakLow, peakHigh } = binAndPeak(sorted);
-                s.bins = bins;
 
-                const peakStr = (peakLow || peakHigh) ? `${fmtCount(peakLow)} - ${fmtCount(peakHigh)}` : "N/A";
-                const svgId = `curve-social-${p}`;
+                const { bins, scalePos } = buildLogBins(sorted, 10);
+                let peakStr = "N/A";
+                let chartMarkup = '';
+                let avgPercent = 50;
+                if (bins.length > 0) {
+                    let maxBin = bins[0];
+                    bins.forEach(b => { if (b.count > maxBin.count) maxBin = b; });
+                    if (maxBin.count > 0) peakStr = `${fmtCount(maxBin.x0)} - ${fmtCount(maxBin.x1)}`;
+                    const chart = renderSocialChart(bins, avg, scalePos);
+                    chartMarkup = chart.svg;
+                    avgPercent = chart.avgPercent;
+                }
+
                 const defs = p === 'Instagram'
-                    ? `<defs><linearGradient id="igGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    ? `<svg width="0" height="0" style="position:absolute;"><defs><linearGradient id="igGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                          <stop offset="0%" stop-color="#833AB4"/>
                          <stop offset="50%" stop-color="#E1306C"/>
                          <stop offset="100%" stop-color="#F77737"/>
-                       </linearGradient></defs>`
+                       </linearGradient></defs></svg>`
                     : '';
 
                 html += `
-                <div class="promo-card ${s.cssClass}">
-                    <svg id="${svgId}" class="promo-bg-curve-container" viewBox="0 0 300 100" preserveAspectRatio="none">${defs}</svg>
-
+                <div class="promo-card social-promo-card ${s.cssClass}">
+                    ${defs}
                     <div class="promo-content-layer">
                         <div class="promo-left">
                             <div class="promo-title">${s.label}</div>
@@ -1434,6 +1521,11 @@
                              <div class="peak-range">${peakStr}</div>
                              <div class="promo-sub">${t.majorityFollowers}</div>
                         </div>
+                    </div>
+
+                    <div class="social-chart-panel">
+                        <div class="avg-marker-label" style="left:${avgPercent.toFixed(1)}%;">${t.avgMarker}</div>
+                        ${chartMarkup}
                     </div>
                 </div>`;
             });
@@ -1549,9 +1641,6 @@
                 const s = stats[loc];
                 drawCurve(`curve-${loc}`, s.bins);
             });
-
-            drawCurve('curve-social-Instagram', socialResult.social['Instagram'].bins, 'url(#igGradient)');
-            drawCurve('curve-social-X', socialResult.social['X'].bins);
         }
 
         function initTable(data) {
