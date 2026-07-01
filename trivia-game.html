@@ -47,6 +47,48 @@
     box-shadow:0 30px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
   }
 
+  .settings-row{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:14px;
+  }
+
+  .lang-toggle{
+    display:inline-flex;
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,248,240,0.15);
+    border-radius:999px;
+    padding:3px;
+    gap:2px;
+  }
+
+  .lang-btn{
+    font-family:'Inter', sans-serif;
+    font-size:12px;
+    font-weight:600;
+    color:rgba(255,248,240,0.6);
+    background:transparent;
+    border:none;
+    border-radius:999px;
+    padding:6px 12px;
+    cursor:pointer;
+    transition:background 0.15s ease, color 0.15s ease;
+  }
+
+  .lang-btn.active{
+    background:var(--fur-orange);
+    color:var(--ink);
+  }
+
+  .lang-btn:hover:not(.active){
+    color:var(--cream);
+  }
+
+  .lang-btn:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+
   .progress-row{
     display:flex;
     align-items:center;
@@ -318,6 +360,12 @@
 <body>
 
 <div class="game-card" id="quizCard">
+  <div class="settings-row">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="langBtnEn" type="button">English (USD)</button>
+      <button class="lang-btn" id="langBtnZh" type="button">中文 (CNY)</button>
+    </div>
+  </div>
   <div class="progress-row">
     <span class="progress-label" id="progressLabel">Question 1 of 5</span>
     <span class="score-pill" id="scorePill">Score: 0</span>
@@ -325,8 +373,8 @@
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
   <p class="studio-eyebrow" id="studioName">Glitzy Fox Studios</p>
-  <h1 class="question-title">What's the price range for this studio's fursuits?</h1>
-  <p class="question-sub">Look over all six samples below, then pick the range you think is correct.</p>
+  <h1 class="question-title" id="questionTitle">What's the price range for this studio's fursuits?</h1>
+  <p class="question-sub" id="questionSub">Look over all six samples below, then pick the range you think is correct.</p>
 
   <div class="swatch-grid" id="swatchGrid"></div>
 
@@ -341,105 +389,120 @@
 </div>
 
 <div class="game-card results-card" id="resultsCard">
-  <p class="studio-eyebrow">Trivia Complete</p>
+  <p class="studio-eyebrow" id="resultsEyebrow">Trivia Complete</p>
   <h1 class="question-title" id="resultsTitle">You scored 0 out of 5</h1>
   <p class="question-sub" id="resultsSub">Here's how you did.</p>
   <button class="next-btn show" id="restartBtn">Play Again</button>
 </div>
 
 <script>
-  // ---- QUESTION DATA ----
-  // Note on mapping: a couple of the correct answers you gave (e.g. "5,001 -
-  // 7,500" and "10,000 - 15,000") don't exactly match a range in the answer
-  // pool, so I mapped them to the closest existing range ($5,000 - $7,500 and
-  // $10,001 - $15,000). Flag it if you'd rather I add exact new ranges instead.
-  const ANSWER_POOL = [
-    "$2,500 - $5,000",
-    "$5,000 - $7,500",
-    "$7,501 - $10,000",
-    "$10,001 - $15,000",
-    "$15,001 - $20,000",
-    "$20,001 - $25,000",
-    "$25,000 - $35,000"
+  // ---- LANGUAGE / CURRENCY ----
+  // Studio names are kept in English in both languages, since they're brand
+  // names rather than translatable text. The CNY rate below is an approximate
+  // conversion for display purposes, not a live exchange rate — swap it out
+  // for a real rate if this needs to be accurate to the day.
+  const CNY_RATE = 7.2;
+
+  const TEXT = {
+    en: {
+      subtitle: "Look over all six samples below, then pick the range you think is correct.",
+      questionTitle: "What's the price range for this studio's fursuits?",
+      correctFeedback: (studio, range) => `Correct! ${studio} fursuits run ${range}.`,
+      wrongFeedback: (studio, range) => `Not quite — ${studio} fursuits run ${range}.`,
+      progressLabel: (i, total) => `Question ${i} of ${total}`,
+      scoreLabel: (score) => `Score: ${score}`,
+      nextBtn: "Next Question →",
+      lastBtn: "See My Score →",
+      resultsEyebrow: "Trivia Complete",
+      resultsTitle: (score, total) => `You scored ${score} out of ${total}`,
+      resultsSubPerfect: "Perfect score! You really know fursuit pricing.",
+      resultsSubGood: "Nice work — you've got a solid eye for pricing.",
+      resultsSubOk: "Not bad! A bit more browsing and you'll nail it.",
+      resultsSubLow: "Fursuit pricing can be tricky — give it another go!",
+      playAgain: "Play Again"
+    },
+    zh: {
+      subtitle: "请查看下方的六张样品图片，然后选择你认为正确的价格区间。",
+      questionTitle: "这家工作室的兽装价格区间是多少？",
+      correctFeedback: (studio, range) => `正确！${studio} 的兽装价格约为 ${range}。`,
+      wrongFeedback: (studio, range) => `不太对——${studio} 的兽装价格约为 ${range}。`,
+      progressLabel: (i, total) => `第 ${i} 题，共 ${total} 题`,
+      scoreLabel: (score) => `得分：${score}`,
+      nextBtn: "下一题 →",
+      lastBtn: "查看得分 →",
+      resultsEyebrow: "问答完成",
+      resultsTitle: (score, total) => `你获得了 ${score} / ${total} 分`,
+      resultsSubPerfect: "满分！你对兽装价格非常了解。",
+      resultsSubGood: "不错！你对价格很有眼光。",
+      resultsSubOk: "还不错！多看看样品会更准。",
+      resultsSubLow: "兽装定价有点难——再试一次吧！",
+      playAgain: "再玩一次"
+    }
+  };
+
+  function formatRange(range, locale){
+    const isZh = locale === 'zh';
+    const fmt = new Intl.NumberFormat(isZh ? 'zh-CN' : 'en-US', {
+      style: 'currency',
+      currency: isZh ? 'CNY' : 'USD',
+      maximumFractionDigits: 0
+    });
+    const rate = isZh ? CNY_RATE : 1;
+    const min = Math.round((range.min * rate) / 10) * 10;
+    const max = Math.round((range.max * rate) / 10) * 10;
+    return `${fmt.format(min)} - ${fmt.format(max)}`;
+  }
+
+  // ---- PRICE RANGE POOL ----
+  // Each range has a stable id so the correct answer can be tracked
+  // regardless of which language/currency is currently displayed.
+  const RANGES = [
+    { id: 'r1', min: 2500,  max: 5000 },
+    { id: 'r2', min: 5000,  max: 7500 },
+    { id: 'r3', min: 7501,  max: 10000 },
+    { id: 'r4', min: 10001, max: 15000 },
+    { id: 'r5', min: 15001, max: 20000 },
+    { id: 'r6', min: 20001, max: 25000 },
+    { id: 'r7', min: 25000, max: 35000 }
   ];
+
+  function getRange(id){
+    return RANGES.find(r => r.id === id);
+  }
 
   function studioImages(slug){
     return [1, 2, 3, 4, 5, 6].map(n => `https://assets.furmono.com/ussamples/${slug}_${n}.webp`);
   }
 
+  // Note on mapping: a couple of the correct answers you gave earlier (e.g.
+  // "5,001 - 7,500" and "10,000 - 15,000") don't exactly match a range in the
+  // pool, so I mapped them to the closest existing range (r2 and r4). Flag it
+  // if you'd rather I add exact new ranges instead.
   const questions = [
-    {
-      studio: "Glitzy Fox Studios",
-      images: studioImages("glitzyfoxstudios"),
-      correctAnswer: "$15,001 - $20,000",
-      allRanges: ANSWER_POOL
-    },
-    {
-      studio: "Wild Dream Creatures",
-      images: studioImages("wilddreamcreatures"),
-      correctAnswer: "$2,500 - $5,000",
-      allRanges: ANSWER_POOL
-    },
-    {
-      studio: "Gray Realm Studio",
-      images: studioImages("grayrealmsstudio"),
-      correctAnswer: "$5,000 - $7,500",
-      allRanges: ANSWER_POOL
-    },
-    {
-      studio: "Sour Citrus Suits",
-      images: studioImages("sourcitrussuits"),
-      correctAnswer: "$5,000 - $7,500",
-      allRanges: ANSWER_POOL
-    },
-    {
-      studio: "Tiny Wyvern",
-      images: studioImages("tinywyvern"),
-      correctAnswer: "$10,001 - $15,000",
-      allRanges: ANSWER_POOL
-    },
-    {
-      studio: "Werewolf Prince 666",
-      images: studioImages("werewolfprince666"),
-      correctAnswer: "$15,001 - $20,000",
-      allRanges: ANSWER_POOL
-    },
-    {
-      studio: "Salmon Run Studios",
-      images: studioImages("salmonrunstudios"),
-      correctAnswer: "$7,501 - $10,000",
-      allRanges: ANSWER_POOL
-    },
-    {
-      studio: "FurZombie Studios",
-      images: studioImages("furzombiestudios"),
-      correctAnswer: "$7,501 - $10,000",
-      allRanges: ANSWER_POOL
-    },
-    {
-      studio: "Bowl of Wolfieos",
-      images: studioImages("bowlofwolfieos"),
-      correctAnswer: "$2,500 - $5,000",
-      allRanges: ANSWER_POOL
-    },
-    {
-      studio: "Raging Sea Kemono",
-      images: studioImages("ragingseakemono"),
-      correctAnswer: "$7,501 - $10,000",
-      allRanges: ANSWER_POOL
-    }
+    { studio: "Glitzy Fox Studios",     images: studioImages("glitzyfoxstudios"),     correctId: 'r5' },
+    { studio: "Wild Dream Creatures",   images: studioImages("wilddreamcreatures"),   correctId: 'r1' },
+    { studio: "Gray Realm Studio",      images: studioImages("grayrealmsstudio"),     correctId: 'r2' },
+    { studio: "Sour Citrus Suits",      images: studioImages("sourcitrussuits"),      correctId: 'r2' },
+    { studio: "Tiny Wyvern",            images: studioImages("tinywyvern"),           correctId: 'r4' },
+    { studio: "Werewolf Prince 666",    images: studioImages("werewolfprince666"),    correctId: 'r5' },
+    { studio: "Salmon Run Studios",     images: studioImages("salmonrunstudios"),     correctId: 'r3' },
+    { studio: "FurZombie Studios",      images: studioImages("furzombiestudios"),     correctId: 'r3' },
+    { studio: "Bowl of Wolfieos",       images: studioImages("bowlofwolfieos"),       correctId: 'r1' },
+    { studio: "Raging Sea Kemono",      images: studioImages("ragingseakemono"),      correctId: 'r3' }
   ];
 
   let score = 0;
   let answered = false;
   let currentIndex = 0;
+  let currentLocale = 'en';
+  let currentChoiceIds = [];   // range ids in the order currently shown
+  let selectedRangeId = null;  // which range id the user picked, once answered
+  let onResultsScreen = false;
 
-  function pickAnswerChoices(q){
-    const distractors = q.allRanges.filter(r => r !== q.correctAnswer);
-    // shuffle distractors, take 3, add correct answer, shuffle again so
-    // the correct answer lands in a random position each time
+  function pickChoiceIds(q){
+    const distractors = RANGES.map(r => r.id).filter(id => id !== q.correctId);
     const shuffled = distractors.sort(() => Math.random() - 0.5).slice(0, 3);
-    const choices = [...shuffled, q.correctAnswer];
+    const choices = [...shuffled, q.correctId];
     return choices.sort(() => Math.random() - 0.5);
   }
 
@@ -468,88 +531,139 @@
   function renderAnswers(q){
     const grid = document.getElementById('answersGrid');
     grid.innerHTML = '';
-    const choices = pickAnswerChoices(q);
-    choices.forEach(choice => {
+    currentChoiceIds.forEach(rangeId => {
+      const range = getRange(rangeId);
       const btn = document.createElement('button');
       btn.className = 'answer-btn';
-      btn.textContent = choice;
-      btn.addEventListener('click', () => handleAnswer(btn, choice, q));
+      btn.textContent = formatRange(range, currentLocale);
+      btn.dataset.rangeId = rangeId;
+
+      if (answered){
+        btn.disabled = true;
+        if (rangeId === q.correctId) btn.classList.add('correct');
+        else if (rangeId === selectedRangeId) btn.classList.add('wrong');
+      } else {
+        btn.addEventListener('click', () => handleAnswer(btn, rangeId, q));
+      }
+
       grid.appendChild(btn);
     });
   }
 
-  function loadQuestion(index){
-    answered = false;
-    const q = questions[index];
-
-    document.getElementById('progressLabel').textContent = `Question ${index + 1} of ${questions.length}`;
-    document.getElementById('progressFill').style.width = `${((index + 1) / questions.length) * 100}%`;
-    document.getElementById('studioName').textContent = q.studio;
-
-    const feedback = document.getElementById('feedback');
-    feedback.classList.remove('show', 'is-correct', 'is-wrong');
-    document.getElementById('nextBtn').classList.remove('show');
-
-    renderSwatches(q);
-    renderAnswers(q);
+  function renderStaticText(){
+    const t = TEXT[currentLocale];
+    document.getElementById('questionTitle').textContent = t.questionTitle;
+    document.getElementById('questionSub').textContent = t.subtitle;
+    document.getElementById('scorePill').textContent = t.scoreLabel(score);
   }
 
-  function handleAnswer(btn, choice, q){
-    if (answered) return;
-    answered = true;
-
-    const allBtns = document.querySelectorAll('.answer-btn');
-    allBtns.forEach(b => {
-      b.disabled = true;
-      if (b.textContent === q.correctAnswer) b.classList.add('correct');
-    });
-
-    const isCorrect = choice === q.correctAnswer;
-    if (!isCorrect) btn.classList.add('wrong');
-
+  function renderFeedback(q){
     const feedback = document.getElementById('feedback');
     const icon = document.getElementById('feedbackIcon');
     const text = document.getElementById('feedbackText');
+    const t = TEXT[currentLocale];
+
+    if (!answered){
+      feedback.classList.remove('show', 'is-correct', 'is-wrong');
+      return;
+    }
+
+    const isCorrect = selectedRangeId === q.correctId;
+    const rangeText = formatRange(getRange(q.correctId), currentLocale);
 
     feedback.classList.remove('is-correct', 'is-wrong');
     if (isCorrect){
-      score++;
       icon.textContent = '✓';
-      text.textContent = `Correct! ${q.studio} fursuits run ${q.correctAnswer}.`;
+      text.textContent = t.correctFeedback(q.studio, rangeText);
       feedback.classList.add('is-correct');
     } else {
       icon.textContent = '✕';
-      text.textContent = `Not quite — ${q.studio} fursuits run ${q.correctAnswer}.`;
+      text.textContent = t.wrongFeedback(q.studio, rangeText);
       feedback.classList.add('is-wrong');
     }
     feedback.classList.add('show');
-    document.getElementById('scorePill').textContent = `Score: ${score}`;
+  }
 
+  function renderNextBtn(){
+    const t = TEXT[currentLocale];
     const nextBtn = document.getElementById('nextBtn');
-    nextBtn.textContent = (currentIndex === questions.length - 1) ? 'See My Score →' : 'Next Question →';
-    nextBtn.classList.add('show');
+    nextBtn.textContent = (currentIndex === questions.length - 1) ? t.lastBtn : t.nextBtn;
+    if (answered) nextBtn.classList.add('show');
+    else nextBtn.classList.remove('show');
+  }
+
+  function renderProgress(){
+    const t = TEXT[currentLocale];
+    document.getElementById('progressLabel').textContent = t.progressLabel(currentIndex + 1, questions.length);
+    document.getElementById('progressFill').style.width = `${((currentIndex + 1) / questions.length) * 100}%`;
+  }
+
+  function renderResults(){
+    const t = TEXT[currentLocale];
+    document.getElementById('resultsEyebrow').textContent = t.resultsEyebrow;
+    document.getElementById('resultsTitle').textContent = t.resultsTitle(score, questions.length);
+    document.getElementById('restartBtn').textContent = t.playAgain;
+
+    const sub = document.getElementById('resultsSub');
+    const pct = score / questions.length;
+    if (pct === 1) sub.textContent = t.resultsSubPerfect;
+    else if (pct >= 0.7) sub.textContent = t.resultsSubGood;
+    else if (pct >= 0.4) sub.textContent = t.resultsSubOk;
+    else sub.textContent = t.resultsSubLow;
+  }
+
+  function renderAll(){
+    if (onResultsScreen){
+      renderResults();
+      return;
+    }
+    const q = questions[currentIndex];
+    renderStaticText();
+    renderProgress();
+    document.getElementById('studioName').textContent = q.studio;
+    renderSwatches(q);
+    renderAnswers(q);
+    renderFeedback(q);
+    renderNextBtn();
+  }
+
+  function loadQuestion(index){
+    answered = false;
+    selectedRangeId = null;
+    currentChoiceIds = pickChoiceIds(questions[index]);
+    renderAll();
+  }
+
+  function handleAnswer(btn, rangeId, q){
+    if (answered) return;
+    answered = true;
+    selectedRangeId = rangeId;
+    if (rangeId === q.correctId) score++;
+    renderAll();
   }
 
   function showResults(){
     document.getElementById('quizCard').style.display = 'none';
-    const resultsCard = document.getElementById('resultsCard');
-    resultsCard.classList.add('show');
-    document.getElementById('resultsTitle').textContent = `You scored ${score} out of ${questions.length}`;
-    const sub = document.getElementById('resultsSub');
-    const pct = score / questions.length;
-    if (pct === 1) sub.textContent = "Perfect score! You really know fursuit pricing.";
-    else if (pct >= 0.7) sub.textContent = "Nice work — you've got a solid eye for pricing.";
-    else if (pct >= 0.4) sub.textContent = "Not bad! A bit more browsing and you'll nail it.";
-    else sub.textContent = "Fursuit pricing can be tricky — give it another go!";
+    document.getElementById('resultsCard').classList.add('show');
+    onResultsScreen = true;
+    renderResults();
   }
 
   function restartQuiz(){
     score = 0;
     currentIndex = 0;
-    document.getElementById('scorePill').textContent = 'Score: 0';
+    onResultsScreen = false;
     document.getElementById('resultsCard').classList.remove('show');
     document.getElementById('quizCard').style.display = '';
     loadQuestion(currentIndex);
+  }
+
+  function setLocale(locale){
+    if (locale === currentLocale) return;
+    currentLocale = locale;
+    document.getElementById('langBtnEn').classList.toggle('active', locale === 'en');
+    document.getElementById('langBtnZh').classList.toggle('active', locale === 'zh');
+    renderAll();
   }
 
   document.getElementById('nextBtn').addEventListener('click', () => {
@@ -562,6 +676,8 @@
   });
 
   document.getElementById('restartBtn').addEventListener('click', restartQuiz);
+  document.getElementById('langBtnEn').addEventListener('click', () => setLocale('en'));
+  document.getElementById('langBtnZh').addEventListener('click', () => setLocale('zh'));
 
   loadQuestion(currentIndex);
 </script>
