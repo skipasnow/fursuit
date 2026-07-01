@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fursuit Price Trivia — Sample Question</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241B2F;
+    --plum-deep:#2E2240;
+    --cream:#FFF8F0;
+    --fur-orange:#FF8C42;
+    --teal:#3D8C84;
+    --gold:#F4C95D;
+    --correct:#3D8C5C;
+    --wrong:#D6584B;
+    --radius-lg:20px;
+    --radius-sm:12px;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,140,66,0.18), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(61,140,132,0.20), transparent 50%),
+      var(--ink);
+    font-family:'Inter', sans-serif;
+    color:var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+  }
+
+  .game-card{
+    width:100%;
+    max-width:760px;
+    background:var(--plum-deep);
+    border-radius:28px;
+    padding:32px 28px 36px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  }
+
+  .progress-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+
+  .progress-label{
+    font-size:13px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:rgba(255,248,240,0.55);
+    font-weight:600;
+  }
+
+  .score-pill{
+    font-family:'Baloo 2', sans-serif;
+    font-size:14px;
+    font-weight:700;
+    background:rgba(244,201,93,0.12);
+    color:var(--gold);
+    padding:6px 14px;
+    border-radius:999px;
+    border:1px solid rgba(244,201,93,0.3);
+  }
+
+  .progress-track{
+    height:6px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.08);
+    overflow:hidden;
+    margin-bottom:26px;
+  }
+  .progress-fill{
+    height:100%;
+    width:10%;
+    background:linear-gradient(90deg, var(--fur-orange), var(--gold));
+    border-radius:999px;
+    transition:width 0.4s ease;
+  }
+
+  .studio-eyebrow{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin:0 0 4px;
+  }
+
+  h1.question-title{
+    font-family:'Baloo 2', sans-serif;
+    font-size:clamp(22px, 4vw, 30px);
+    font-weight:800;
+    margin:0 0 4px;
+    color:var(--cream);
+    line-height:1.15;
+  }
+
+  .question-sub{
+    font-size:14px;
+    color:rgba(255,248,240,0.6);
+    margin:0 0 22px;
+  }
+
+  .swatch-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:12px;
+    margin-bottom:28px;
+  }
+
+  .swatch{
+    position:relative;
+    aspect-ratio:1/1;
+    border-radius:var(--radius-sm);
+    overflow:hidden;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 10px),
+      #463A5C;
+    border:1px dashed rgba(255,248,240,0.25);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:z-index 0.2s ease;
+  }
+
+  .swatch:hover{
+    overflow:visible;
+    z-index:20;
+  }
+
+  .swatch img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    transition:transform 0.25s ease, object-fit 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .swatch:hover img{
+    transform:scale(1.9);
+    object-fit:contain;
+    background:var(--plum-deep);
+    box-shadow:0 24px 48px -12px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,248,240,0.15);
+  }
+
+  .swatch-fallback{
+    font-size:11px;
+    color:rgba(255,248,240,0.45);
+    text-align:center;
+    padding:6px;
+    font-family:'Inter', sans-serif;
+  }
+
+  .swatch-tag{
+    position:absolute;
+    bottom:6px;
+    left:6px;
+    background:rgba(36,27,47,0.75);
+    color:var(--cream);
+    font-size:10px;
+    font-weight:600;
+    padding:2px 6px;
+    border-radius:6px;
+    letter-spacing:0.04em;
+  }
+
+  .answers-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+
+  .answer-btn{
+    font-family:'Baloo 2', sans-serif;
+    font-size:17px;
+    font-weight:700;
+    color:var(--cream);
+    background:rgba(255,255,255,0.04);
+    border:1.5px solid rgba(255,248,240,0.18);
+    border-radius:var(--radius-sm);
+    padding:16px 14px;
+    cursor:pointer;
+    transition:transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    text-align:center;
+  }
+
+  .answer-btn:hover:not(:disabled){
+    transform:translateY(-2px);
+    border-color:var(--fur-orange);
+    background:rgba(255,140,66,0.08);
+  }
+
+  .answer-btn:focus-visible{
+    outline:3px solid var(--gold);
+    outline-offset:2px;
+  }
+
+  .answer-btn:disabled{
+    cursor:default;
+  }
+
+  .answer-btn.correct{
+    background:rgba(61,140,92,0.18);
+    border-color:var(--correct);
+    color:#BFE8CC;
+  }
+
+  .answer-btn.wrong{
+    background:rgba(214,88,75,0.18);
+    border-color:var(--wrong);
+    color:#F4C4BD;
+  }
+
+  .feedback{
+    margin-top:20px;
+    min-height:54px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 16px;
+    border-radius:var(--radius-sm);
+    font-size:15px;
+    font-weight:600;
+    opacity:0;
+    transform:translateY(6px);
+    transition:opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .feedback.show{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  .feedback.is-correct{
+    background:rgba(61,140,92,0.14);
+    color:#BFE8CC;
+    border:1px solid rgba(61,140,92,0.4);
+  }
+
+  .feedback.is-wrong{
+    background:rgba(214,88,75,0.14);
+    color:#F4C4BD;
+    border:1px solid rgba(214,88,75,0.4);
+  }
+
+  .feedback-icon{
+    font-size:20px;
+    line-height:1;
+  }
+
+  .next-btn{
+    margin-top:18px;
+    width:100%;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:16px;
+    color:var(--ink);
+    background:var(--gold);
+    border:none;
+    border-radius:var(--radius-sm);
+    padding:14px;
+    cursor:pointer;
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(6px);
+    transition:opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .next-btn.show{
+    opacity:1;
+    pointer-events:auto;
+    transform:translateY(0);
+  }
+
+  .next-btn:hover{
+    filter:brightness(1.05);
+  }
+
+  .results-card{
+    display:none;
+    text-align:center;
+  }
+
+  .results-card.show{
+    display:block;
+  }
+
+  #resultsTitle{
+    margin-top:6px;
+  }
+
+  #restartBtn{
+    margin-top:24px;
+  }
+
+  @media (max-width:480px){
+    .swatch-grid{grid-template-columns:repeat(3, 1fr); gap:8px;}
+    .answers-grid{grid-template-columns:1fr;}
+    .game-card{padding:24px 18px 28px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="game-card" id="quizCard">
+  <div class="progress-row">
+    <span class="progress-label" id="progressLabel">Question 1 of 5</span>
+    <span class="score-pill" id="scorePill">Score: 0</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <p class="studio-eyebrow" id="studioName">Glitzy Fox Studios</p>
+  <h1 class="question-title">What's the price range for this studio's fursuits?</h1>
+  <p class="question-sub">Look over all six samples below, then pick the range you think is correct.</p>
+
+  <div class="swatch-grid" id="swatchGrid"></div>
+
+  <div class="answers-grid" id="answersGrid"></div>
+
+  <div class="feedback" id="feedback">
+    <span class="feedback-icon" id="feedbackIcon"></span>
+    <span id="feedbackText"></span>
+  </div>
+
+  <button class="next-btn" id="nextBtn">Next Question →</button>
+</div>
+
+<div class="game-card results-card" id="resultsCard">
+  <p class="studio-eyebrow">Trivia Complete</p>
+  <h1 class="question-title" id="resultsTitle">You scored 0 out of 5</h1>
+  <p class="question-sub" id="resultsSub">Here's how you did.</p>
+  <button class="next-btn show" id="restartBtn">Play Again</button>
+</div>
+
+<script>
+  // ---- QUESTION DATA ----
+  // Note on mapping: a couple of the correct answers you gave (e.g. "5,001 -
+  // 7,500" and "10,000 - 15,000") don't exactly match a range in the answer
+  // pool, so I mapped them to the closest existing range ($5,000 - $7,500 and
+  // $10,001 - $15,000). Flag it if you'd rather I add exact new ranges instead.
+  const ANSWER_POOL = [
+    "$2,500 - $5,000",
+    "$5,000 - $7,500",
+    "$7,501 - $10,000",
+    "$10,001 - $15,000",
+    "$15,001 - $20,000",
+    "$20,001 - $25,000",
+    "$25,000 - $35,000"
+  ];
+
+  function studioImages(slug){
+    return [1, 2, 3, 4, 5, 6].map(n => `https://assets.furmono.com/ussamples/${slug}_${n}.webp`);
+  }
+
+  const questions = [
+    {
+      studio: "Glitzy Fox Studios",
+      images: studioImages("glitzyfoxstudios"),
+      correctAnswer: "$15,001 - $20,000",
+      allRanges: ANSWER_POOL
+    },
+    {
+      studio: "Wild Dream Creatures",
+      images: studioImages("wilddreamcreatures"),
+      correctAnswer: "$2,500 - $5,000",
+      allRanges: ANSWER_POOL
+    },
+    {
+      studio: "Gray Realm Studio",
+      images: studioImages("grayrealmsstudio"),
+      correctAnswer: "$5,000 - $7,500",
+      allRanges: ANSWER_POOL
+    },
+    {
+      studio: "Sour Citrus Suits",
+      images: studioImages("sourcitrussuits"),
+      correctAnswer: "$5,000 - $7,500",
+      allRanges: ANSWER_POOL
+    },
+    {
+      studio: "Tiny Wyvern",
+      images: studioImages("tinywyvern"),
+      correctAnswer: "$10,001 - $15,000",
+      allRanges: ANSWER_POOL
+    },
+    {
+      studio: "Werewolf Prince 666",
+      images: studioImages("werewolfprince666"),
+      correctAnswer: "$15,001 - $20,000",
+      allRanges: ANSWER_POOL
+    },
+    {
+      studio: "Salmon Run Studios",
+      images: studioImages("salmonrunstudios"),
+      correctAnswer: "$7,501 - $10,000",
+      allRanges: ANSWER_POOL
+    },
+    {
+      studio: "FurZombie Studios",
+      images: studioImages("furzombiestudios"),
+      correctAnswer: "$7,501 - $10,000",
+      allRanges: ANSWER_POOL
+    },
+    {
+      studio: "Bowl of Wolfieos",
+      images: studioImages("bowlofwolfieos"),
+      correctAnswer: "$2,500 - $5,000",
+      allRanges: ANSWER_POOL
+    },
+    {
+      studio: "Raging Sea Kemono",
+      images: studioImages("ragingseakemono"),
+      correctAnswer: "$7,501 - $10,000",
+      allRanges: ANSWER_POOL
+    }
+  ];
+
+  let score = 0;
+  let answered = false;
+  let currentIndex = 0;
+
+  function pickAnswerChoices(q){
+    const distractors = q.allRanges.filter(r => r !== q.correctAnswer);
+    // shuffle distractors, take 3, add correct answer, shuffle again so
+    // the correct answer lands in a random position each time
+    const shuffled = distractors.sort(() => Math.random() - 0.5).slice(0, 3);
+    const choices = [...shuffled, q.correctAnswer];
+    return choices.sort(() => Math.random() - 0.5);
+  }
+
+  function renderSwatches(q){
+    const grid = document.getElementById('swatchGrid');
+    grid.innerHTML = '';
+    q.images.forEach((src, i) => {
+      const swatch = document.createElement('div');
+      swatch.className = 'swatch';
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = `${q.studio} sample ${i + 1}`;
+      img.loading = 'lazy';
+      img.onerror = () => {
+        swatch.innerHTML = `<div class="swatch-fallback">Sample ${i + 1}<br>image unavailable</div>`;
+      };
+      const tag = document.createElement('span');
+      tag.className = 'swatch-tag';
+      tag.textContent = `#${i + 1}`;
+      swatch.appendChild(img);
+      swatch.appendChild(tag);
+      grid.appendChild(swatch);
+    });
+  }
+
+  function renderAnswers(q){
+    const grid = document.getElementById('answersGrid');
+    grid.innerHTML = '';
+    const choices = pickAnswerChoices(q);
+    choices.forEach(choice => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = choice;
+      btn.addEventListener('click', () => handleAnswer(btn, choice, q));
+      grid.appendChild(btn);
+    });
+  }
+
+  function loadQuestion(index){
+    answered = false;
+    const q = questions[index];
+
+    document.getElementById('progressLabel').textContent = `Question ${index + 1} of ${questions.length}`;
+    document.getElementById('progressFill').style.width = `${((index + 1) / questions.length) * 100}%`;
+    document.getElementById('studioName').textContent = q.studio;
+
+    const feedback = document.getElementById('feedback');
+    feedback.classList.remove('show', 'is-correct', 'is-wrong');
+    document.getElementById('nextBtn').classList.remove('show');
+
+    renderSwatches(q);
+    renderAnswers(q);
+  }
+
+  function handleAnswer(btn, choice, q){
+    if (answered) return;
+    answered = true;
+
+    const allBtns = document.querySelectorAll('.answer-btn');
+    allBtns.forEach(b => {
+      b.disabled = true;
+      if (b.textContent === q.correctAnswer) b.classList.add('correct');
+    });
+
+    const isCorrect = choice === q.correctAnswer;
+    if (!isCorrect) btn.classList.add('wrong');
+
+    const feedback = document.getElementById('feedback');
+    const icon = document.getElementById('feedbackIcon');
+    const text = document.getElementById('feedbackText');
+
+    feedback.classList.remove('is-correct', 'is-wrong');
+    if (isCorrect){
+      score++;
+      icon.textContent = '✓';
+      text.textContent = `Correct! ${q.studio} fursuits run ${q.correctAnswer}.`;
+      feedback.classList.add('is-correct');
+    } else {
+      icon.textContent = '✕';
+      text.textContent = `Not quite — ${q.studio} fursuits run ${q.correctAnswer}.`;
+      feedback.classList.add('is-wrong');
+    }
+    feedback.classList.add('show');
+    document.getElementById('scorePill').textContent = `Score: ${score}`;
+
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.textContent = (currentIndex === questions.length - 1) ? 'See My Score →' : 'Next Question →';
+    nextBtn.classList.add('show');
+  }
+
+  function showResults(){
+    document.getElementById('quizCard').style.display = 'none';
+    const resultsCard = document.getElementById('resultsCard');
+    resultsCard.classList.add('show');
+    document.getElementById('resultsTitle').textContent = `You scored ${score} out of ${questions.length}`;
+    const sub = document.getElementById('resultsSub');
+    const pct = score / questions.length;
+    if (pct === 1) sub.textContent = "Perfect score! You really know fursuit pricing.";
+    else if (pct >= 0.7) sub.textContent = "Nice work — you've got a solid eye for pricing.";
+    else if (pct >= 0.4) sub.textContent = "Not bad! A bit more browsing and you'll nail it.";
+    else sub.textContent = "Fursuit pricing can be tricky — give it another go!";
+  }
+
+  function restartQuiz(){
+    score = 0;
+    currentIndex = 0;
+    document.getElementById('scorePill').textContent = 'Score: 0';
+    document.getElementById('resultsCard').classList.remove('show');
+    document.getElementById('quizCard').style.display = '';
+    loadQuestion(currentIndex);
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    currentIndex++;
+    if (currentIndex >= questions.length){
+      showResults();
+    } else {
+      loadQuestion(currentIndex);
+    }
+  });
+
+  document.getElementById('restartBtn').addEventListener('click', restartQuiz);
+
+  loadQuestion(currentIndex);
+</script>
+
+</body>
+</html>
