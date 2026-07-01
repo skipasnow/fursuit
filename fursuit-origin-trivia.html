@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guess the Fursuit's Origin — Sample Question</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241B2F;
+    --plum-deep:#2E2240;
+    --cream:#FFF8F0;
+    --fur-orange:#FF8C42;
+    --teal:#3D8C84;
+    --gold:#F4C95D;
+    --correct:#3D8C5C;
+    --wrong:#D6584B;
+    --radius-lg:20px;
+    --radius-sm:12px;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,140,66,0.18), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(61,140,132,0.20), transparent 50%),
+      var(--ink);
+    font-family:'Inter', sans-serif;
+    color:var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+  }
+
+  .game-card{
+    width:100%;
+    max-width:760px;
+    background:var(--plum-deep);
+    border-radius:28px;
+    padding:32px 28px 36px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  }
+
+  .settings-row{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:14px;
+  }
+
+  .lang-toggle{
+    display:inline-flex;
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,248,240,0.15);
+    border-radius:999px;
+    padding:3px;
+    gap:2px;
+  }
+
+  .lang-btn{
+    font-family:'Inter', sans-serif;
+    font-size:12px;
+    font-weight:600;
+    color:rgba(255,248,240,0.6);
+    background:transparent;
+    border:none;
+    border-radius:999px;
+    padding:6px 12px;
+    cursor:pointer;
+    transition:background 0.15s ease, color 0.15s ease;
+  }
+
+  .lang-btn.active{
+    background:var(--fur-orange);
+    color:var(--ink);
+  }
+
+  .lang-btn:hover:not(.active){
+    color:var(--cream);
+  }
+
+  .lang-btn:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+
+  .progress-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+
+  .progress-label{
+    font-size:13px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:rgba(255,248,240,0.55);
+    font-weight:600;
+  }
+
+  .score-pill{
+    font-family:'Baloo 2', sans-serif;
+    font-size:14px;
+    font-weight:700;
+    background:rgba(244,201,93,0.12);
+    color:var(--gold);
+    padding:6px 14px;
+    border-radius:999px;
+    border:1px solid rgba(244,201,93,0.3);
+  }
+
+  .progress-track{
+    height:6px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.08);
+    overflow:hidden;
+    margin-bottom:26px;
+  }
+  .progress-fill{
+    height:100%;
+    width:10%;
+    background:linear-gradient(90deg, var(--fur-orange), var(--gold));
+    border-radius:999px;
+    transition:width 0.4s ease;
+  }
+
+  .studio-eyebrow{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin:0 0 4px;
+  }
+
+  h1.question-title{
+    font-family:'Baloo 2', sans-serif;
+    font-size:clamp(22px, 4vw, 30px);
+    font-weight:800;
+    margin:0 0 4px;
+    color:var(--cream);
+    line-height:1.15;
+  }
+
+  .question-sub{
+    font-size:14px;
+    color:rgba(255,248,240,0.6);
+    margin:0 0 22px;
+  }
+
+  .photo-frame{
+    position:relative;
+    width:100%;
+    max-width:420px;
+    margin:0 auto 28px;
+    aspect-ratio:1/1;
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 10px),
+      #463A5C;
+    border:1px solid rgba(255,248,240,0.15);
+    box-shadow:0 20px 40px -16px rgba(0,0,0,0.55);
+    transition:z-index 0.2s ease;
+  }
+
+  .photo-frame:hover{
+    overflow:visible;
+    z-index:20;
+  }
+
+  .photo-frame img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    cursor:zoom-in;
+    transition:transform 0.25s ease, object-fit 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .photo-frame:hover img{
+    transform:scale(1.9);
+    object-fit:contain;
+    background:var(--plum-deep);
+    box-shadow:0 24px 48px -12px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,248,240,0.15);
+  }
+
+  /* Some source photos have identifying text near the bottom edge.
+     For those, we permanently clip a portion off the bottom of the
+     image, and keep object-fit:cover on hover instead of switching
+     to contain, so the crop stays in place even when zoomed in. */
+  .photo-frame img.crop-bottom{
+    clip-path:inset(0 0 var(--crop-pct, 20%) 0);
+  }
+
+  .photo-frame:hover img.crop-bottom{
+    object-fit:cover;
+  }
+
+  .photo-fallback{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:13px;
+    color:rgba(255,248,240,0.45);
+    text-align:center;
+    padding:12px;
+    font-family:'Inter', sans-serif;
+  }
+
+  .answers-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+
+  .answer-btn{
+    font-family:'Baloo 2', sans-serif;
+    font-size:17px;
+    font-weight:700;
+    color:var(--cream);
+    background:rgba(255,255,255,0.04);
+    border:1.5px solid rgba(255,248,240,0.18);
+    border-radius:var(--radius-sm);
+    padding:16px 14px;
+    cursor:pointer;
+    transition:transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    text-align:center;
+  }
+
+  .answer-btn:hover:not(:disabled){
+    transform:translateY(-2px);
+    border-color:var(--fur-orange);
+    background:rgba(255,140,66,0.08);
+  }
+
+  .answer-btn:focus-visible{
+    outline:3px solid var(--gold);
+    outline-offset:2px;
+  }
+
+  .answer-btn:disabled{
+    cursor:default;
+  }
+
+  .answer-btn.correct{
+    background:rgba(61,140,92,0.18);
+    border-color:var(--correct);
+    color:#BFE8CC;
+  }
+
+  .answer-btn.wrong{
+    background:rgba(214,88,75,0.18);
+    border-color:var(--wrong);
+    color:#F4C4BD;
+  }
+
+  .feedback{
+    margin-top:20px;
+    min-height:54px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 16px;
+    border-radius:var(--radius-sm);
+    font-size:15px;
+    font-weight:600;
+    opacity:0;
+    transform:translateY(6px);
+    transition:opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .feedback.show{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  .feedback.is-correct{
+    background:rgba(61,140,92,0.14);
+    color:#BFE8CC;
+    border:1px solid rgba(61,140,92,0.4);
+  }
+
+  .feedback.is-wrong{
+    background:rgba(214,88,75,0.14);
+    color:#F4C4BD;
+    border:1px solid rgba(214,88,75,0.4);
+  }
+
+  .feedback-icon{
+    font-size:20px;
+    line-height:1;
+  }
+
+  .next-btn{
+    margin-top:18px;
+    width:100%;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:16px;
+    color:var(--ink);
+    background:var(--gold);
+    border:none;
+    border-radius:var(--radius-sm);
+    padding:14px;
+    cursor:pointer;
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(6px);
+    transition:opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .next-btn.show{
+    opacity:1;
+    pointer-events:auto;
+    transform:translateY(0);
+  }
+
+  .next-btn:hover{
+    filter:brightness(1.05);
+  }
+
+  .results-card{
+    display:none;
+    text-align:center;
+  }
+
+  .results-card.show{
+    display:block;
+  }
+
+  #resultsTitle{
+    margin-top:6px;
+  }
+
+  #restartBtn{
+    margin-top:24px;
+  }
+
+  @media (max-width:480px){
+    .answers-grid{grid-template-columns:1fr;}
+    .game-card{padding:24px 18px 28px;}
+    .photo-frame{max-width:100%;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="game-card" id="quizCard">
+  <div class="settings-row">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="langBtnEn" type="button">English</button>
+      <button class="lang-btn" id="langBtnZh" type="button">中文</button>
+    </div>
+  </div>
+  <div class="progress-row">
+    <span class="progress-label" id="progressLabel">Question 1 of 5</span>
+    <span class="score-pill" id="scorePill">Score: 0</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <p class="studio-eyebrow" id="mysteryLabel">Mystery Fursuit</p>
+  <h1 class="question-title" id="questionTitle">Where is this fursuit from?</h1>
+  <p class="question-sub" id="questionSub">Study the photo, then pick the country or region you think made it.</p>
+
+  <div class="photo-frame" id="photoFrame"></div>
+
+  <div class="answers-grid" id="answersGrid"></div>
+
+  <div class="feedback" id="feedback">
+    <span class="feedback-icon" id="feedbackIcon"></span>
+    <span id="feedbackText"></span>
+  </div>
+
+  <button class="next-btn" id="nextBtn">Next Question →</button>
+</div>
+
+<div class="game-card results-card" id="resultsCard">
+  <p class="studio-eyebrow" id="resultsEyebrow">Trivia Complete</p>
+  <h1 class="question-title" id="resultsTitle">You scored 0 out of 5</h1>
+  <p class="question-sub" id="resultsSub">Here's how you did.</p>
+  <button class="next-btn show" id="restartBtn">Play Again</button>
+</div>
+
+<script>
+  // ---- LANGUAGE ----
+  const TEXT = {
+    en: {
+      subtitle: "Study the photo, then pick the country or region you think made it.",
+      questionTitle: "Where is this fursuit from?",
+      mysteryLabel: "Mystery Fursuit",
+      correctFeedback: (country) => `Correct! This fursuit is from ${country}.`,
+      wrongFeedback: (country) => `Not quite — this fursuit is from ${country}.`,
+      progressLabel: (i, total) => `Question ${i} of ${total}`,
+      scoreLabel: (score) => `Score: ${score}`,
+      nextBtn: "Next Question →",
+      lastBtn: "See My Score →",
+      resultsEyebrow: "Trivia Complete",
+      resultsTitle: (score, total) => `You scored ${score} out of ${total}`,
+      resultsSubPerfect: "Perfect score! You've got a great eye for fursuit origins.",
+      resultsSubGood: "Nice work — you can really spot regional styles.",
+      resultsSubOk: "Not bad! A bit more browsing and you'll nail it.",
+      resultsSubLow: "Tricky, right? Give it another go!",
+      playAgain: "Play Again"
+    },
+    zh: {
+      subtitle: "仔细观察图片，然后选出你认为这套兽装的产地。",
+      questionTitle: "这套兽装来自哪里？",
+      mysteryLabel: "神秘兽装",
+      correctFeedback: (country) => `正确！这套兽装来自${country}。`,
+      wrongFeedback: (country) => `不太对——这套兽装来自${country}。`,
+      progressLabel: (i, total) => `第 ${i} 题，共 ${total} 题`,
+      scoreLabel: (score) => `得分：${score}`,
+      nextBtn: "下一题 →",
+      lastBtn: "查看得分 →",
+      resultsEyebrow: "问答完成",
+      resultsTitle: (score, total) => `你获得了 ${score} / ${total} 分`,
+      resultsSubPerfect: "满分！你对兽装产地非常了解。",
+      resultsSubGood: "不错！你很擅长辨认地区风格。",
+      resultsSubOk: "还不错！多看看样品会更准。",
+      resultsSubLow: "确实有点难——再试一次吧！",
+      playAgain: "再玩一次"
+    }
+  };
+
+  // ---- ORIGIN POOL ----
+  // Each origin has a stable id plus an English and Mandarin label.
+  const ORIGINS = [
+    { id: 'cn', en: 'Mainland China', zh: '中国大陆' },
+    { id: 'tw', en: 'Taiwan',         zh: '台湾' },
+    { id: 'us', en: 'America',        zh: '美国' },
+    { id: 'jp', en: 'Japan',          zh: '日本' },
+    { id: 'kr', en: 'Korea',          zh: '韩国' },
+    { id: 'vn', en: 'Vietnam',        zh: '越南' },
+    { id: 'sg', en: 'Singapore',      zh: '新加坡' }
+  ];
+
+  function getOrigin(id){
+    return ORIGINS.find(o => o.id === id);
+  }
+
+  function originLabel(id, locale){
+    const o = getOrigin(id);
+    return locale === 'zh' ? o.zh : o.en;
+  }
+
+  // ---- QUESTIONS ----
+  // One photo per question, deliberately not naming the studio so its
+  // branding/style doesn't hint at the answer.
+  const questions = [
+    { image: "https://assets.furmono.com/ussamples/alfur_2.webp", correctId: 'us' },
+    { image: "https://assets.furmono.com/samples/BlackMoon_1.webp", correctId: 'kr' },
+    { image: "https://assets.furmono.com/samples/Sema_1.webp", correctId: 'jp' },
+    { image: "https://assets.furmono.com/samples/MonsterShakeFursuit_3.webp", correctId: 'tw' },
+    { image: "https://assets.furmono.com/samples/Zisstyle_5.webp", correctId: 'jp' },
+    { image: "https://assets.furmono.com/samples/DragonX2_2.webp", correctId: 'tw' },
+    { image: "https://assets.furmono.com/samples/BlackDragonStudio_5.webp", correctId: 'cn' },
+    { image: "https://assets.furmono.com/samples/ShippoCrafts_1.webp", correctId: 'jp' },
+    { image: "https://assets.furmono.com/samples/KamiliaFursuit_6.webp", correctId: 'vn' },
+    { image: "https://assets.furmono.com/samples/FurPlus_5.webp", correctId: 'kr' },
+    { image: "https://assets.furmono.com/samples/WenYu_2.webp", correctId: 'cn' },
+    { image: "https://pbs.twimg.com/media/GN-z4LJWkAAzFEk?format=jpg&name=large", correctId: 'us' },
+    { image: "https://assets.furmono.com/samples/CloudYunsu_5.webp", correctId: 'cn' },
+    { image: "https://assets.furmono.com/samples/Kota_1.webp", correctId: 'tw', cropBottom: 20 },
+    { image: "https://assets.furmono.com/samples/PurpleBatFursuit_2.webp", correctId: 'kr' },
+    { image: "https://assets.furmono.com/samples/Anason_1.webp", correctId: 'cn' },
+    { image: "https://assets.furmono.com/ussamples/oakleyscreations_2.webp", correctId: 'us' },
+    { image: "https://assets.furmono.com/samples/FurtopianStudio_6.webp", correctId: 'cn' },
+    { image: "https://assets.furmono.com/samples/KomadoriWorkshop_1.webp", correctId: 'jp' },
+    { image: "https://assets.furmono.com/ussamples/kawaiimonofursuits_2.webp", correctId: 'us' }
+  ];
+
+  let score = 0;
+  let answered = false;
+  let currentIndex = 0;
+  let currentLocale = 'en';
+  let currentChoiceIds = [];    // origin ids in the order currently shown
+  let selectedOriginId = null;  // which origin id the user picked, once answered
+  let onResultsScreen = false;
+  let playOrder = [];           // shuffled copy of `questions` used for this playthrough
+
+  function shuffle(arr){
+    const copy = arr.slice();
+    for (let i = copy.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  function pickChoiceIds(q){
+    const distractors = ORIGINS.map(o => o.id).filter(id => id !== q.correctId);
+    const shuffled = distractors.sort(() => Math.random() - 0.5).slice(0, 3);
+    const choices = [...shuffled, q.correctId];
+    return choices.sort(() => Math.random() - 0.5);
+  }
+
+  function renderPhoto(q){
+    const frame = document.getElementById('photoFrame');
+    frame.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = q.image;
+    img.alt = 'Mystery fursuit photo';
+    img.loading = 'lazy';
+    if (q.cropBottom){
+      img.classList.add('crop-bottom');
+      img.style.setProperty('--crop-pct', `${q.cropBottom}%`);
+    }
+    img.onerror = () => {
+      frame.innerHTML = `<div class="photo-fallback">Photo unavailable</div>`;
+    };
+    frame.appendChild(img);
+  }
+
+  function renderAnswers(q){
+    const grid = document.getElementById('answersGrid');
+    grid.innerHTML = '';
+    currentChoiceIds.forEach(originId => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = originLabel(originId, currentLocale);
+      btn.dataset.originId = originId;
+
+      if (answered){
+        btn.disabled = true;
+        if (originId === q.correctId) btn.classList.add('correct');
+        else if (originId === selectedOriginId) btn.classList.add('wrong');
+      } else {
+        btn.addEventListener('click', () => handleAnswer(btn, originId, q));
+      }
+
+      grid.appendChild(btn);
+    });
+  }
+
+  function renderStaticText(){
+    const t = TEXT[currentLocale];
+    document.getElementById('questionTitle').textContent = t.questionTitle;
+    document.getElementById('questionSub').textContent = t.subtitle;
+    document.getElementById('scorePill').textContent = t.scoreLabel(score);
+    document.getElementById('mysteryLabel').textContent = t.mysteryLabel;
+  }
+
+  function renderFeedback(q){
+    const feedback = document.getElementById('feedback');
+    const icon = document.getElementById('feedbackIcon');
+    const text = document.getElementById('feedbackText');
+    const t = TEXT[currentLocale];
+
+    if (!answered){
+      feedback.classList.remove('show', 'is-correct', 'is-wrong');
+      return;
+    }
+
+    const isCorrect = selectedOriginId === q.correctId;
+    const countryText = originLabel(q.correctId, currentLocale);
+
+    feedback.classList.remove('is-correct', 'is-wrong');
+    if (isCorrect){
+      icon.textContent = '✓';
+      text.textContent = t.correctFeedback(countryText);
+      feedback.classList.add('is-correct');
+    } else {
+      icon.textContent = '✕';
+      text.textContent = t.wrongFeedback(countryText);
+      feedback.classList.add('is-wrong');
+    }
+    feedback.classList.add('show');
+  }
+
+  function renderNextBtn(){
+    const t = TEXT[currentLocale];
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.textContent = (currentIndex === playOrder.length - 1) ? t.lastBtn : t.nextBtn;
+    if (answered) nextBtn.classList.add('show');
+    else nextBtn.classList.remove('show');
+  }
+
+  function renderProgress(){
+    const t = TEXT[currentLocale];
+    document.getElementById('progressLabel').textContent = t.progressLabel(currentIndex + 1, playOrder.length);
+    document.getElementById('progressFill').style.width = `${((currentIndex + 1) / playOrder.length) * 100}%`;
+  }
+
+  function renderResults(){
+    const t = TEXT[currentLocale];
+    document.getElementById('resultsEyebrow').textContent = t.resultsEyebrow;
+    document.getElementById('resultsTitle').textContent = t.resultsTitle(score, playOrder.length);
+    document.getElementById('restartBtn').textContent = t.playAgain;
+
+    const sub = document.getElementById('resultsSub');
+    const pct = score / playOrder.length;
+    if (pct === 1) sub.textContent = t.resultsSubPerfect;
+    else if (pct >= 0.7) sub.textContent = t.resultsSubGood;
+    else if (pct >= 0.4) sub.textContent = t.resultsSubOk;
+    else sub.textContent = t.resultsSubLow;
+  }
+
+  function renderAll(){
+    if (onResultsScreen){
+      renderResults();
+      return;
+    }
+    const q = playOrder[currentIndex];
+    renderStaticText();
+    renderProgress();
+    renderPhoto(q);
+    renderAnswers(q);
+    renderFeedback(q);
+    renderNextBtn();
+  }
+
+  function loadQuestion(index){
+    answered = false;
+    selectedOriginId = null;
+    currentChoiceIds = pickChoiceIds(playOrder[index]);
+    renderAll();
+  }
+
+  function handleAnswer(btn, originId, q){
+    if (answered) return;
+    answered = true;
+    selectedOriginId = originId;
+    if (originId === q.correctId) score++;
+    renderAll();
+  }
+
+  function showResults(){
+    document.getElementById('quizCard').style.display = 'none';
+    document.getElementById('resultsCard').classList.add('show');
+    onResultsScreen = true;
+    renderResults();
+  }
+
+  function restartQuiz(){
+    score = 0;
+    currentIndex = 0;
+    onResultsScreen = false;
+    playOrder = shuffle(questions);
+    document.getElementById('resultsCard').classList.remove('show');
+    document.getElementById('quizCard').style.display = '';
+    loadQuestion(currentIndex);
+  }
+
+  function setLocale(locale){
+    if (locale === currentLocale) return;
+    currentLocale = locale;
+    document.getElementById('langBtnEn').classList.toggle('active', locale === 'en');
+    document.getElementById('langBtnZh').classList.toggle('active', locale === 'zh');
+    renderAll();
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    currentIndex++;
+    if (currentIndex >= playOrder.length){
+      showResults();
+    } else {
+      loadQuestion(currentIndex);
+    }
+  });
+
+  document.getElementById('restartBtn').addEventListener('click', restartQuiz);
+  document.getElementById('langBtnEn').addEventListener('click', () => setLocale('en'));
+  document.getElementById('langBtnZh').addEventListener('click', () => setLocale('zh'));
+
+  playOrder = shuffle(questions);
+  loadQuestion(currentIndex);
+</script>
+
+</body>
+</html>
